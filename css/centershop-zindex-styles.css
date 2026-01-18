@@ -1,0 +1,21 @@
+.kontaktdato {
+  position: relative;
+  z-index: 1000;
+}
+
+img.ui-datepicker-trigger {
+    width: 18px;
+    margin: -8px 0px -7px 4px;
+    padding: 3px;
+    background: #eee;
+    border: 1px #ddd solid;
+    border-radius: 2px;
+    pointer: cursor;
+    transition: scale 100ms ease-in-out;
+    transform: scal(1);
+}
+
+img.ui-datepicker-trigger:hover {
+    box-shadow: 0px 4px 25px -6px #000;
+    transform: scale(1.05);
+}

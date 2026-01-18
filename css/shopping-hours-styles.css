@@ -1,0 +1,608 @@
+/* ===========================
+   Admin Styles
+   =========================== */
+
+.centershop-opening-hours-wrap h1 {
+    margin-bottom: 20px;
+}
+
+.centershop-admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+@media (max-width: 1280px) {
+    .centershop-admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.shoppinghours-settings {
+    max-width: 100%;
+}
+
+/* ===========================
+   Admin Preview Area
+   =========================== */
+
+.shoppinghours-demo {
+    position: static;
+    margin-top: 0;
+    padding: 0;
+    background-color: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.shoppinghours-demo h2 {
+    margin: 0;
+    padding: 15px 20px;
+    background-color: #f6f7f7;
+    border-bottom: 1px solid #c3c4c7;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d2327;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 4px 4px 0 0;
+}
+
+.shoppinghours-demo .description {
+    padding: 10px 20px 0;
+    margin: 0;
+    font-size: 12px;
+    color: #646970;
+    font-style: italic;
+}
+
+.shoppinghours-container {
+    padding: 20px;
+    background-color: #fff;
+}
+
+/* Apply neutral styling to preview area */
+.shoppinghours-container .centeraabningstider {
+    padding: 0;
+    margin-bottom: 0;
+    background-color: transparent;
+}
+
+.shoppinghours-container .centeraabningstider td {
+    padding: 8px 12px;
+    border-bottom: 0;
+    color: #000;
+}
+
+.shoppinghours-container tr.ugedag {
+    font-size: 16px;
+}
+
+.shoppinghours-container .centeraabningstider table {
+    margin-bottom: 0;
+}
+
+/* Preview area collected display */
+.shoppinghours-container .centeraabningstider.opsamlet {
+    background-color: transparent;
+    padding: 0;
+}
+
+.shoppinghours-container .days-together-shooping-hours {
+    font-weight: 600;
+    color: #000;
+    font-size: 16px;
+}
+
+.shoppinghours-container .hours-for-days-together-shopping-hours {
+    color: #000;
+    margin-top: 3px;
+    margin-bottom: 12px;
+}
+
+/* Preview area today's hours */
+.shoppinghours-container .todays-shopping-hours {
+    text-align: center;
+    padding: 20px;
+    background-color: transparent;
+}
+
+.shoppinghours-container .shopping-hour-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #000;
+}
+
+.shoppinghours-container .idag {
+    font-weight: bold;
+    background-color: transparent !important;
+}
+
+/* Admin Table Styles */
+.shoppinghours {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.shoppinghours th {
+    background-color: #f0f0f1;
+    padding: 12px 15px;
+    /* text-align: left; */
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #50575e;
+}
+
+.shoppinghours td {
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.shoppinghours tr:last-child td {
+    border-bottom: none;
+}
+
+.shoppinghours tr.disabled {
+    opacity: 0.5;
+    background-color: #f6f7f7;
+}
+
+.shoppinghours tr.editing {
+    background-color: #f0f6fc;
+}
+
+/* Time Input Styling */
+.centershop-time-input {
+    padding: 6px 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 120px;
+    transition: border-color 0.2s;
+}
+
+.centershop-time-input:focus {
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.centershop-time-input:disabled,
+.centershop-time-input.disabled {
+    background-color: #f6f7f7;
+    border-color: #dcdcde;
+    cursor: not-allowed;
+}
+
+/* Checkbox Toggle Styling */
+.centershop-closed-toggle {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Headers */
+h2.hellig-overskrift {
+    padding: 0;
+    background-color: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: none;
+    margin: 30px 0 15px;
+    color: #1d2327;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+h1.shoppinghours-overskrift {
+    padding: 0;
+    background-color: transparent;
+    font-size: 23px;
+    font-weight: 400;
+    box-shadow: none;
+    margin: 0 0 15px;
+    color: #1d2327;
+}
+
+/* ===========================
+   Frontend Display Styles
+   Override Skeleton CSS Framework
+   Ultra-High Specificity
+   =========================== */
+
+/* Default: Black on White */
+.centeraabningstider.centeraabningstider {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
+    background-color: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Override Skeleton table styles with ultra-high specificity */
+.centeraabningstider.centeraabningstider table,
+.centeraabningstider table.centeraabningstider {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.centeraabningstider.centeraabningstider table th,
+.centeraabningstider.centeraabningstider table td,
+.centeraabningstider table tbody tr td {
+    padding: 10px 15px !important;
+    text-align: left !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.centeraabningstider.centeraabningstider table tbody,
+.centeraabningstider table tbody {
+    border: none !important;
+    border-top: none !important;
+    background: transparent !important;
+}
+
+.centeraabningstider.centeraabningstider table tbody tr,
+.centeraabningstider table tbody tr {
+    border-bottom: 1px solid #ddd !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.centeraabningstider.centeraabningstider table tbody tr:last-child,
+.centeraabningstider table tbody tr:last-child {
+    border-bottom: none !important;
+}
+
+.centeraabningstider.centeraabningstider table tbody tr:nth-child(even),
+.centeraabningstider.centeraabningstider table tbody tr:nth-child(odd),
+.centeraabningstider table tbody tr:nth-child(even),
+.centeraabningstider table tbody tr:nth-child(odd) {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.centeraabningstider.centeraabningstider td.ugedag-navn,
+.centeraabningstider td.ugedag-navn {
+    font-weight: 600 !important;
+    color: #000 !important;
+    text-align: left !important;
+}
+
+.centeraabningstider.centeraabningstider td.openhours,
+.centeraabningstider.centeraabningstider td.closinghours,
+.centeraabningstider td.openhours,
+.centeraabningstider td.closinghours {
+    text-align: center !important;
+    color: #000 !important;
+}
+
+.centeraabningstider.centeraabningstider tr.idag td,
+.centeraabningstider tr.idag td {
+    font-weight: bold !important;
+}
+
+.centeraabningstider.centeraabningstider td.lukket,
+.centeraabningstider td.lukket {
+    color: #000 !important;
+    font-style: italic !important;
+    text-align: center !important;
+}
+
+/* Collected Week Display */
+.centeraabningstider.opsamlet {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: transparent;
+    padding: 0;
+}
+
+.days-together-shooping-hours {
+    font-weight: 600;
+    color: #000;
+}
+
+.hours-for-days-together-shopping-hours {
+    color: #000;
+    margin-top: 3px;
+}
+
+/* Today's Hours Display */
+.todays-shopping-hours {
+    text-align: center;
+    padding: 0;
+    background-color: transparent;
+}
+
+.shopping-hour-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+span.shopping-hour-open-hours, 
+span.shopping-hour-closed-hours {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #000;
+}
+
+span.shopping-hour-open-minutes, 
+span.shopping-hour-closed-minutes {
+    font-weight: 600;
+    position: relative;
+    top: -14px;
+    left: -4px;
+    font-size: 1.1rem;
+    color: #000;
+}
+
+span.shopping-hour-hiphen {
+    font-size: 1.5rem;
+    color: #000;
+}
+
+span.shopping-hour-closed-today {
+    position: relative;
+    color: #000;
+    font-size: 3.2rem;
+    font-weight: 900;
+    line-height: 2.6;
+}
+
+span.shopping-hour-time {
+    font-size: 1.2rem;
+    color: #000;
+}
+
+/* Extra Text */
+.shopping-hour-extra-text {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: transparent;
+    color: #000;
+    border: none;
+    border-radius: 0;
+}
+
+/* ===========================
+   Footer Variant: White on Black
+   Override Skeleton in Footer with ULTRA-HIGH Specificity
+   =========================== */
+
+footer .centeraabningstider.centeraabningstider,
+.site-footer .centeraabningstider.centeraabningstider {
+    background-color: transparent !important;
+    color: #fff !important;
+}
+
+footer .centeraabningstider.centeraabningstider table,
+.site-footer .centeraabningstider.centeraabningstider table {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+}
+
+footer .centeraabningstider.centeraabningstider table tbody,
+.site-footer .centeraabningstider.centeraabningstider table tbody {
+    background: transparent !important;
+    border: none !important;
+}
+
+footer .centeraabningstider.centeraabningstider table th,
+footer .centeraabningstider.centeraabningstider table td,
+.site-footer .centeraabningstider.centeraabningstider table th,
+.site-footer .centeraabningstider.centeraabningstider table td {
+    padding: 10px 15px !important;
+    border: none !important;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+footer .centeraabningstider.centeraabningstider table tbody tr,
+.site-footer .centeraabningstider.centeraabningstider table tbody tr {
+    background: transparent !important;
+    border: none !important;
+}
+
+footer .centeraabningstider.centeraabningstider table tbody tr:nth-child(even),
+footer .centeraabningstider.centeraabningstider table tbody tr:nth-child(odd),
+.site-footer .centeraabningstider.centeraabningstider table tbody tr:nth-child(even),
+.site-footer .centeraabningstider.centeraabningstider table tbody tr:nth-child(odd) {
+    background: transparent !important;
+    border: none !important;
+}
+
+footer .centeraabningstider.centeraabningstider table tbody tr:hover,
+footer .centeraabningstider.centeraabningstider table tbody tr:focus,
+.site-footer .centeraabningstider.centeraabningstider table tbody tr:hover,
+.site-footer .centeraabningstider.centeraabningstider table tbody tr:focus {
+    background: transparent !important;
+    border: none !important;
+}
+
+footer .centeraabningstider.centeraabningstider td.ugedag-navn,
+footer .centeraabningstider.centeraabningstider td.openhours,
+footer .centeraabningstider.centeraabningstider td.closinghours,
+footer .centeraabningstider.centeraabningstider td.lukket,
+.site-footer .centeraabningstider.centeraabningstider td.ugedag-navn,
+.site-footer .centeraabningstider.centeraabningstider td.openhours,
+.site-footer .centeraabningstider.centeraabningstider td.closinghours,
+.site-footer .centeraabningstider.centeraabningstider td.lukket {
+    color: #fff !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+footer .days-together-shooping-hours,
+footer .hours-for-days-together-shopping-hours,
+.site-footer .days-together-shooping-hours,
+.site-footer .hours-for-days-together-shopping-hours {
+    color: #fff !important;
+}
+
+footer .shopping-hour-title,
+footer span.shopping-hour-open-hours,
+footer span.shopping-hour-closed-hours,
+footer span.shopping-hour-open-minutes,
+footer span.shopping-hour-closed-minutes,
+footer span.shopping-hour-hiphen,
+footer span.shopping-hour-closed-today,
+footer span.shopping-hour-time,
+.site-footer .shopping-hour-title,
+.site-footer span.shopping-hour-open-hours,
+.site-footer span.shopping-hour-closed-hours,
+.site-footer span.shopping-hour-open-minutes,
+.site-footer span.shopping-hour-closed-minutes,
+.site-footer span.shopping-hour-hiphen,
+.site-footer span.shopping-hour-closed-today,
+.site-footer span.shopping-hour-time {
+    color: #fff !important;
+}
+
+footer .shopping-hour-extra-text,
+.site-footer .shopping-hour-extra-text {
+    color: #fff;
+}
+
+/* Holiday Styles */
+.centershop-holiday-row.disabled {
+    opacity: 0.5;
+}
+
+span.shopping-hour-hiphen {
+    font-size: 2rem;
+    margin: auto -.6rem auto -1rem;
+}
+
+p.shopping-hour-title {
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: .85rem;
+}
+
+.openinghours {
+	background-color: #fefefe;
+	padding: 10px;
+	margin-top: 0rem;
+	height: 255px;
+	font-size: 2.6rem;
+	text-transform: uppercase;
+	text-align: center;
+	transition: all 200ms;
+	transform: scale(1);
+}
+
+.openinghours:hover {
+	box-shadow: 0px 0px 30px -10px grey;
+	cursor: pointer;
+	transform: scale(1.03);
+}
+
+span.shopping-hour-open-hours, span.shopping-hour-closed-hours {
+    font-size: 4.6rem;
+    font-weight: 600;
+}
+
+span.shopping-hour-open-minutes, span.shopping-hour-closed-minutes {
+    font-weight: 600;
+    position: relative;
+    top: -14px;
+    left: 0px;
+    font-size: 2.4rem;
+}
+
+span.shopping-hour-hiphen {
+    font-size: 4rem;
+    margin: auto -.1rem auto -1rem;
+}
+
+.shopping-hour-title {
+	margin-bottom: -2.5rem
+}
+
+.shopping-hour-extra-text {
+	text-transform: initial;
+	font-size: 1.2rem;
+	line-height: 2.4rem;
+	margin-top: -.5rem
+}
+
+.shopping-hour-extra-text table {
+    margin: auto;
+}
+
+.shopping-hour-extra-text table td {
+    border: 0;
+    height: 2px!important;
+    line-height: 2px;
+    text-align: center;
+    font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .shopping-hour-extra-text {
+    font-size: 1.8rem;
+  }
+}
+
+a.sort-tid-butik.aabningstid {
+    overflow: initial;
+    font-weight: 100;
+    height: 255px;
+}
+
+a.sort-tid-butik {
+    overflow: hidden;
+    display: block;
+}
+
+a.sort-tid-butik.aabningstid:hover {
+    text-decoration: none;
+}
+
+.shopping-hour-title {
+    margin-bottom: -2.5rem;
+}
+
+.page-template-visbutikslister .openinghours {
+    height: auto;
+}
+
+.centeraabningstider.opsamlet {
+    font-size: 2rem;
+    width: 80%;
+    text-align: center;
+    margin: 0 auto 1rem;
+    background-color: white;
+}
+
+.hours-for-days-together-shopping-hours {
+    font-size: 3rem;
+    margin-top: -1rem;
+}

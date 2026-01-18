@@ -1,0 +1,105 @@
+/* Shop Logo Ticker with Swiper */
+.centershop-logo-ticker-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+    margin: 40px 0;
+}
+
+.centershop-logo-ticker-wrapper .swiper {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    padding-bottom: 15px;
+    margin-bottom: -15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.centershop-logo-ticker-wrapper .swiper.swiper-initialized {
+    opacity: 1;
+}
+
+.centershop-logo-ticker-wrapper .swiper-wrapper {
+    transition-timing-function: linear !important;
+}
+
+.centershop-logo-ticker-wrapper .swiper-slide {
+    width: auto !important;
+}
+
+.ticker-logo-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--logo-height, 80px));
+    transition: all 0.3s ease;
+}
+
+.ticker-logo-item img {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.ticker-logo-item:hover {
+    transform: scale(1.05);
+}
+
+.ticker-logo-item:hover img {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+.ticker-logo-item a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.ticker-logo-item img {
+    max-height: var(--logo-height, 80px);
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ticker-track {
+        gap: 30px;
+    }
+    
+    .ticker-logo-item {
+        padding: 8px 15px;
+    }
+    
+    .ticker-logo-item img {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 550px) {
+    .ticker-track {
+        gap: 20px;
+    }
+    
+    .ticker-logo-item {
+        padding: 5px 10px;
+    }
+    
+    .ticker-logo-item img {
+        max-width: 120px;
+    }
+}
+
+/* Editor Preview */
+.centershop-logo-ticker-editor .components-placeholder {
+    padding: 40px;
+    text-align: center;
+}
+
+.centershop-logo-ticker-editor .components-placeholder__label {
+    font-size: 24px;
+    margin-bottom: 10px;
+}

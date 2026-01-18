@@ -1,0 +1,32 @@
+{
+  "apiVersion": 2,
+  "name": "centershop/opening-hours",
+  "title": "Center Åbningstider",
+  "category": "widgets",
+  "icon": "clock",
+  "description": "Vis centerets åbningstider i forskellige formater",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "attributes": {
+    "showWeek": {
+      "type": "boolean",
+      "default": false
+    },
+    "showCollected": {
+      "type": "boolean",
+      "default": true
+    },
+    "showToday": {
+      "type": "boolean",
+      "default": false
+    },
+    "showExtraText": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "textdomain": "centershop",
+  "editorScript": "file:./index.js"
+}

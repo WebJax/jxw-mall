@@ -1,0 +1,183 @@
+/**
+ * CenterShop Admin Styles
+ */
+
+/* Dashboard */
+.centershop-dashboard-widgets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.centershop-widget {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.centershop-widget h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.centershop-stat {
+    font-size: 48px;
+    font-weight: 600;
+    color: #2271b1;
+    margin: 10px 0 5px;
+    line-height: 1;
+}
+
+.centershop-widget p {
+    margin: 0 0 15px;
+    color: #646970;
+}
+
+/* Cards */
+.centershop-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.centershop-card h2 {
+    margin-top: 0;
+}
+
+/* Activity list */
+.centershop-activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.centershop-activity-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.centershop-activity-list li:last-child {
+    border-bottom: none;
+}
+
+.activity-type {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.activity-shop { background: #2271b1; }
+.activity-post { background: #00a32a; }
+.activity-fb { background: #1877f2; }
+
+.activity-time {
+    color: #646970;
+    font-size: 12px;
+    margin-left: auto;
+}
+
+/* Shop access page */
+.centershop-shop-access .form-table th {
+    width: 150px;
+}
+
+/* Facebook settings */
+.centershop-fb-settings .centershop-notice {
+    background: #f0f6fc;
+    border-left: 4px solid #2271b1;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.centershop-fb-settings .centershop-notice h4 {
+    margin: 0 0 10px;
+}
+
+.centershop-fb-settings .centershop-notice ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+/* Status messages */
+#centershop-fb-status-message {
+    margin-left: 10px;
+}
+
+/* Shop dashboard */
+.centershop-shop-dashboard .centershop-widget {
+    text-align: center;
+}
+
+.centershop-shop-notice {
+    background: #fff8e5;
+    border-left: 4px solid #dba617;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+/* Forms */
+.centershop-form .form-table {
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.centershop-delete-user {
+    color: #b32d2e !important;
+}
+
+/* Media gallery in meta box */
+.centershop-media-gallery {
+    padding: 10px 0;
+}
+
+.centershop-media-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.centershop-media-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.centershop-media-item img,
+.centershop-media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.centershop-remove-media {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: center;
+}
+
+.centershop-remove-media:hover {
+    background: #b32d2e;
+}

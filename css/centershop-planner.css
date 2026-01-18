@@ -1,0 +1,478 @@
+/**
+ * CenterShop Planner Styles
+ */
+
+/* Container */
+.centershop-planner-wrap {
+    max-width: 1400px;
+}
+
+.centershop-planner-container {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+/* Header */
+.centershop-planner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.centershop-planner-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.centershop-planner-nav h2 {
+    margin: 0;
+    min-width: 200px;
+    text-align: center;
+}
+
+.centershop-planner-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.centershop-planner-filters select {
+    min-width: 150px;
+}
+
+/* Calendar */
+.centershop-calendar-container {
+    overflow-x: auto;
+}
+
+.centershop-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #f0f0f1;
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+}
+
+.centershop-weekday {
+    background: #f6f7f7;
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.centershop-weekday.centershop-weekend {
+    color: #b32d2e;
+}
+
+.centershop-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #dcdcde;
+}
+
+/* Calendar day */
+.centershop-calendar-day {
+    background: #fff;
+    min-height: 120px;
+    padding: 5px;
+    position: relative;
+}
+
+.centershop-calendar-day.other-month {
+    background: #f6f7f7;
+}
+
+.centershop-calendar-day.today {
+    background: #f0f6fc;
+}
+
+.centershop-calendar-day.weekend {
+    background: #fafafa;
+}
+
+.centershop-day-number {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1d2327;
+    padding: 3px 5px;
+}
+
+.centershop-calendar-day.other-month .centershop-day-number {
+    color: #a7aaad;
+}
+
+.centershop-calendar-day.today .centershop-day-number {
+    background: #2271b1;
+    color: #fff;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Post cards in calendar */
+.centershop-day-posts {
+    margin-top: 5px;
+}
+
+.centershop-post-card {
+    background: #f0f6fc;
+    border-left: 3px solid #2271b1;
+    padding: 5px 8px;
+    margin-bottom: 4px;
+    border-radius: 0 3px 3px 0;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.centershop-post-card:hover {
+    background: #e1ecf4;
+}
+
+.centershop-post-card.status-draft {
+    border-left-color: #646970;
+    background: #f0f0f1;
+}
+
+.centershop-post-card.status-draft:hover {
+    background: #e0e0e0;
+}
+
+.centershop-post-card.status-awaiting_content {
+    border-left-color: #dba617;
+    background: #fff8e5;
+}
+
+.centershop-post-card.status-awaiting_content:hover {
+    background: #f5edd6;
+}
+
+.centershop-post-card.status-ready {
+    border-left-color: #00a32a;
+    background: #edfaef;
+}
+
+.centershop-post-card.status-ready:hover {
+    background: #d8f5dd;
+}
+
+.centershop-post-card.status-published {
+    border-left-color: #135e96;
+    background: #e7f3ff;
+}
+
+.centershop-post-card.status-published:hover {
+    background: #d6eaff;
+}
+
+.centershop-post-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.centershop-post-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 3px;
+    color: #646970;
+    font-size: 11px;
+}
+
+.centershop-post-type-badge {
+    background: rgba(0,0,0,0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+/* Add post button in day */
+.centershop-add-post-day {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: #2271b1;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 18px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.centershop-calendar-day:hover .centershop-add-post-day {
+    opacity: 1;
+}
+
+.centershop-add-post-day:hover {
+    background: #135e96;
+}
+
+/* Legend */
+.centershop-planner-legend {
+    display: flex;
+    gap: 20px;
+    padding: 15px 0;
+    flex-wrap: wrap;
+}
+
+.centershop-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #646970;
+}
+
+.centershop-status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.centershop-status-dot.status-draft {
+    background: #646970;
+}
+
+.centershop-status-dot.status-awaiting_content {
+    background: #dba617;
+}
+
+.centershop-status-dot.status-ready {
+    background: #00a32a;
+}
+
+.centershop-status-dot.status-published {
+    background: #135e96;
+}
+
+/* Modal */
+.centershop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.centershop-modal-content {
+    background: #fff;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: auto;
+    position: relative;
+}
+
+.centershop-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #646970;
+    z-index: 1;
+}
+
+.centershop-modal-close:hover {
+    color: #1d2327;
+}
+
+.centershop-modal-body {
+    padding: 20px;
+}
+
+/* Shop upload section */
+.centershop-shop-upload-section {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.centershop-upload-dropzone {
+    border: 2px dashed #c3c4c7;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 20px;
+}
+
+.centershop-upload-dropzone:hover,
+.centershop-upload-dropzone.dragging {
+    border-color: #2271b1;
+    background: #f0f6fc;
+}
+
+.centershop-upload-dropzone p {
+    margin: 0;
+    color: #646970;
+}
+
+.centershop-upload-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.centershop-upload-preview-item {
+    width: 100px;
+    height: 100px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.centershop-upload-preview-item img,
+.centershop-upload-preview-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.centershop-upload-preview-item .remove {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.centershop-upload-description {
+    margin-bottom: 20px;
+}
+
+.centershop-upload-description label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.centershop-upload-description textarea {
+    width: 100%;
+}
+
+/* Previous uploads grid */
+.centershop-uploads-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.centershop-upload-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.centershop-upload-thumb {
+    height: 120px;
+    background: #f0f0f1;
+}
+
+.centershop-upload-thumb img,
+.centershop-upload-thumb video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.centershop-upload-info {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.centershop-upload-status {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.centershop-upload-status.status-draft {
+    background: #f0f0f1;
+    color: #646970;
+}
+
+.centershop-upload-status.status-awaiting_content {
+    background: #fff8e5;
+    color: #8a6d11;
+}
+
+.centershop-upload-status.status-ready {
+    background: #edfaef;
+    color: #1a7a2c;
+}
+
+.centershop-upload-status.status-published {
+    background: #e7f3ff;
+    color: #135e96;
+}
+
+.centershop-upload-date {
+    font-size: 12px;
+    color: #646970;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .centershop-planner-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .centershop-planner-nav {
+        justify-content: center;
+    }
+    
+    .centershop-planner-filters {
+        justify-content: center;
+    }
+    
+    .centershop-calendar-day {
+        min-height: 80px;
+    }
+    
+    .centershop-post-meta {
+        display: none;
+    }
+}

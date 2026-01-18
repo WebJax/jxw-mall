@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "centershop/single-shop",
+  "title": "Enkelt Butik",
+  "category": "widgets",
+  "icon": "store",
+  "description": "Viser en enkelt butik valgt fra en liste",
+  "attributes": {
+    "shopId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "textdomain": "centershop_txtdomain",
+  "editorScript": "centershop-single-shop-editor",
+  "style": "centershop-single-shop-style"
+}

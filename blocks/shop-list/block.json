@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "centershop/shop-list",
+  "title": "Butiksliste",
+  "category": "widgets",
+  "icon": "store",
+  "description": "Viser en liste over alle udgivne butikker med deres information",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "textdomain": "centershop_txtdomain",
+  "editorScript": "centershop-shop-list-editor",
+  "style": "centershop-shop-list-style"
+}

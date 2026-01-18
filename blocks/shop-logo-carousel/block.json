@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "centershop/shop-logo-carousel",
+  "title": "Butiks Logo Ticker",
+  "category": "widgets",
+  "icon": "images-alt2",
+  "description": "Viser butikkers logoer i en kontinuerlig rullende ticker",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "attributes": {
+    "logoHeight": {
+      "type": "number",
+      "default": 80
+    },
+    "animationSpeed": {
+      "type": "number",
+      "default": 30
+    }
+  },
+  "editorScript": "centershop-logo-carousel-editor",
+  "style": "centershop-logo-carousel-style"
+}
