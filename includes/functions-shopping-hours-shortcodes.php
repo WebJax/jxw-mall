@@ -111,7 +111,14 @@ class CenterShop_Shopping_Hours_Shortcodes
         $returning = '<div class="centeraabningstider opsamlet" style="display:flex;flex-direction:column;gap:10px;background:transparent;padding:0;">';
         foreach ($days_groups as $group) {
             $returning .= '<div class="days-together-shooping-hours" style="font-weight:600;">';
-            $returning .= esc_html(implode(' - ', $group['days']));
+            
+            // If more than 2 days, show "Mandag til Onsdag" instead of "Mandag - Tirsdag - Onsdag"
+            if (count($group['days']) > 2) {
+                $returning .= esc_html($group['days'][0]) . ' til ' . esc_html(end($group['days']));
+            } else {
+                $returning .= esc_html(implode(' - ', $group['days']));
+            }
+            
             $returning .= '</div>';
             
             if ($group['heltlukket']) {
