@@ -369,7 +369,6 @@ span.shopping-hour-closed-today {
     color: #000;
     font-size: 3.2rem;
     font-weight: 900;
-    line-height: 2.6;
 }
 
 span.shopping-hour-time {
@@ -510,7 +509,6 @@ p.shopping-hour-title {
 	background-color: #fefefe;
 	padding: 10px;
 	margin-top: 0rem;
-	height: 255px;
 	font-size: 2.6rem;
 	text-transform: uppercase;
 	text-align: center;
@@ -525,7 +523,7 @@ p.shopping-hour-title {
 }
 
 span.shopping-hour-open-hours, span.shopping-hour-closed-hours {
-    font-size: 4.6rem;
+    font-size: 3.6rem;
     font-weight: 600;
 }
 
@@ -539,11 +537,7 @@ span.shopping-hour-open-minutes, span.shopping-hour-closed-minutes {
 
 span.shopping-hour-hiphen {
     font-size: 4rem;
-    margin: auto -.1rem auto -1rem;
-}
-
-.shopping-hour-title {
-	margin-bottom: -2.5rem
+    margin-inline: -.5rem;
 }
 
 .shopping-hour-extra-text {
@@ -562,7 +556,7 @@ span.shopping-hour-hiphen {
     height: 2px!important;
     line-height: 2px;
     text-align: center;
-    font-size: 2rem;
+    font-size: 1.2rem;
 }
 
 @media (max-width: 768px) {

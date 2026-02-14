@@ -140,12 +140,12 @@ class CenterShop_Shopping_Hours_Shortcodes
         $aaben = get_option($day.'_aaben', '');
         $lukket = get_option($day.'_lukket', '');
         
-        $returning = '<div class="todays-shopping-hours" style="background:transparent;padding:0;">';
-        $returning .= '<p class="shopping-hour-title" style="font-size:1.2rem;font-weight:bold;margin-bottom:10px;">Åbningstid i dag</p>';
+        $returning = '<div class="todays-shopping-hours">';
+        $returning .= '<p class="shopping-hour-title">Åbningstid i dag</p>';
         
         // Check if completely closed
         if ($heltlukket) {
-            $returning .= '<span class="shopping-hour-closed-today" style="font-size:1.2rem;">Lukket</span>';
+            $returning .= '<span class="shopping-hour-closed-today">Lukket</span>';
         } elseif (!empty($aaben) && !empty($lukket)) {
             // Split time into hours and minutes
             $aaben_parts = explode(':', $aaben);
