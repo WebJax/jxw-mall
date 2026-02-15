@@ -31,33 +31,33 @@ class CenterShop_Shopping_Hours_Shortcodes
     }
 
     public function show_shopping_hour_week() {
-        $returning = '<div class="centeraabningstider ugeskema"><table style="width:100%;border-collapse:collapse;margin:0;background:transparent;border:none;">';
+        $returning = '<div class="centeraabningstider ugeskema"><table>';
         
         for ($i = 0; $i < 7; $i++) {
             $week_day = $this->week_days[$i];
             $week_day_display = $this->week_days_display[$i];
             $class = ($week_day == $this->day_of_week) ? 'idag' : '';
             
-            $returning .= '<tr class="ugedag '. $class .'" style="background:transparent;border:none;border-bottom:1px solid #ddd;">';
-            $returning .= '<td class="ugedag-navn" style="padding:10px 15px;border:none;background:transparent;font-weight:600;">'.$week_day_display.'</td>';
+            $returning .= '<tr class="ugedag '. $class .'">';
+            $returning .= '<td class="ugedag-navn">'.$week_day_display.'</td>';
             
             if ($this->is_holliday) {
                 if (!$this->is_holliday[3]) {
                     $openhollyday = get_option($this->is_holliday[1], '');
                     $closehollyday = get_option($this->is_holliday[2], '');
-                    $returning .= '<td class="openhours holliday" style="padding:10px 15px;border:none;background:transparent;text-align:center;">' . esc_html($openhollyday) . '</td>';
-                    $returning .= '<td class="closinghours holliday" style="padding:10px 15px;border:none;background:transparent;text-align:center;">' . esc_html($closehollyday) . '</td>';
+                    $returning .= '<td class="openhours holliday">' . esc_html($openhollyday) . '</td>';
+                    $returning .= '<td class="closinghours holliday">' . esc_html($closehollyday) . '</td>';
                 } else {
-                    $returning .= '<td colspan="2" class="closed-holliday" style="padding:10px 15px;border:none;background:transparent;">Der er lukket ' . esc_html($this->is_holliday[0] ?? '') . '</td>';          
+                    $returning .= '<td colspan="2" class="closed-holliday">Der er lukket ' . esc_html($this->is_holliday[0] ?? '') . '</td>';          
                 }
             } else {
                 if (get_option($week_day.'_heltlukket')) {
-                    $returning .= '<td colspan="2" class="lukket" style="padding:10px 15px;border:none;background:transparent;text-align:center;font-style:italic;">Lukket</td>';
+                    $returning .= '<td colspan="2" class="lukket">Lukket</td>';
                 } else {
                     $openhour = get_option($week_day.'_aaben', '');
                     $closehour = get_option($week_day.'_lukket', '');
-                    $returning .= '<td class="openhours" style="padding:10px 15px;border:none;background:transparent;text-align:center;">' . esc_html($openhour) . '</td>';
-                    $returning .= '<td class="closinghours" style="padding:10px 15px;border:none;background:transparent;text-align:center;">' . esc_html($closehour) . '</td>';
+                    $returning .= '<td class="openhours">' . esc_html($openhour) . '</td>';
+                    $returning .= '<td class="closinghours">' . esc_html($closehour) . '</td>';
                 }          
             }
             $returning .= '</tr>';
@@ -108,9 +108,9 @@ class CenterShop_Shopping_Hours_Shortcodes
             $processed[$i] = true;
         }
         
-        $returning = '<div class="centeraabningstider opsamlet" style="display:flex;flex-direction:column;gap:10px;background:transparent;padding:0;">';
+        $returning = '<div class="centeraabningstider opsamlet">';
         foreach ($days_groups as $group) {
-            $returning .= '<div class="days-together-shooping-hours" style="font-weight:600;">';
+            $returning .= '<div class="days-together-shooping-hours">';
             
             // If more than 2 days, show "Mandag til Onsdag" instead of "Mandag - Tirsdag - Onsdag"
             if (count($group['days']) > 2) {
@@ -122,11 +122,11 @@ class CenterShop_Shopping_Hours_Shortcodes
             $returning .= '</div>';
             
             if ($group['heltlukket']) {
-                $returning .= '<div class="hours-for-days-together-shopping-hours" style="margin-top:3px;">Lukket</div>';
+                $returning .= '<div class="hours-for-days-together-shopping-hours">Lukket</div>';
             } elseif (!empty($group['aaben']) && !empty($group['lukket'])) {
-                $returning .= '<div class="hours-for-days-together-shopping-hours" style="margin-top:3px;">' . esc_html($group['aaben']) . ' - ' . esc_html($group['lukket']) . '</div>';
+                $returning .= '<div class="hours-for-days-together-shopping-hours">' . esc_html($group['aaben']) . ' - ' . esc_html($group['lukket']) . '</div>';
             } else {
-                $returning .= '<div class="hours-for-days-together-shopping-hours" style="margin-top:3px;">Lukket</div>';
+                $returning .= '<div class="hours-for-days-together-shopping-hours">Lukket</div>';
             }
         }
         $returning .= '</div>';

@@ -1,0 +1,142 @@
+/**
+ * Styles for Connected Shop Pills
+ * Displays shop connections as stylish pills/badges
+ */
+
+.jxw-connected-shops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0;
+    padding: 15px 0;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.jxw-shop-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff !important;
+    text-decoration: none !important;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    line-height: 1.4;
+}
+
+.jxw-shop-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: #ffffff !important;
+}
+
+.jxw-shop-pill:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Alternative color schemes - add classes to customize */
+.jxw-shop-pill.blue {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.jxw-shop-pill.green {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.jxw-shop-pill.orange {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.jxw-shop-pill.pink {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Shop icon (optional - add before text) */
+.jxw-shop-pill::before {
+    content: "🏪";
+    margin-right: 6px;
+    font-size: 16px;
+}
+
+/* Related posts section on shop page */
+.jxw-shop-related-posts {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.jxw-shop-related-posts h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 20px;
+}
+
+.jxw-shop-related-posts ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.jxw-shop-related-posts li {
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.jxw-shop-related-posts li:last-child {
+    border-bottom: none;
+}
+
+.jxw-shop-related-posts a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.jxw-shop-related-posts a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .jxw-connected-shops {
+        gap: 6px;
+    }
+    
+    .jxw-shop-pill {
+        padding: 5px 12px;
+        font-size: 13px;
+    }
+    
+    .jxw-shop-pill::before {
+        font-size: 14px;
+        margin-right: 4px;
+    }
+}
+
+/* Integration with post meta - place pills after post meta */
+.entry-meta + .jxw-connected-shops {
+    margin-top: 15px;
+}
+
+/* Alternative layout - inline with meta */
+.jxw-connected-shops.inline {
+    display: inline-flex;
+    margin: 0 10px;
+    padding: 0;
+    border: none;
+}
+
+.jxw-connected-shops.inline .jxw-shop-pill {
+    font-size: 12px;
+    padding: 4px 10px;
+}

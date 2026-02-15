@@ -63,6 +63,9 @@ function centershop_load_modules() {
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-posts-list.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-shortcodes.php';
     
+    // Post-Shop connection module
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
+    
     // Initialize modules
     CenterShop_Admin_Menu::get_instance();
     CenterShop_Shop_Roles::get_instance();

@@ -222,9 +222,9 @@ h1.shoppinghours-overskrift {
 .centeraabningstider.centeraabningstider {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
     background-color: #fff !important;
-    color: #000 !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    color: #000;
+    padding: 0;
+    margin: 0;
 }
 
 /* Override Skeleton table styles with ultra-high specificity */
@@ -313,19 +313,15 @@ h1.shoppinghours-overskrift {
 .centeraabningstider.opsamlet {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    background-color: transparent;
-    padding: 0;
+    gap: 0px;
 }
 
 .days-together-shooping-hours {
     font-weight: 600;
     color: #000;
-}
-
-.hours-for-days-together-shopping-hours {
-    color: #000;
-    margin-top: 3px;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
 }
 
 /* Today's Hours Display */
@@ -509,7 +505,6 @@ p.shopping-hour-title {
 	background-color: #fefefe;
 	padding: 10px;
 	margin-top: 0rem;
-	font-size: 2.6rem;
 	text-transform: uppercase;
 	text-align: center;
 	transition: all 200ms;
@@ -560,15 +555,19 @@ span.shopping-hour-hiphen {
 }
 
 @media (max-width: 768px) {
-  .shopping-hour-extra-text {
-    font-size: 1.8rem;
-  }
+	.shopping-hour-extra-text {
+	    font-size: 1.8rem;
+	}
+
+	a.sort-tid-butik.aabningstid {
+		margin-top: 2rem;
+		box-shadow: 0 0 35px -5px lightgray;
+	}
 }
 
 a.sort-tid-butik.aabningstid {
     overflow: initial;
     font-weight: 100;
-    height: 255px;
 }
 
 a.sort-tid-butik {
@@ -589,14 +588,13 @@ a.sort-tid-butik.aabningstid:hover {
 }
 
 .centeraabningstider.opsamlet {
-    font-size: 2rem;
-    width: 80%;
     text-align: center;
-    margin: 0 auto 1rem;
-    background-color: white;
+    font-size: 1rem;
 }
 
 .hours-for-days-together-shopping-hours {
-    font-size: 3rem;
-    margin-top: -1rem;
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 1rem;
+    padding: 0;
 }

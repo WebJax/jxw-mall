@@ -62,7 +62,7 @@ li.butikskategori-overskrift,
     padding: 1.5rem;
     width: 227px;
     background-color: #efefef;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     text-align: center;
     transition: 200ms ease-in-out all;
 }
@@ -142,7 +142,8 @@ img.listbutiklogo {
 /* Butik info */
 .butikinfo {
     background-color: #efefef;
-    padding: 2rem;
+    font-size: 1.2rem;
+    line-height: 1.2;
 }
 
 .butiksliste .butikinfo, .listbutiklogo {
@@ -150,9 +151,10 @@ img.listbutiklogo {
 }
 
 h4.butikerhvervnavn {
-    font-size: 2.2rem;
-    margin-bottom: 1rem;
-    font-weight: 500;
+    font-size: 1.8rem;
+    margin-bottom: .5rem;
+    line-height: 1;
+    letter-spacing: -.1px;
 }
 
 .cpt-mailadress {
@@ -172,7 +174,7 @@ h4.butikerhvervnavn {
 
 .aabningstider-box h5 {
     margin-bottom: 0;
-    font-size: 2rem;
+    font-size: 1.5rem;
     border-bottom: 1px solid;
 }
 
@@ -181,7 +183,7 @@ h4.butikerhvervnavn {
 }
 
 .aabningstider-box td {
-    font-size: 1.4rem;
+    font-size: 1rem;
 }
 
 /* Single butik side */
@@ -300,6 +302,19 @@ h4.butikerhvervnavn {
     .centershop-address,
     .centershop-phone {
         font-size: 13px;
+    }
+
+    li.butik-paa-liste {
+        display: flex;
+        width: 100%;
+    }
+    
+    .butikinfo {
+        font-size: 1rem;
+    }
+    
+    .aabningstider-box tr td {
+        font-size: .9rem;
     }
 }
 
