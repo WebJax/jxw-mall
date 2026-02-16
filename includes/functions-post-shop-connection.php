@@ -116,8 +116,12 @@ function jxw_display_connected_shops($post_id = null) {
     foreach ($connected_shops as $shop_id) {
         $shop = get_post($shop_id);
         if ($shop && $shop->post_status === 'publish') {
+            $logo_url = wp_get_attachment_url(get_post_meta($shop_id, 'allround-cpt_logo_id', true)); 
             $shop_url = get_permalink($shop_id);
             $output .= '<a href="' . esc_url($shop_url) . '" class="jxw-shop-pill">';
+            if ($logo_url) {
+                $output .= '<img src="' . esc_url($logo_url) . '" alt="' . esc_attr($shop->post_title) . '">';
+            }
             $output .= esc_html($shop->post_title);
             $output .= '</a>';
         }

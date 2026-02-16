@@ -149,10 +149,11 @@ img.listbutiklogo {
 }
 
 h4.butikerhvervnavn {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     margin-bottom: .5rem;
     line-height: 1;
     letter-spacing: -.1px;
+    hyphens: manual;
 }
 
 .cpt-mailadress {
@@ -187,7 +188,8 @@ h4.butikerhvervnavn {
 /* Single butik side */
 .butiksnavn {
     margin-top: 3rem;
-    font-size: 5rem;
+    font-size: 2.6rem;
+    font-weight: 900;
 }
 
 /* Gutenberg Blocks Styling */

@@ -11,28 +11,37 @@
     padding: 15px 0;
     border-top: 1px solid #e0e0e0;
     border-bottom: 1px solid #e0e0e0;
+
 }
 
 .jxw-shop-pill {
     display: inline-flex;
     align-items: center;
-    padding: 6px 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #ffffff !important;
+    padding: 6px 16px 6px 50px;
+    margin-top: 5px;
+    color: #000 !important;
     text-decoration: none !important;
     border-radius: 20px;
     font-size: 14px;
-    font-weight: 500;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.4;
+    position: relative;
+}
+
+.jxw-shop-pill img {
+    width: 40px;
+    left: 5px;
+    position: absolute;
+    border: 1px solid rgb(240, 240, 240);
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .jxw-shop-pill:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    color: #ffffff !important;
+    color: #000 !important;
 }
 
 .jxw-shop-pill:active {
@@ -55,13 +64,6 @@
 
 .jxw-shop-pill.pink {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-/* Shop icon (optional - add before text) */
-.jxw-shop-pill::before {
-    content: "🏪";
-    margin-right: 6px;
-    font-size: 16px;
 }
 
 /* Related posts section on shop page */
@@ -113,8 +115,9 @@
     }
     
     .jxw-shop-pill {
-        padding: 5px 12px;
+        padding: 5px 12px 5px 50px;
         font-size: 13px;
+    
     }
     
     .jxw-shop-pill::before {

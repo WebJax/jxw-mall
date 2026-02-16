@@ -179,7 +179,7 @@ function dianalund_add_shop_filter_to_archive() {
 // Modificer query for at filtrere
 function dianalund_filter_posts_by_shop($query) {
     if (!is_admin() && $query->is_main_query() && (is_home() || is_archive())) {
-        if (isset($_GET['shop_filter']) && !empty($_GET['shop_filter']))) {
+        if (isset($_GET['shop_filter']) && !empty($_GET['shop_filter'])) {
             $shop_id = intval($_GET['shop_filter']);
             
             $meta_query = array(

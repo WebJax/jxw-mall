@@ -51,3 +51,10 @@
     </div>
     <?php } ?>
   </section>
+  <section class="butik-related-news">
+    <?php
+    if (function_exists('jxw_display_shop_related_posts')) {
+        echo jxw_display_shop_related_posts();
+    }
+    ?>
+  </section>
