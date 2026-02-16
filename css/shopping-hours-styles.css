@@ -363,8 +363,9 @@ span.shopping-hour-hiphen {
 span.shopping-hour-closed-today {
     position: relative;
     color: #000;
-    font-size: 3.2rem;
+    font-size: 1.8rem;
     font-weight: 900;
+
 }
 
 span.shopping-hour-time {
@@ -499,6 +500,8 @@ p.shopping-hour-title {
     text-transform: uppercase;
     font-weight: 600;
     font-size: .85rem;
+    margin-bottom: 0;
+
 }
 
 .openinghours {
@@ -536,10 +539,11 @@ span.shopping-hour-hiphen {
 }
 
 .shopping-hour-extra-text {
-	text-transform: initial;
-	font-size: 1.2rem;
-	line-height: 2.4rem;
-	margin-top: -.5rem
+    text-transform: initial;
+    font-size: 1.2rem;
+    line-height: 2.4rem;
+    margin-top: -.5rem;
+
 }
 
 .shopping-hour-extra-text table {
@@ -551,10 +555,28 @@ span.shopping-hour-hiphen {
     height: 2px!important;
     line-height: 2px;
     text-align: center;
-    font-size: 1.2rem;
+    font-weight: 300;
+    font-size: .9rem;
+
 }
 
 @media (max-width: 768px) {
+    span.shopping-hour-open-hours, span.shopping-hour-closed-hours {
+        font-size: 3rem;
+        line-height: 1rem;    
+    }
+    
+    span.shopping-hour-open-minutes, span.shopping-hour-closed-minutes {
+        font-size: 1.4rem;
+        line-height: 1rem;
+        top: -28px;
+    }
+    
+    span.shopping-hour-hiphen {
+        font-size: 3rem;
+        margin-inline: -1.5rem -.7rem;
+    }
+    
 	.shopping-hour-extra-text {
 	    font-size: 1.8rem;
 	}
@@ -577,10 +599,6 @@ a.sort-tid-butik {
 
 a.sort-tid-butik.aabningstid:hover {
     text-decoration: none;
-}
-
-.shopping-hour-title {
-    margin-bottom: -2.5rem;
 }
 
 .page-template-visbutikslister .openinghours {
