@@ -216,12 +216,12 @@ class CenterShop_Shopping_Hours {
   }
 
   public function shoppinghours_load_frontend_scripts() {
-    wp_enqueue_style( 'centershop_shoppinghours_frontend_css', plugin_dir_url( dirname(__FILE__) ) . 'css/shopping-hours-styles.css', false, '2.0.2' );
+    wp_enqueue_style( 'centershop_shoppinghours_frontend_css', plugin_dir_url( dirname(__FILE__) ) . 'css/shopping-hours-styles.css', false, filemtime(plugin_dir_path( __FILE__ ) . '../css/shopping-hours-styles.css') );
   } 
 
   public function shoppinghours_load_admin_scripts() {
-    wp_enqueue_style( 'centershop_shoppinghours_admin_css', plugin_dir_url( dirname(__FILE__) ) . 'css/shopping-hours-styles.css', false, '2.0.2' );
-    wp_enqueue_script( 'centershop_shoppinghours_admin_script', plugin_dir_url( dirname(__FILE__) ) . 'js/shopping-hours-scripts.js', array('jquery'), '1.0.0', true );
+    wp_enqueue_style( 'centershop_shoppinghours_admin_css', plugin_dir_url( dirname(__FILE__) ) . 'css/shopping-hours-styles.css', false, filemtime(plugin_dir_path( __FILE__ ) . '../css/shopping-hours-styles.css') );
+    wp_enqueue_script( 'centershop_shoppinghours_admin_script', plugin_dir_url( dirname(__FILE__) ) . 'js/shopping-hours-scripts.js', array('jquery'), filemtime(plugin_dir_path( __FILE__ ) . '../js/shopping-hours-scripts.js'), true );
     wp_localize_script( 'centershop_shoppinghours_admin_script', 'shoppinghours_ajax_url', admin_url( 'admin-ajax.php' ) );
   }  
 

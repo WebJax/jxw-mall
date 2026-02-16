@@ -43,7 +43,7 @@ class CenterShop_FB_Shortcodes {
             'centershop-fb-feed',
             CENTERSHOP_PLUGIN_URL . 'css/centershop-fb-feed.css',
             array(),
-            CENTERSHOP_VERSION
+            filemtime(plugin_dir_path(__FILE__) . '../css/centershop-fb-feed.css')
         );
     }
     

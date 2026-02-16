@@ -175,7 +175,7 @@ function jxw_enqueue_shop_pills_styles() {
             'jxw-shop-pills',
             CENTERSHOP_PLUGIN_URL . 'css/shop-pills.css',
             array(),
-            CENTERSHOP_VERSION
+            filemtime(plugin_dir_path(__FILE__) . '../css/shop-pills.css')
         );
     }
 }
