@@ -496,8 +496,8 @@ class CenterShop_FB_Connections {
             return true;
         }
         
-        // Check if user is shop manager for this shop
-        if (CenterShop_Shop_Roles::is_shop_manager($user_id)) {
+        // Check if user has the capability to manage connections and is assigned to this shop
+        if (user_can($user_id, 'centershop_manage_connections') && CenterShop_Shop_Roles::is_shop_manager($user_id)) {
             $user_shop_id = CenterShop_Shop_Roles::get_user_shop_id($user_id);
             return (int)$user_shop_id === (int)$shop_id;
         }
@@ -547,6 +547,7 @@ class CenterShop_FB_Connections {
         
         $platform_name = $connection->connection_type === 'instagram' ? 'Instagram' : 'Facebook';
         $disconnected_by = $user ? $user->display_name : 'Ukendt bruger';
+        $shop_name = $shop ? $shop->post_title : "Butik ID {$connection->shop_id}";
         
         // Email to admin
         $admin_subject = sprintf(
@@ -558,19 +559,40 @@ class CenterShop_FB_Connections {
         $admin_message = sprintf(
             __("En %s forbindelse er blevet fjernet:\n\nButik: %s\n%s side/konto: %s\nFjernet af: %s\nDato: %s\n", 'centershop_txtdomain'),
             $platform_name,
-            $shop->post_title,
+            $shop_name,
             $platform_name,
             $connection->fb_page_name,
             $disconnected_by,
             current_time('mysql')
         );
         
-        wp_mail($admin_email, $admin_subject, $admin_message);
+        $sent = wp_mail($admin_email, $admin_subject, $admin_message);
+        
+        if (!$sent && defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf(
+                'CenterShop: Failed to send disconnect notification to admin %s',
+                $admin_email
+            ));
+        }
         
         // Email to shop owner (if email exists and not disconnected by admin)
         $shop_email = get_post_meta($connection->shop_id, 'butik_payed_mail', true);
         
         if ($shop_email && !user_can($disconnected_by_user_id, 'manage_options')) {
+            // Validate and sanitize email
+            $shop_email = sanitize_email($shop_email);
+            
+            if (!is_email($shop_email)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log(sprintf(
+                        'CenterShop: Invalid shop email address for shop ID %d: %s',
+                        $connection->shop_id,
+                        $shop_email
+                    ));
+                }
+                return;
+            }
+            
             $shop_subject = sprintf(
                 __('[%s] Din %s forbindelse er fjernet', 'centershop_txtdomain'),
                 get_bloginfo('name'),
@@ -585,7 +607,14 @@ class CenterShop_FB_Connections {
                 current_time('mysql')
             );
             
-            wp_mail($shop_email, $shop_subject, $shop_message);
+            $sent = wp_mail($shop_email, $shop_subject, $shop_message);
+            
+            if (!$sent && defined('WP_DEBUG') && WP_DEBUG) {
+                error_log(sprintf(
+                    'CenterShop: Failed to send disconnect notification to shop email %s',
+                    $shop_email
+                ));
+            }
         }
     }
 }
