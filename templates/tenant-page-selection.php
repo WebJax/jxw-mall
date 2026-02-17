@@ -92,6 +92,7 @@
         <p><?php _e('Vi fandt flere Facebook sider du administrerer. Vælg den side du vil forbinde:', 'centershop_txtdomain'); ?></p>
         
         <form method="post" action="" id="page-selection-form">
+            <?php wp_nonce_field('centershop_fb_page_selection_' . $token); ?>
             <input type="hidden" name="shop_id" value="<?php echo esc_attr($shop_id); ?>">
             <input type="hidden" name="token" value="<?php echo esc_attr($token); ?>">
             <input type="hidden" name="transient_key" value="<?php echo esc_attr($transient_key); ?>">
