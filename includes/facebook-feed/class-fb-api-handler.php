@@ -193,7 +193,7 @@ class CenterShop_FB_API_Handler {
      */
     public function get_user_pages($user_access_token) {
         $result = $this->request('me/accounts', array(
-            'fields' => 'id,name,access_token',
+            'fields' => 'id,name,access_token,instagram_business_account',
             'access_token' => $user_access_token
         ));
         
@@ -202,5 +202,77 @@ class CenterShop_FB_API_Handler {
         }
         
         return isset($result['data']) ? $result['data'] : array();
+    }
+    
+    /**
+     * Get Instagram Business Account info
+     */
+    public function get_instagram_account($instagram_account_id, $access_token) {
+        $result = $this->request($instagram_account_id, array(
+            'fields' => 'id,username,name,profile_picture_url',
+            'access_token' => $access_token
+        ));
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Get Instagram media (posts)
+     */
+    public function get_instagram_media($instagram_account_id, $limit = 10, $since = null, $access_token = null) {
+        // Use provided token or fall back to global token
+        $token = $access_token ? $access_token : $this->access_token;
+        
+        if (empty($token)) {
+            return new WP_Error('no_token', __('Ingen access token tilgængelig for denne Instagram konto', 'centershop_txtdomain'));
+        }
+        
+        $params = array(
+            'fields' => 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count',
+            'limit' => $limit,
+            'access_token' => $token
+        );
+        
+        if ($since) {
+            $params['since'] = $since;
+        }
+        
+        $result = $this->request($instagram_account_id . '/media', $params);
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        return isset($result['data']) ? $result['data'] : array();
+    }
+    
+    /**
+     * Refresh access token
+     * Exchanges a valid long-lived token for a new one with extended expiration
+     */
+    public function refresh_access_token($access_token) {
+        $result = $this->request('oauth/access_token', array(
+            'grant_type' => 'fb_exchange_token',
+            'client_id' => get_option('centershop_fb_app_id', ''),
+            'client_secret' => get_option('centershop_fb_app_secret', ''),
+            'fb_exchange_token' => $access_token
+        ));
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        if (!isset($result['access_token'])) {
+            return new WP_Error('no_token', __('Ingen access token i respons', 'centershop_txtdomain'));
+        }
+        
+        return array(
+            'access_token' => $result['access_token'],
+            'expires_in' => $result['expires_in'] ?? null
+        );
     }
 }
