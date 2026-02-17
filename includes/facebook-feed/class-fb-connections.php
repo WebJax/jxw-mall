@@ -111,11 +111,16 @@ class CenterShop_FB_Connections {
     /**
      * Create magic token for a shop
      */
-    public function create_magic_token($shop_id) {
+    public function create_magic_token($shop_id, $user_id = null) {
         global $wpdb;
         
         if (!$shop_id || !get_post($shop_id)) {
             return new WP_Error('invalid_shop', __('Ugyldig butik ID', 'centershop_txtdomain'));
+        }
+        
+        // Check permissions
+        if ($user_id !== null && !$this->user_can_manage_shop($shop_id, $user_id)) {
+            return new WP_Error('permission_denied', __('Du har ikke tilladelse til at generere link for denne butik', 'centershop_txtdomain'));
         }
         
         // Generate cryptographically secure token
@@ -474,5 +479,111 @@ class CenterShop_FB_Connections {
         }
         
         return $status_list;
+    }
+    
+    /**
+     * Check if user can manage shop connections
+     */
+    public function user_can_manage_shop($shop_id, $user_id = null) {
+        if ($user_id === null) {
+            $user_id = get_current_user_id();
+        }
+        
+        // Admins can manage all shops
+        if (user_can($user_id, 'manage_options')) {
+            return true;
+        }
+        
+        // Check if user is shop manager for this shop
+        if (CenterShop_Shop_Roles::is_shop_manager($user_id)) {
+            $user_shop_id = CenterShop_Shop_Roles::get_user_shop_id($user_id);
+            return $user_shop_id == $shop_id;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Disconnect page with notifications
+     */
+    public function disconnect_page_with_notification($connection_id, $user_id = null) {
+        if ($user_id === null) {
+            $user_id = get_current_user_id();
+        }
+        
+        // Get connection details before disconnecting
+        $connection = $this->get_connection($connection_id);
+        if (!$connection) {
+            return new WP_Error('connection_not_found', __('Forbindelse ikke fundet', 'centershop_txtdomain'));
+        }
+        
+        // Check if user has permission
+        if (!$this->user_can_manage_shop($connection->shop_id, $user_id)) {
+            return new WP_Error('permission_denied', __('Du har ikke tilladelse til at fjerne denne forbindelse', 'centershop_txtdomain'));
+        }
+        
+        // Disconnect
+        $result = $this->disconnect_page($connection_id);
+        
+        if ($result === false) {
+            return new WP_Error('disconnect_failed', __('Kunne ikke fjerne forbindelse', 'centershop_txtdomain'));
+        }
+        
+        // Send notifications
+        $this->send_disconnect_notifications($connection, $user_id);
+        
+        return array('success' => true);
+    }
+    
+    /**
+     * Send disconnect notifications
+     */
+    private function send_disconnect_notifications($connection, $disconnected_by_user_id) {
+        $shop = get_post($connection->shop_id);
+        $user = get_userdata($disconnected_by_user_id);
+        $admin_email = get_option('admin_email');
+        
+        $platform_name = $connection->connection_type === 'instagram' ? 'Instagram' : 'Facebook';
+        $disconnected_by = $user ? $user->display_name : 'Ukendt bruger';
+        
+        // Email to admin
+        $admin_subject = sprintf(
+            __('[%s] %s forbindelse fjernet', 'centershop_txtdomain'),
+            get_bloginfo('name'),
+            $platform_name
+        );
+        
+        $admin_message = sprintf(
+            __("En %s forbindelse er blevet fjernet:\n\nButik: %s\n%s side/konto: %s\nFjernet af: %s\nDato: %s\n", 'centershop_txtdomain'),
+            $platform_name,
+            $shop->post_title,
+            $platform_name,
+            $connection->fb_page_name,
+            $disconnected_by,
+            current_time('mysql')
+        );
+        
+        wp_mail($admin_email, $admin_subject, $admin_message);
+        
+        // Email to shop owner (if email exists and not disconnected by admin)
+        $shop_email = get_post_meta($connection->shop_id, 'butik_payed_mail', true);
+        
+        if ($shop_email && !user_can($disconnected_by_user_id, 'manage_options')) {
+            $shop_subject = sprintf(
+                __('[%s] Din %s forbindelse er fjernet', 'centershop_txtdomain'),
+                get_bloginfo('name'),
+                $platform_name
+            );
+            
+            $shop_message = sprintf(
+                __("Din %s forbindelse er blevet fjernet:\n\n%s side/konto: %s\nFjernet: %s\n\nKontakt center administratoren hvis du har spørgsmål.\n", 'centershop_txtdomain'),
+                $platform_name,
+                $platform_name,
+                $connection->fb_page_name,
+                current_time('mysql')
+            );
+            
+            wp_mail($shop_email, $shop_subject, $shop_message);
+        }
     }
 }
