@@ -115,6 +115,7 @@ register_activation_hook(__FILE__, 'centershop_activate');
 function centershop_deactivate() {
     // Clear cron jobs
     wp_clear_scheduled_hook('centershop_fb_import_cron');
+    wp_clear_scheduled_hook('centershop_fb_token_refresh');
 }
 register_deactivation_hook(__FILE__, 'centershop_deactivate');
 

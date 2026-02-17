@@ -333,8 +333,68 @@ class CenterShop_FB_Connections {
      * Refresh token
      */
     public function refresh_token($connection_id) {
-        // This will be implemented when Facebook API token refresh is added
-        return new WP_Error('not_implemented', __('Token refresh ikke implementeret endnu', 'centershop_txtdomain'));
+        global $wpdb;
+        
+        $connection = $this->get_connection($connection_id);
+        if (!$connection) {
+            return new WP_Error('connection_not_found', __('Forbindelse ikke fundet', 'centershop_txtdomain'));
+        }
+        
+        // Get API handler
+        $api = CenterShop_FB_API_Handler::get_instance();
+        
+        // Refresh the token
+        $result = $api->refresh_access_token($connection->page_access_token);
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        // Calculate new expiration date (60 days from now)
+        $expires_date = isset($result['expires_in']) 
+            ? date('Y-m-d H:i:s', time() + $result['expires_in'])
+            : date('Y-m-d H:i:s', strtotime('+60 days'));
+        
+        // Update connection with new token and expiration
+        $updated = $wpdb->update(
+            self::get_connections_table(),
+            array(
+                'page_access_token' => $result['access_token'],
+                'token_expires' => $expires_date
+            ),
+            array('id' => $connection_id),
+            array('%s', '%s'),
+            array('%d')
+        );
+        
+        if ($updated === false) {
+            return new WP_Error('db_error', __('Kunne ikke opdatere token', 'centershop_txtdomain'));
+        }
+        
+        return array(
+            'success' => true,
+            'expires' => $expires_date
+        );
+    }
+    
+    /**
+     * Get connections expiring soon
+     */
+    public function get_expiring_connections($days = 7) {
+        global $wpdb;
+        
+        $table = self::get_connections_table();
+        $threshold_date = date('Y-m-d H:i:s', strtotime("+{$days} days"));
+        
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table 
+             WHERE is_active = 1 
+             AND token_expires IS NOT NULL 
+             AND token_expires <= %s 
+             AND token_expires > NOW()
+             ORDER BY token_expires ASC",
+            $threshold_date
+        ));
     }
     
     /**
