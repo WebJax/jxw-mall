@@ -86,7 +86,7 @@
         
         <p>
             <?php if ($show_retry): ?>
-                <a href="<?php echo esc_url($_SERVER['HTTP_REFERER'] ?? home_url()); ?>" class="btn">
+                <a href="<?php echo home_url('/connect-facebook'); ?>" class="btn">
                     <?php _e('Prøv igen', 'centershop_txtdomain'); ?>
                 </a>
             <?php endif; ?>

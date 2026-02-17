@@ -320,14 +320,6 @@ class CenterShop_FB_Tenant_Auth {
     }
     
     /**
-     * Handle page selection form submission
-     */
-    public function handle_page_selection() {
-        // This would be an AJAX endpoint to handle the page selection form
-        // For simplicity, we're handling it in the callback for now
-    }
-    
-    /**
      * Send notification to admin
      */
     private function send_admin_notification($shop_id, $page_name) {
@@ -363,11 +355,21 @@ class CenterShop_FB_Tenant_Auth {
      * Load template file
      */
     private function load_template($template_name, $args = array()) {
-        extract($args);
-        
         $template_path = CENTERSHOP_PLUGIN_DIR . 'templates/' . $template_name . '.php';
         
         if (file_exists($template_path)) {
+            // Pass variables to template scope explicitly
+            $shop = isset($args['shop']) ? $args['shop'] : null;
+            $oauth_url = isset($args['oauth_url']) ? $args['oauth_url'] : '';
+            $mall_name = isset($args['mall_name']) ? $args['mall_name'] : '';
+            $page_name = isset($args['page_name']) ? $args['page_name'] : '';
+            $error_message = isset($args['error_message']) ? $args['error_message'] : '';
+            $show_retry = isset($args['show_retry']) ? $args['show_retry'] : false;
+            $shop_id = isset($args['shop_id']) ? $args['shop_id'] : 0;
+            $token = isset($args['token']) ? $args['token'] : '';
+            $pages = isset($args['pages']) ? $args['pages'] : array();
+            $transient_key = isset($args['transient_key']) ? $args['transient_key'] : '';
+            
             include $template_path;
         } else {
             // Fallback inline template
@@ -379,7 +381,13 @@ class CenterShop_FB_Tenant_Auth {
      * Render inline template as fallback
      */
     private function render_inline_template($template_name, $args) {
-        extract($args);
+        // Explicit variable assignments instead of extract()
+        $shop = isset($args['shop']) ? $args['shop'] : null;
+        $oauth_url = isset($args['oauth_url']) ? $args['oauth_url'] : '';
+        $mall_name = isset($args['mall_name']) ? $args['mall_name'] : '';
+        $page_name = isset($args['page_name']) ? $args['page_name'] : '';
+        $error_message = isset($args['error_message']) ? $args['error_message'] : '';
+        $show_retry = isset($args['show_retry']) ? $args['show_retry'] : false;
         
         get_header();
         
@@ -412,7 +420,7 @@ class CenterShop_FB_Tenant_Auth {
                     <h1><?php _e('Fejl', 'centershop_txtdomain'); ?></h1>
                     <p style="color: #d63638;"><?php echo esc_html($error_message); ?></p>
                     <?php if ($show_retry): ?>
-                        <p><a href="<?php echo esc_url($_SERVER['HTTP_REFERER'] ?? home_url()); ?>" class="button"><?php _e('Prøv igen', 'centershop_txtdomain'); ?></a></p>
+                        <p><a href="<?php echo home_url('/connect-facebook'); ?>" class="button"><?php _e('Prøv igen', 'centershop_txtdomain'); ?></a></p>
                     <?php endif; ?>
                     <p><a href="<?php echo home_url(); ?>"><?php _e('Gå til hjemmesiden', 'centershop_txtdomain'); ?></a></p>
                 </div>
