@@ -1,0 +1,382 @@
+<?php
+/**
+ * Facebook Feed - Tenant Authentication Handler
+ * 
+ * Handles OAuth flow for tenants to connect their Facebook pages
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class CenterShop_FB_Tenant_Auth {
+    
+    /**
+     * Instance
+     */
+    private static $instance = null;
+    
+    /**
+     * Connections handler
+     */
+    private $connections;
+    
+    /**
+     * API handler
+     */
+    private $api;
+    
+    /**
+     * Get instance
+     */
+    public static function get_instance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        $this->connections = CenterShop_FB_Connections::get_instance();
+        $this->api = CenterShop_FB_API_Handler::get_instance();
+        
+        // Register public endpoints
+        add_action('init', array($this, 'register_endpoints'));
+        add_action('template_redirect', array($this, 'handle_endpoints'));
+    }
+    
+    /**
+     * Register rewrite endpoints
+     */
+    public function register_endpoints() {
+        add_rewrite_rule(
+            '^connect-facebook/?$',
+            'index.php?centershop_fb_connect=landing',
+            'top'
+        );
+        add_rewrite_rule(
+            '^connect-facebook/callback/?$',
+            'index.php?centershop_fb_connect=callback',
+            'top'
+        );
+        
+        add_rewrite_tag('%centershop_fb_connect%', '([^&]+)');
+    }
+    
+    /**
+     * Handle endpoint requests
+     */
+    public function handle_endpoints() {
+        $endpoint = get_query_var('centershop_fb_connect');
+        
+        if (!$endpoint) {
+            return;
+        }
+        
+        // Prevent WordPress from loading normal template
+        remove_action('template_redirect', 'redirect_canonical');
+        
+        switch ($endpoint) {
+            case 'landing':
+                $this->render_landing_page();
+                exit;
+            
+            case 'callback':
+                $this->handle_oauth_callback();
+                exit;
+        }
+    }
+    
+    /**
+     * Render landing page
+     */
+    private function render_landing_page() {
+        $shop_id = isset($_GET['shop']) ? intval($_GET['shop']) : 0;
+        $token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
+        
+        // Validate token
+        $token_data = $this->connections->validate_magic_token($token);
+        
+        if (is_wp_error($token_data)) {
+            $this->render_error_page($token_data->get_error_message());
+            return;
+        }
+        
+        // Verify shop ID matches token
+        if ($token_data->shop_id != $shop_id) {
+            $this->render_error_page(__('Ugyldigt butik ID', 'centershop_txtdomain'));
+            return;
+        }
+        
+        // Get shop details
+        $shop = get_post($shop_id);
+        if (!$shop) {
+            $this->render_error_page(__('Butik ikke fundet', 'centershop_txtdomain'));
+            return;
+        }
+        
+        // Get Facebook App credentials
+        $app_id = get_option('centershop_fb_app_id', '');
+        if (empty($app_id)) {
+            $this->render_error_page(__('Facebook app ikke konfigureret. Kontakt administrator.', 'centershop_txtdomain'));
+            return;
+        }
+        
+        // Build OAuth URL
+        $callback_url = home_url('/connect-facebook/callback');
+        $state = base64_encode(json_encode(array(
+            'shop_id' => $shop_id,
+            'token' => $token
+        )));
+        
+        $oauth_url = 'https://www.facebook.com/v18.0/dialog/oauth?' . http_build_query(array(
+            'client_id' => $app_id,
+            'redirect_uri' => $callback_url,
+            'state' => $state,
+            'scope' => 'pages_show_list,pages_read_engagement,pages_read_user_content'
+        ));
+        
+        // Load template
+        $this->load_template('tenant-connect', array(
+            'shop' => $shop,
+            'oauth_url' => $oauth_url,
+            'mall_name' => get_bloginfo('name')
+        ));
+    }
+    
+    /**
+     * Handle OAuth callback
+     */
+    private function handle_oauth_callback() {
+        // Check for errors
+        if (isset($_GET['error'])) {
+            $error_message = isset($_GET['error_description']) 
+                ? sanitize_text_field($_GET['error_description']) 
+                : __('Facebook godkendelse fejlede', 'centershop_txtdomain');
+            $this->render_error_page($error_message, true);
+            return;
+        }
+        
+        // Get authorization code
+        $code = isset($_GET['code']) ? sanitize_text_field($_GET['code']) : '';
+        if (empty($code)) {
+            $this->render_error_page(__('Ingen authorization code modtaget', 'centershop_txtdomain'));
+            return;
+        }
+        
+        // Decode state
+        $state = isset($_GET['state']) ? json_decode(base64_decode($_GET['state']), true) : array();
+        if (empty($state['shop_id']) || empty($state['token'])) {
+            $this->render_error_page(__('Ugyldig state parameter', 'centershop_txtdomain'));
+            return;
+        }
+        
+        $shop_id = intval($state['shop_id']);
+        $token = sanitize_text_field($state['token']);
+        
+        // Validate token again
+        $token_data = $this->connections->validate_magic_token($token);
+        if (is_wp_error($token_data)) {
+            $this->render_error_page($token_data->get_error_message());
+            return;
+        }
+        
+        // Exchange code for access token
+        $app_id = get_option('centershop_fb_app_id', '');
+        $app_secret = get_option('centershop_fb_app_secret', '');
+        $callback_url = home_url('/connect-facebook/callback');
+        
+        $token_url = 'https://graph.facebook.com/v18.0/oauth/access_token?' . http_build_query(array(
+            'client_id' => $app_id,
+            'client_secret' => $app_secret,
+            'redirect_uri' => $callback_url,
+            'code' => $code
+        ));
+        
+        $response = wp_remote_get($token_url);
+        if (is_wp_error($response)) {
+            $this->render_error_page(__('Kunne ikke hente access token', 'centershop_txtdomain'));
+            return;
+        }
+        
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!isset($body['access_token'])) {
+            $this->render_error_page(__('Ingen access token i respons', 'centershop_txtdomain'));
+            return;
+        }
+        
+        $short_lived_token = $body['access_token'];
+        
+        // Exchange for long-lived token
+        $long_lived_result = $this->api->exchange_for_long_lived_token($short_lived_token);
+        if (is_wp_error($long_lived_result)) {
+            $this->render_error_page($long_lived_result->get_error_message());
+            return;
+        }
+        
+        // Get user's pages
+        $pages_result = $this->api->get_user_pages($long_lived_result['access_token']);
+        if (is_wp_error($pages_result)) {
+            $this->render_error_page($pages_result->get_error_message());
+            return;
+        }
+        
+        if (empty($pages_result)) {
+            $this->render_error_page(__('Ingen Facebook sider fundet. Du skal være administrator af en Facebook Business side.', 'centershop_txtdomain'));
+            return;
+        }
+        
+        // If only one page, auto-select it
+        if (count($pages_result) === 1) {
+            $page = $pages_result[0];
+            $this->save_connection_and_show_success($shop_id, $token, $page);
+            return;
+        }
+        
+        // Show page selection
+        $this->load_template('tenant-page-selection', array(
+            'shop_id' => $shop_id,
+            'token' => $token,
+            'pages' => $pages_result
+        ));
+    }
+    
+    /**
+     * Save connection and show success page
+     */
+    private function save_connection_and_show_success($shop_id, $token, $page_data) {
+        // Save connection
+        $result = $this->connections->save_page_connection($shop_id, array(
+            'page_id' => $page_data['id'],
+            'page_name' => $page_data['name'],
+            'access_token' => $page_data['access_token'],
+            'connection_type' => 'facebook'
+        ));
+        
+        if (is_wp_error($result)) {
+            $this->render_error_page($result->get_error_message());
+            return;
+        }
+        
+        // Mark token as used
+        $this->connections->mark_token_used($token);
+        
+        // Send notification to admin
+        $this->send_admin_notification($shop_id, $page_data['name']);
+        
+        // Show success page
+        $shop = get_post($shop_id);
+        $this->load_template('tenant-success', array(
+            'shop' => $shop,
+            'page_name' => $page_data['name'],
+            'mall_name' => get_bloginfo('name')
+        ));
+    }
+    
+    /**
+     * Handle page selection form submission
+     */
+    public function handle_page_selection() {
+        // This would be an AJAX endpoint to handle the page selection form
+        // For simplicity, we're handling it in the callback for now
+    }
+    
+    /**
+     * Send notification to admin
+     */
+    private function send_admin_notification($shop_id, $page_name) {
+        $shop = get_post($shop_id);
+        $admin_email = get_option('admin_email');
+        
+        $subject = sprintf(
+            __('[%s] Ny Facebook forbindelse', 'centershop_txtdomain'),
+            get_bloginfo('name')
+        );
+        
+        $message = sprintf(
+            __("En butik har forbundet deres Facebook side:\n\nButik: %s\nFacebook side: %s\n\nOpslag vil nu blive importeret automatisk.", 'centershop_txtdomain'),
+            $shop->post_title,
+            $page_name
+        );
+        
+        wp_mail($admin_email, $subject, $message);
+    }
+    
+    /**
+     * Render error page
+     */
+    private function render_error_page($message, $show_retry = false) {
+        $this->load_template('tenant-error', array(
+            'error_message' => $message,
+            'show_retry' => $show_retry,
+            'mall_name' => get_bloginfo('name')
+        ));
+    }
+    
+    /**
+     * Load template file
+     */
+    private function load_template($template_name, $args = array()) {
+        extract($args);
+        
+        $template_path = CENTERSHOP_PLUGIN_DIR . 'templates/' . $template_name . '.php';
+        
+        if (file_exists($template_path)) {
+            include $template_path;
+        } else {
+            // Fallback inline template
+            $this->render_inline_template($template_name, $args);
+        }
+    }
+    
+    /**
+     * Render inline template as fallback
+     */
+    private function render_inline_template($template_name, $args) {
+        extract($args);
+        
+        get_header();
+        
+        switch ($template_name) {
+            case 'tenant-connect':
+                ?>
+                <div class="centershop-tenant-connect" style="max-width: 600px; margin: 50px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h1><?php _e('Forbind din Facebook side', 'centershop_txtdomain'); ?></h1>
+                    <p><?php printf(__('Hej %s! Klik nedenfor for at forbinde din Facebook Business side til %s hjemmeside.', 'centershop_txtdomain'), esc_html($shop->post_title), esc_html($mall_name)); ?></p>
+                    <p><a href="<?php echo esc_url($oauth_url); ?>" class="button button-primary button-large"><?php _e('Forbind Facebook side', 'centershop_txtdomain'); ?></a></p>
+                    <p><small><?php _e('Du kan afbryde forbindelsen når som helst fra dine Facebook indstillinger.', 'centershop_txtdomain'); ?></small></p>
+                </div>
+                <?php
+                break;
+            
+            case 'tenant-success':
+                ?>
+                <div class="centershop-tenant-success" style="max-width: 600px; margin: 50px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h1><?php _e('✓ Forbundet!', 'centershop_txtdomain'); ?></h1>
+                    <p><?php printf(__('Din Facebook side "%s" er nu forbundet til %s.', 'centershop_txtdomain'), esc_html($page_name), esc_html($mall_name)); ?></p>
+                    <p><?php _e('Dine opslag vil automatisk blive vist på hjemmesiden.', 'centershop_txtdomain'); ?></p>
+                    <p><a href="<?php echo home_url(); ?>" class="button button-primary"><?php _e('Gå til hjemmesiden', 'centershop_txtdomain'); ?></a></p>
+                </div>
+                <?php
+                break;
+            
+            case 'tenant-error':
+                ?>
+                <div class="centershop-tenant-error" style="max-width: 600px; margin: 50px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h1><?php _e('Fejl', 'centershop_txtdomain'); ?></h1>
+                    <p style="color: #d63638;"><?php echo esc_html($error_message); ?></p>
+                    <?php if ($show_retry): ?>
+                        <p><a href="<?php echo esc_url($_SERVER['HTTP_REFERER'] ?? home_url()); ?>" class="button"><?php _e('Prøv igen', 'centershop_txtdomain'); ?></a></p>
+                    <?php endif; ?>
+                    <p><a href="<?php echo home_url(); ?>"><?php _e('Gå til hjemmesiden', 'centershop_txtdomain'); ?></a></p>
+                </div>
+                <?php
+                break;
+        }
+        
+        get_footer();
+    }
+}

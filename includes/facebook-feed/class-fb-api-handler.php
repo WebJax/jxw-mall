@@ -100,7 +100,7 @@ class CenterShop_FB_API_Handler {
         }
         
         $params = array(
-            'fields' => 'id,message,created_time,permalink_url,full_picture,attachments{media_type,media,url}',
+            'fields' => 'id,message,created_time,permalink_url,full_picture,attachments{media_type,media,url},likes.summary(true),comments.summary(true),shares',
             'limit' => $limit,
             'access_token' => $token
         );
@@ -146,5 +146,57 @@ class CenterShop_FB_API_Handler {
     public function set_access_token($token) {
         $this->access_token = $token;
         update_option('centershop_fb_access_token', $token);
+    }
+    
+    /**
+     * Exchange short-lived token for long-lived token
+     * Then get page access token from long-lived user token
+     */
+    public function exchange_for_long_lived_token($short_lived_token) {
+        $app_id = get_option('centershop_fb_app_id', '');
+        $app_secret = get_option('centershop_fb_app_secret', '');
+        
+        if (empty($app_id) || empty($app_secret)) {
+            return new WP_Error('no_credentials', __('Facebook App ID og Secret ikke konfigureret', 'centershop_txtdomain'));
+        }
+        
+        // Exchange for long-lived user token (60 days)
+        $params = array(
+            'grant_type' => 'fb_exchange_token',
+            'client_id' => $app_id,
+            'client_secret' => $app_secret,
+            'fb_exchange_token' => $short_lived_token
+        );
+        
+        $result = $this->request('oauth/access_token', $params);
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        if (!isset($result['access_token'])) {
+            return new WP_Error('no_token', __('Ingen access token i respons', 'centershop_txtdomain'));
+        }
+        
+        return array(
+            'access_token' => $result['access_token'],
+            'expires_in' => $result['expires_in'] ?? null
+        );
+    }
+    
+    /**
+     * Get user's managed pages
+     */
+    public function get_user_pages($user_access_token) {
+        $result = $this->request('me/accounts', array(
+            'fields' => 'id,name,access_token',
+            'access_token' => $user_access_token
+        ));
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        return isset($result['data']) ? $result['data'] : array();
     }
 }

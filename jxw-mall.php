@@ -55,6 +55,7 @@ function centershop_load_modules() {
     
     // Facebook Feed modules
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-database.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-connections.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-post-type.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-api-handler.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-importer.php';
@@ -62,6 +63,7 @@ function centershop_load_modules() {
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-settings.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-posts-list.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-shortcodes.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-tenant-auth.php';
     
     // Post-Shop connection module
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
@@ -74,12 +76,14 @@ function centershop_load_modules() {
     CenterShop_Planner_Calendar::get_instance();
     CenterShop_Planner_Templates::get_instance();
     CenterShop_FB_Database::get_instance();
+    CenterShop_FB_Connections::get_instance();
     CenterShop_FB_Post_Type::get_instance();
     CenterShop_FB_API_Handler::get_instance();
     CenterShop_FB_Importer::get_instance();
     CenterShop_FB_Cron::get_instance();
     CenterShop_FB_Settings::get_instance();
     CenterShop_FB_Posts_List::get_instance();
+    CenterShop_FB_Tenant_Auth::get_instance();
 }
 add_action('plugins_loaded', 'centershop_load_modules');
 
@@ -90,6 +94,13 @@ function centershop_activate() {
     // Create Facebook posts database table
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-database.php';
     CenterShop_FB_Database::create_table();
+    
+    // Create Facebook connections tables
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-connections.php';
+    CenterShop_FB_Connections::create_tables();
+    
+    // Flush rewrite rules for new endpoints
+    flush_rewrite_rules();
     
     // Setup cron jobs
     if (!wp_next_scheduled('centershop_fb_import_cron')) {

@@ -66,7 +66,10 @@ class CenterShop_FB_Importer {
         );
         
         foreach ($pages as $page) {
-            $page_result = $this->import_from_page($page['page_id'], $page['shop_id'] ?? null);
+            $page_token = isset($page['page_token']) ? $page['page_token'] : null;
+            $connection_id = isset($page['connection_id']) ? $page['connection_id'] : null;
+            
+            $page_result = $this->import_from_page($page['page_id'], $page['shop_id'] ?? null, $page_token, $connection_id);
             
             $results['pages'][$page['page_id']] = $page_result;
             
@@ -87,13 +90,15 @@ class CenterShop_FB_Importer {
     /**
      * Import posts from single page
      */
-    public function import_from_page($page_id, $shop_id = null) {
+    public function import_from_page($page_id, $shop_id = null, $page_token = null, $connection_id = null) {
         $days_to_fetch = get_option('centershop_fb_days_to_fetch', 7);
         $since = date('Y-m-d', strtotime("-{$days_to_fetch} days"));
         
-        // Get page-specific token
-        $page_tokens = get_option('centershop_fb_page_tokens', array());
-        $page_token = isset($page_tokens[$page_id]) ? $page_tokens[$page_id] : null;
+        // Use provided page token, or fall back to old page tokens config
+        if (!$page_token) {
+            $page_tokens = get_option('centershop_fb_page_tokens', array());
+            $page_token = isset($page_tokens[$page_id]) ? $page_tokens[$page_id] : null;
+        }
         
         $posts = $this->api->get_page_posts($page_id, 25, $since, $page_token);
         
@@ -128,6 +133,12 @@ class CenterShop_FB_Importer {
             }
         }
         
+        // Update last sync time for connection
+        if ($connection_id) {
+            $connections_handler = CenterShop_FB_Connections::get_instance();
+            $connections_handler->update_last_sync($connection_id);
+        }
+        
         return array(
             'success' => true,
             'imported' => $imported,
@@ -139,25 +150,43 @@ class CenterShop_FB_Importer {
      * Get configured pages
      */
     private function get_configured_pages() {
-        $pages_config = get_option('centershop_fb_pages', '');
-        
-        if (empty($pages_config)) {
-            return array();
-        }
+        // First check for new connections system
+        $connections_handler = CenterShop_FB_Connections::get_instance();
+        $connections = $connections_handler->get_all_active_connections();
         
         $pages = array();
-        $lines = explode("\n", $pages_config);
         
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-            
-            // Format: page_id or page_id:shop_id
-            $parts = explode(':', $line);
+        // Convert connections to pages array format
+        foreach ($connections as $connection) {
             $pages[] = array(
-                'page_id' => trim($parts[0]),
-                'shop_id' => isset($parts[1]) ? intval(trim($parts[1])) : null
+                'page_id' => $connection->fb_page_id,
+                'shop_id' => $connection->shop_id,
+                'page_token' => $connection->page_access_token,
+                'connection_id' => $connection->id
             );
+        }
+        
+        // Fallback to old config format if no connections
+        if (empty($pages)) {
+            $pages_config = get_option('centershop_fb_pages', '');
+            
+            if (empty($pages_config)) {
+                return array();
+            }
+            
+            $lines = explode("\n", $pages_config);
+            
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                
+                // Format: page_id or page_id:shop_id
+                $parts = explode(':', $line);
+                $pages[] = array(
+                    'page_id' => trim($parts[0]),
+                    'shop_id' => isset($parts[1]) ? intval(trim($parts[1])) : null
+                );
+            }
         }
         
         return $pages;

@@ -73,6 +73,9 @@ class CenterShop_FB_Database {
             media_type varchar(50) DEFAULT NULL,
             media_url varchar(500) DEFAULT NULL,
             attachments_data longtext DEFAULT NULL,
+            likes_count int DEFAULT 0,
+            comments_count int DEFAULT 0,
+            shares_count int DEFAULT 0,
             PRIMARY KEY  (id),
             UNIQUE KEY fb_post_id (fb_post_id),
             KEY fb_page_id (fb_page_id),
@@ -108,6 +111,14 @@ class CenterShop_FB_Database {
             $media_url = $attachment['url'] ?? $attachment['media']['image']['src'] ?? null;
         }
         
+        // Extract public engagement counts
+        $likes_count = isset($fb_data['likes']['summary']['total_count']) 
+            ? intval($fb_data['likes']['summary']['total_count']) : 0;
+        $comments_count = isset($fb_data['comments']['summary']['total_count']) 
+            ? intval($fb_data['comments']['summary']['total_count']) : 0;
+        $shares_count = isset($fb_data['shares']['count']) 
+            ? intval($fb_data['shares']['count']) : 0;
+        
         $data = array(
             'fb_post_id' => sanitize_text_field($fb_data['id']),
             'fb_page_id' => sanitize_text_field($fb_page_id),
@@ -119,13 +130,16 @@ class CenterShop_FB_Database {
             'media_type' => $media_type ? sanitize_text_field($media_type) : null,
             'media_url' => $media_url ? esc_url_raw($media_url) : null,
             'attachments_data' => $attachments_json,
+            'likes_count' => $likes_count,
+            'comments_count' => $comments_count,
+            'shares_count' => $shares_count,
             'imported_time' => current_time('mysql')
         );
         
         $result = $wpdb->insert(
             self::get_table_name(),
             $data,
-            array('%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+            array('%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s')
         );
         
         return $result !== false ? $wpdb->insert_id : false;
