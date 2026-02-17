@@ -259,6 +259,14 @@ class CenterShop_FB_Tenant_Auth {
                         'type' => 'instagram',
                         'username' => $ig_info['username'] ?? null
                     );
+                } elseif (defined('WP_DEBUG') && WP_DEBUG) {
+                    // Log Instagram account fetch failures for debugging
+                    error_log(sprintf(
+                        'CenterShop: Failed to fetch Instagram account %s: %s',
+                        $ig_account_id,
+                        $ig_info->get_error_message()
+                    ));
+                }
                 }
             }
         }
