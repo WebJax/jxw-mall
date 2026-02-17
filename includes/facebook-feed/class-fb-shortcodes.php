@@ -153,16 +153,22 @@ class CenterShop_FB_Shortcodes {
                     <?php echo nl2br(esc_html($content)); ?>
                 </div>
                 
-                <?php if ($db_post && ($db_post->likes_count > 0 || $db_post->comments_count > 0 || $db_post->shares_count > 0)): ?>
+                <?php
+                $likes_count    = ($db_post && isset($db_post->likes_count)) ? (int) $db_post->likes_count : 0;
+                $comments_count = ($db_post && isset($db_post->comments_count)) ? (int) $db_post->comments_count : 0;
+                $shares_count   = ($db_post && isset($db_post->shares_count)) ? (int) $db_post->shares_count : 0;
+                ?>
+                
+                <?php if ($likes_count > 0 || $comments_count > 0 || $shares_count > 0): ?>
                     <div class="centershop-fb-engagement">
-                        <?php if ($db_post->likes_count > 0): ?>
-                            <span class="centershop-fb-likes">👍 <?php echo number_format($db_post->likes_count); ?></span>
+                        <?php if ($likes_count > 0): ?>
+                            <span class="centershop-fb-likes">👍 <?php echo number_format($likes_count); ?></span>
                         <?php endif; ?>
-                        <?php if ($db_post->comments_count > 0): ?>
-                            <span class="centershop-fb-comments">💬 <?php echo number_format($db_post->comments_count); ?></span>
+                        <?php if ($comments_count > 0): ?>
+                            <span class="centershop-fb-comments">💬 <?php echo number_format($comments_count); ?></span>
                         <?php endif; ?>
-                        <?php if ($db_post->shares_count > 0): ?>
-                            <span class="centershop-fb-shares">↗️ <?php echo number_format($db_post->shares_count); ?></span>
+                        <?php if ($shares_count > 0): ?>
+                            <span class="centershop-fb-shares">↗️ <?php echo number_format($shares_count); ?></span>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
