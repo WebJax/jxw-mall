@@ -38,6 +38,11 @@ class CenterShop_FB_Settings {
         add_action('wp_ajax_centershop_fb_get_user_pages', array($this, 'ajax_fb_get_user_pages'));
         add_action('wp_ajax_centershop_fb_exchange_token', array($this, 'ajax_fb_exchange_token'));
         add_action('wp_ajax_centershop_fb_save_pages', array($this, 'ajax_fb_save_pages'));
+        
+        // Tenant connection AJAX handlers
+        add_action('wp_ajax_centershop_fb_generate_magic_link', array($this, 'ajax_generate_magic_link'));
+        add_action('wp_ajax_centershop_fb_send_connection_email', array($this, 'ajax_send_connection_email'));
+        add_action('wp_ajax_centershop_fb_disconnect_shop', array($this, 'ajax_disconnect_shop'));
     }
     
     /**
@@ -86,6 +91,23 @@ class CenterShop_FB_Settings {
         $last_import = get_option('centershop_fb_last_import', '');
         
         ?>
+        <style>
+        #centershop-fb-magic-link-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #centershop-fb-magic-link-modal > div {
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+        </style>
         <div class="wrap centershop-fb-settings">
             <h1><?php _e('Facebook Feed Indstillinger', 'centershop_txtdomain'); ?></h1>
             
@@ -142,6 +164,124 @@ class CenterShop_FB_Settings {
                     </button>
                     <span id="centershop-fb-status-message"></span>
                 </p>
+            </div>
+            
+            <!-- Tenant Connections section -->
+            <div class="centershop-card">
+                <h2><?php _e('Butiksforbindelser', 'centershop_txtdomain'); ?></h2>
+                
+                <p><?php _e('Send forbindelseslinks til butikkerne så de selv kan forbinde deres Facebook sider.', 'centershop_txtdomain'); ?></p>
+                
+                <?php 
+                $connections_handler = CenterShop_FB_Connections::get_instance();
+                $shops_status = $connections_handler->get_all_shops_status();
+                ?>
+                
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th><?php _e('Butik', 'centershop_txtdomain'); ?></th>
+                            <th><?php _e('Status', 'centershop_txtdomain'); ?></th>
+                            <th><?php _e('Facebook Side', 'centershop_txtdomain'); ?></th>
+                            <th><?php _e('Sidst synkroniseret', 'centershop_txtdomain'); ?></th>
+                            <th><?php _e('Handlinger', 'centershop_txtdomain'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($shops_status)): ?>
+                            <tr>
+                                <td colspan="5"><?php _e('Ingen butikker fundet', 'centershop_txtdomain'); ?></td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($shops_status as $shop_status): ?>
+                                <tr>
+                                    <td><strong><?php echo esc_html($shop_status['shop_name']); ?></strong></td>
+                                    <td>
+                                        <?php if ($shop_status['connected']): ?>
+                                            <span style="color:#46b450;">● <?php _e('Forbundet', 'centershop_txtdomain'); ?></span>
+                                        <?php else: ?>
+                                            <span style="color:#dc3232;">○ <?php _e('Ikke forbundet', 'centershop_txtdomain'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        if (!empty($shop_status['connections'])) {
+                                            foreach ($shop_status['connections'] as $conn) {
+                                                echo esc_html($conn->fb_page_name ?: $conn->fb_page_id);
+                                                if (count($shop_status['connections']) > 1) {
+                                                    echo '<br>';
+                                                }
+                                            }
+                                        } else {
+                                            echo '<em>—</em>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        if (!empty($shop_status['connections'])) {
+                                            foreach ($shop_status['connections'] as $conn) {
+                                                if ($conn->last_sync) {
+                                                    echo esc_html(date_i18n('j. M Y H:i', strtotime($conn->last_sync)));
+                                                } else {
+                                                    echo '<em>' . __('Aldrig', 'centershop_txtdomain') . '</em>';
+                                                }
+                                                if (count($shop_status['connections']) > 1) {
+                                                    echo '<br>';
+                                                }
+                                            }
+                                        } else {
+                                            echo '<em>—</em>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($shop_status['connected']): ?>
+                                            <?php foreach ($shop_status['connections'] as $conn): ?>
+                                                <button type="button" class="button button-small centershop-fb-disconnect" 
+                                                        data-connection-id="<?php echo esc_attr($conn->id); ?>"
+                                                        data-shop-name="<?php echo esc_attr($shop_status['shop_name']); ?>">
+                                                    <?php _e('Afbryd', 'centershop_txtdomain'); ?>
+                                                </button>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <button type="button" class="button button-primary centershop-fb-generate-link" 
+                                                    data-shop-id="<?php echo esc_attr($shop_status['shop_id']); ?>"
+                                                    data-shop-name="<?php echo esc_attr($shop_status['shop_name']); ?>">
+                                                <?php _e('Generer Link', 'centershop_txtdomain'); ?>
+                                            </button>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+                
+                <!-- Magic link modal -->
+                <div id="centershop-fb-magic-link-modal" style="display:none;">
+                    <div style="background:#fff;padding:20px;border-radius:8px;max-width:600px;margin:50px auto;">
+                        <h3><?php _e('Forbindelses Link', 'centershop_txtdomain'); ?></h3>
+                        <p id="centershop-fb-link-shop-name"></p>
+                        <p>
+                            <input type="text" id="centershop-fb-magic-link-input" readonly style="width:100%;padding:8px;font-family:monospace;" />
+                        </p>
+                        <p>
+                            <button type="button" class="button button-primary" id="centershop-fb-copy-link">
+                                <?php _e('Kopier Link', 'centershop_txtdomain'); ?>
+                            </button>
+                            <button type="button" class="button" id="centershop-fb-send-email">
+                                <?php _e('Send Email', 'centershop_txtdomain'); ?>
+                            </button>
+                            <button type="button" class="button" id="centershop-fb-close-modal">
+                                <?php _e('Luk', 'centershop_txtdomain'); ?>
+                            </button>
+                        </p>
+                        <p class="description">
+                            <?php _e('Linket udløber om 7 dage og kan kun bruges én gang.', 'centershop_txtdomain'); ?>
+                        </p>
+                    </div>
+                </div>
             </div>
             
             <form method="post" action="">
@@ -674,6 +814,101 @@ class CenterShop_FB_Settings {
                     }
                 });
             });
+            
+            // Tenant connection handlers
+            var currentShopId = null;
+            var currentMagicLink = null;
+            
+            // Generate magic link
+            $('.centershop-fb-generate-link').on('click', function() {
+                var $btn = $(this);
+                var shopId = $btn.data('shop-id');
+                var shopName = $btn.data('shop-name');
+                
+                $btn.prop('disabled', true).text('Genererer...');
+                
+                $.post(ajaxurl, {
+                    action: 'centershop_fb_generate_magic_link',
+                    nonce: '<?php echo wp_create_nonce('centershop_fb_nonce'); ?>',
+                    shop_id: shopId
+                }, function(response) {
+                    $btn.prop('disabled', false).text('<?php _e('Generer Link', 'centershop_txtdomain'); ?>');
+                    
+                    if (response.success) {
+                        currentShopId = shopId;
+                        currentMagicLink = response.data.link;
+                        $('#centershop-fb-link-shop-name').text('Link til: ' + shopName);
+                        $('#centershop-fb-magic-link-input').val(response.data.link);
+                        $('#centershop-fb-magic-link-modal').show();
+                    } else {
+                        alert('Fejl: ' + response.data.message);
+                    }
+                });
+            });
+            
+            // Copy link to clipboard
+            $('#centershop-fb-copy-link').on('click', function() {
+                var $input = $('#centershop-fb-magic-link-input');
+                $input.select();
+                document.execCommand('copy');
+                $(this).text('✓ Kopieret!');
+                setTimeout(function() {
+                    $('#centershop-fb-copy-link').text('<?php _e('Kopier Link', 'centershop_txtdomain'); ?>');
+                }, 2000);
+            });
+            
+            // Send email
+            $('#centershop-fb-send-email').on('click', function() {
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('Sender...');
+                
+                $.post(ajaxurl, {
+                    action: 'centershop_fb_send_connection_email',
+                    nonce: '<?php echo wp_create_nonce('centershop_fb_nonce'); ?>',
+                    shop_id: currentShopId,
+                    magic_link: currentMagicLink
+                }, function(response) {
+                    $btn.prop('disabled', false).text('<?php _e('Send Email', 'centershop_txtdomain'); ?>');
+                    
+                    if (response.success) {
+                        alert('✓ ' + response.data.message);
+                    } else {
+                        alert('Fejl: ' + response.data.message);
+                    }
+                });
+            });
+            
+            // Close modal
+            $('#centershop-fb-close-modal').on('click', function() {
+                $('#centershop-fb-magic-link-modal').hide();
+            });
+            
+            // Disconnect shop
+            $('.centershop-fb-disconnect').on('click', function() {
+                var $btn = $(this);
+                var connectionId = $btn.data('connection-id');
+                var shopName = $btn.data('shop-name');
+                
+                if (!confirm('Er du sikker på at du vil afbryde forbindelsen for ' + shopName + '?')) {
+                    return;
+                }
+                
+                $btn.prop('disabled', true).text('Afbryder...');
+                
+                $.post(ajaxurl, {
+                    action: 'centershop_fb_disconnect_shop',
+                    nonce: '<?php echo wp_create_nonce('centershop_fb_nonce'); ?>',
+                    connection_id: connectionId
+                }, function(response) {
+                    if (response.success) {
+                        alert('✓ ' + response.data.message);
+                        location.reload();
+                    } else {
+                        $btn.prop('disabled', false).text('<?php _e('Afbryd', 'centershop_txtdomain'); ?>');
+                        alert('Fejl: ' + response.data.message);
+                    }
+                });
+            });
         });
         </script>
         <?php
@@ -1075,5 +1310,113 @@ class CenterShop_FB_Settings {
                 count($page_list)
             )
         ));
+    }
+    
+    /**
+     * AJAX: Generate magic link for shop
+     */
+    public function ajax_generate_magic_link() {
+        check_ajax_referer('centershop_fb_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Ingen tilladelse', 'centershop_txtdomain')));
+        }
+        
+        $shop_id = isset($_POST['shop_id']) ? intval($_POST['shop_id']) : 0;
+        
+        if (!$shop_id) {
+            wp_send_json_error(array('message' => __('Mangler butik ID', 'centershop_txtdomain')));
+        }
+        
+        $connections = CenterShop_FB_Connections::get_instance();
+        $result = $connections->create_magic_token($shop_id);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+        
+        wp_send_json_success(array(
+            'link' => $result['link'],
+            'token' => $result['token'],
+            'expires' => date_i18n('j. F Y H:i', strtotime($result['expires_date']))
+        ));
+    }
+    
+    /**
+     * AJAX: Send connection email to shop
+     */
+    public function ajax_send_connection_email() {
+        check_ajax_referer('centershop_fb_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Ingen tilladelse', 'centershop_txtdomain')));
+        }
+        
+        $shop_id = isset($_POST['shop_id']) ? intval($_POST['shop_id']) : 0;
+        $magic_link = isset($_POST['magic_link']) ? esc_url_raw($_POST['magic_link']) : '';
+        
+        if (!$shop_id || !$magic_link) {
+            wp_send_json_error(array('message' => __('Mangler data', 'centershop_txtdomain')));
+        }
+        
+        $shop = get_post($shop_id);
+        if (!$shop) {
+            wp_send_json_error(array('message' => __('Butik ikke fundet', 'centershop_txtdomain')));
+        }
+        
+        // Get shop email from custom field
+        $shop_email = get_post_meta($shop_id, 'butik_payed_mail', true);
+        
+        if (empty($shop_email)) {
+            wp_send_json_error(array('message' => __('Ingen email adresse for denne butik', 'centershop_txtdomain')));
+        }
+        
+        $mall_name = get_bloginfo('name');
+        $shop_name = $shop->post_title;
+        
+        $subject = sprintf(__('Forbind din Facebook til %s hjemmeside', 'centershop_txtdomain'), $mall_name);
+        
+        $message = sprintf(
+            __("Hej %s,\n\nVi vil gerne fremvise dine Facebook og Instagram opslag på vores hjemmeside for at hjælpe med at promovere din butik!\n\nKlik på linket nedenfor for at forbinde din side (tager 2 minutter):\n%s\n\nDette er helt valgfrit og du kan afbryde forbindelsen når som helst.\n\nSpørgsmål? Svar på denne email.\n\nMed venlig hilsen,\n%s", 'centershop_txtdomain'),
+            $shop_name,
+            $magic_link,
+            $mall_name
+        );
+        
+        $headers = array('Content-Type: text/plain; charset=UTF-8');
+        
+        $sent = wp_mail($shop_email, $subject, $message, $headers);
+        
+        if ($sent) {
+            wp_send_json_success(array('message' => sprintf(__('Email sendt til %s', 'centershop_txtdomain'), $shop_email)));
+        } else {
+            wp_send_json_error(array('message' => __('Kunne ikke sende email', 'centershop_txtdomain')));
+        }
+    }
+    
+    /**
+     * AJAX: Disconnect shop from Facebook
+     */
+    public function ajax_disconnect_shop() {
+        check_ajax_referer('centershop_fb_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Ingen tilladelse', 'centershop_txtdomain')));
+        }
+        
+        $connection_id = isset($_POST['connection_id']) ? intval($_POST['connection_id']) : 0;
+        
+        if (!$connection_id) {
+            wp_send_json_error(array('message' => __('Mangler forbindelse ID', 'centershop_txtdomain')));
+        }
+        
+        $connections = CenterShop_FB_Connections::get_instance();
+        $result = $connections->disconnect_page($connection_id);
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Kunne ikke afbryde forbindelse', 'centershop_txtdomain')));
+        }
+        
+        wp_send_json_success(array('message' => __('Forbindelse afbrudt', 'centershop_txtdomain')));
     }
 }
