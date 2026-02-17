@@ -234,21 +234,34 @@ class CenterShop_FB_Tenant_Auth {
             $this->render_error_page(__('Ingen Facebook sider fundet. Du skal være administrator af en Facebook Business side.', 'centershop_txtdomain'));
             return;
         }
+
+        // Derive effective shop ID from validated token data to prevent tampering
+        if (isset($token_data) && isset($token_data->shop_id)) {
+            // If both client-provided and token-derived shop IDs exist, ensure they match
+            if (isset($shop_id) && (string) $shop_id !== (string) $token_data->shop_id) {
+                $this->render_error_page(__('Ugyldig forespørgsel: butik-id matcher ikke godkendt token.', 'centershop_txtdomain'));
+                return;
+            }
+            $effective_shop_id = (int) $token_data->shop_id;
+        } else {
+            // Fallback to existing shop_id if token data is unavailable
+            $effective_shop_id = isset($shop_id) ? (int) $shop_id : 0;
+        }
         
         // If only one page, auto-select it
         if (count($pages_result) === 1) {
             $page = $pages_result[0];
-            $this->save_connection_and_show_success($shop_id, $token, $page);
+            $this->save_connection_and_show_success($effective_shop_id, $token, $page);
             return;
         }
         
         // Store pages in transient for page selection form
-        $transient_key = 'centershop_fb_pages_' . $shop_id . '_' . substr($token, 0, 16);
+        $transient_key = 'centershop_fb_pages_' . $effective_shop_id . '_' . substr($token, 0, 16);
         set_transient($transient_key, $pages_result, HOUR_IN_SECONDS);
         
         // Show page selection
         $this->load_template('tenant-page-selection', array(
-            'shop_id' => $shop_id,
+            'shop_id' => $effective_shop_id,
             'token' => $token,
             'pages' => $pages_result,
             'transient_key' => $transient_key
