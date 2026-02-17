@@ -152,7 +152,11 @@ class CenterShop_FB_Tenant_Auth {
      */
     private function handle_oauth_callback() {
         // Check if this is a page selection form submission
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_page'])) {
+        $request_method = isset( $_SERVER['REQUEST_METHOD'] )
+            ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) )
+            : '';
+
+        if ( 'POST' === $request_method && isset( $_POST['selected_page'] ) ) {
             $this->handle_page_selection_submission();
             return;
         }
