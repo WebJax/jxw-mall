@@ -150,7 +150,10 @@ class CenterShop_FB_API_Handler {
     
     /**
      * Exchange short-lived token for long-lived token
-     * Then get page access token from long-lived user token
+     * 
+     * This exchanges the short-lived user access token (1-2 hours) for a long-lived
+     * user token (60 days). Page access tokens obtained from the long-lived user token
+     * do not expire as long as the user remains an admin of the page.
      */
     public function exchange_for_long_lived_token($short_lived_token) {
         $app_id = get_option('centershop_fb_app_id', '');
@@ -160,7 +163,8 @@ class CenterShop_FB_API_Handler {
             return new WP_Error('no_credentials', __('Facebook App ID og Secret ikke konfigureret', 'centershop_txtdomain'));
         }
         
-        // Exchange for long-lived user token (60 days)
+        // Exchange for long-lived user token (valid for 60 days)
+        // Page tokens obtained from this will not expire
         $params = array(
             'grant_type' => 'fb_exchange_token',
             'client_id' => $app_id,
