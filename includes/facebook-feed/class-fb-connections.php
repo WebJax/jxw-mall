@@ -273,14 +273,19 @@ class CenterShop_FB_Connections {
         
         $table = self::get_connections_table();
         
-        $where = $wpdb->prepare("shop_id = %d", $shop_id);
         if ($active_only) {
-            $where .= " AND is_active = 1";
+            $sql = $wpdb->prepare(
+                "SELECT * FROM $table WHERE shop_id = %d AND is_active = 1 ORDER BY connected_date DESC",
+                $shop_id
+            );
+        } else {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM $table WHERE shop_id = %d ORDER BY connected_date DESC",
+                $shop_id
+            );
         }
         
-        return $wpdb->get_results(
-            "SELECT * FROM $table WHERE $where ORDER BY connected_date DESC"
-        );
+        return $wpdb->get_results($sql);
     }
     
     /**
