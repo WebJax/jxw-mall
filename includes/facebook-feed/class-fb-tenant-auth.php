@@ -136,7 +136,7 @@ class CenterShop_FB_Tenant_Auth {
             'client_id' => $app_id,
             'redirect_uri' => $callback_url,
             'state' => $state,
-            'scope' => 'pages_show_list,pages_read_engagement,pages_read_user_content'
+            'scope' => 'pages_show_list,pages_read_engagement,pages_read_user_content,instagram_basic,instagram_manage_insights,instagram_content_publish'
         ));
         
         // Load template
@@ -234,8 +234,37 @@ class CenterShop_FB_Tenant_Auth {
             return;
         }
         
-        if (empty($pages_result)) {
-            $this->render_error_page(__('Ingen Facebook sider fundet. Du skal være administrator af en Facebook Business side.', 'centershop_txtdomain'));
+        // Collect all available accounts (Facebook Pages and Instagram Business Accounts)
+        $available_accounts = array();
+        
+        foreach ($pages_result as $page) {
+            // Add Facebook page
+            $available_accounts[] = array(
+                'id' => $page['id'],
+                'name' => $page['name'],
+                'access_token' => $page['access_token'],
+                'type' => 'facebook'
+            );
+            
+            // Check if this page has an Instagram Business Account
+            if (isset($page['instagram_business_account']['id'])) {
+                $ig_account_id = $page['instagram_business_account']['id'];
+                $ig_info = $this->api->get_instagram_account($ig_account_id, $page['access_token']);
+                
+                if (!is_wp_error($ig_info)) {
+                    $available_accounts[] = array(
+                        'id' => $ig_account_id,
+                        'name' => '@' . ($ig_info['username'] ?? $ig_info['name'] ?? 'Instagram'),
+                        'access_token' => $page['access_token'],
+                        'type' => 'instagram',
+                        'username' => $ig_info['username'] ?? null
+                    );
+                }
+            }
+        }
+        
+        if (empty($available_accounts)) {
+            $this->render_error_page(__('Ingen Facebook sider eller Instagram konti fundet. Du skal være administrator af en Facebook Business side eller have en forbundet Instagram Business konto.', 'centershop_txtdomain'));
             return;
         }
 
@@ -252,22 +281,22 @@ class CenterShop_FB_Tenant_Auth {
             $effective_shop_id = isset($shop_id) ? (int) $shop_id : 0;
         }
         
-        // If only one page, auto-select it
-        if (count($pages_result) === 1) {
-            $page = $pages_result[0];
-            $this->save_connection_and_show_success($effective_shop_id, $token, $page);
+        // If only one account, auto-select it
+        if (count($available_accounts) === 1) {
+            $account = $available_accounts[0];
+            $this->save_connection_and_show_success($effective_shop_id, $token, $account);
             return;
         }
         
-        // Store pages in transient for page selection form
+        // Store accounts in transient for page selection form
         $transient_key = 'centershop_fb_pages_' . $effective_shop_id . '_' . hash('sha256', $token);
-        set_transient($transient_key, $pages_result, HOUR_IN_SECONDS);
+        set_transient($transient_key, $available_accounts, HOUR_IN_SECONDS);
         
         // Show page selection
         $this->load_template('tenant-page-selection', array(
             'shop_id' => $effective_shop_id,
             'token' => $token,
-            'pages' => $pages_result,
+            'pages' => $available_accounts,
             'transient_key' => $transient_key
         ));
     }
@@ -324,12 +353,15 @@ class CenterShop_FB_Tenant_Auth {
      * Save connection and show success page
      */
     private function save_connection_and_show_success($shop_id, $token, $page_data) {
+        // Determine connection type from page_data
+        $connection_type = isset($page_data['type']) ? $page_data['type'] : 'facebook';
+        
         // Save connection
         $result = $this->connections->save_page_connection($shop_id, array(
             'page_id' => $page_data['id'],
             'page_name' => $page_data['name'],
             'access_token' => $page_data['access_token'],
-            'connection_type' => 'facebook'
+            'connection_type' => $connection_type
         ));
         
         if (is_wp_error($result)) {
@@ -341,13 +373,14 @@ class CenterShop_FB_Tenant_Auth {
         $this->connections->mark_token_used($token);
         
         // Send notification to admin
-        $this->send_admin_notification($shop_id, $page_data['name']);
+        $this->send_admin_notification($shop_id, $page_data['name'], $connection_type);
         
         // Show success page
         $shop = get_post($shop_id);
         $this->load_template('tenant-success', array(
             'shop' => $shop,
             'page_name' => $page_data['name'],
+            'connection_type' => $connection_type,
             'mall_name' => get_bloginfo('name')
         ));
     }
@@ -355,18 +388,23 @@ class CenterShop_FB_Tenant_Auth {
     /**
      * Send notification to admin
      */
-    private function send_admin_notification($shop_id, $page_name) {
+    private function send_admin_notification($shop_id, $page_name, $connection_type = 'facebook') {
         $shop = get_post($shop_id);
         $admin_email = get_option('admin_email');
         
+        $platform_name = $connection_type === 'instagram' ? 'Instagram' : 'Facebook';
+        
         $subject = sprintf(
-            __('[%s] Ny Facebook forbindelse', 'centershop_txtdomain'),
-            get_bloginfo('name')
+            __('[%s] Ny %s forbindelse', 'centershop_txtdomain'),
+            get_bloginfo('name'),
+            $platform_name
         );
         
         $message = sprintf(
-            __("En butik har forbundet deres Facebook side:\n\nButik: %s\nFacebook side: %s\n\nOpslag vil nu blive importeret automatisk.", 'centershop_txtdomain'),
+            __("En butik har forbundet deres %s:\n\nButik: %s\n%s: %s\n\nOpslag vil nu blive importeret automatisk.", 'centershop_txtdomain'),
+            $platform_name,
             $shop->post_title,
+            $platform_name,
             $page_name
         );
         

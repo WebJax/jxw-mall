@@ -3,7 +3,7 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php _e('Vælg din Facebook side', 'centershop_txtdomain'); ?> - <?php bloginfo('name'); ?></title>
+    <title><?php _e('Vælg din side eller konto', 'centershop_txtdomain'); ?> - <?php bloginfo('name'); ?></title>
     <?php wp_head(); ?>
     <style>
         body {
@@ -44,6 +44,8 @@
             border-bottom: 1px solid #eee;
             cursor: pointer;
             transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
         }
         .page-item:last-child {
             border-bottom: none;
@@ -53,6 +55,7 @@
         }
         .page-item input[type="radio"] {
             margin-right: 10px;
+            flex-shrink: 0;
         }
         .page-name {
             font-weight: 600;
@@ -62,6 +65,23 @@
             font-size: 12px;
             color: #999;
             margin-top: 5px;
+        }
+        .page-type {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        .page-type.facebook {
+            background: #e7f3ff;
+            color: #1877f2;
+        }
+        .page-type.instagram {
+            background: #fce4ec;
+            color: #e1306c;
         }
         .btn-primary {
             background: #1877f2;
@@ -87,9 +107,9 @@
 </head>
 <body>
     <div class="centershop-tenant-page-selection">
-        <h1><?php _e('Vælg din Facebook side', 'centershop_txtdomain'); ?></h1>
+        <h1><?php _e('Vælg din side eller konto', 'centershop_txtdomain'); ?></h1>
         
-        <p><?php _e('Vi fandt flere Facebook sider du administrerer. Vælg den side du vil forbinde:', 'centershop_txtdomain'); ?></p>
+        <p><?php _e('Vi fandt flere sider og konti du administrerer. Vælg den du vil forbinde:', 'centershop_txtdomain'); ?></p>
         
         <form method="post" action="" id="page-selection-form">
             <?php wp_nonce_field('centershop_fb_page_selection_' . $token); ?>
@@ -102,7 +122,12 @@
                     <label class="page-item">
                         <input type="radio" name="selected_page" value="<?php echo esc_attr($index); ?>" required>
                         <div>
-                            <div class="page-name"><?php echo esc_html($page['name']); ?></div>
+                            <div class="page-name">
+                                <?php echo esc_html($page['name']); ?>
+                                <span class="page-type <?php echo esc_attr($page['type'] ?? 'facebook'); ?>">
+                                    <?php echo esc_html($page['type'] ?? 'facebook'); ?>
+                                </span>
+                            </div>
                             <div class="page-id">ID: <?php echo esc_html($page['id']); ?></div>
                         </div>
                     </label>
@@ -111,7 +136,7 @@
             
             <p>
                 <button type="submit" class="btn-primary">
-                    <?php _e('Forbind valgte side', 'centershop_txtdomain'); ?>
+                    <?php _e('Forbind valgte side/konto', 'centershop_txtdomain'); ?>
                 </button>
             </p>
         </form>
