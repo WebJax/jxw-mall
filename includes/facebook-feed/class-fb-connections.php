@@ -355,7 +355,9 @@ class CenterShop_FB_Connections {
             return $result;
         }
         
-        // Calculate new expiration date (60 days from now)
+        // Calculate new expiration date
+        // Facebook long-lived tokens are valid for 60 days by default
+        // If expires_in is provided in the response, use that; otherwise default to 60 days
         $expires_date = isset($result['expires_in']) 
             ? date('Y-m-d H:i:s', time() + $result['expires_in'])
             : date('Y-m-d H:i:s', strtotime('+60 days'));
@@ -497,7 +499,7 @@ class CenterShop_FB_Connections {
         // Check if user is shop manager for this shop
         if (CenterShop_Shop_Roles::is_shop_manager($user_id)) {
             $user_shop_id = CenterShop_Shop_Roles::get_user_shop_id($user_id);
-            return $user_shop_id == $shop_id;
+            return (int)$user_shop_id === (int)$shop_id;
         }
         
         return false;
