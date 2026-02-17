@@ -99,7 +99,7 @@ class CenterShop_FB_Settings {
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.7);
-            z-index: 100000;
+            z-index: 999;
             display: flex;
             align-items: center;
             justify-content: center;
