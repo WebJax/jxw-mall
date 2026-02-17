@@ -73,7 +73,17 @@ class CenterShop_FB_Cron {
         // Schedule weekly token refresh
         if (!wp_next_scheduled(self::TOKEN_REFRESH_HOOK)) {
             // Schedule for 2 AM on Sundays
-            $timestamp = strtotime('next Sunday 02:00:00');
+            $now = time();
+            if (date('w', $now) === '0') { // Today is Sunday
+                $timestamp = strtotime('today 02:00:00');
+                if ($timestamp <= $now) {
+                    // If 2 AM today has already passed, schedule for next Sunday
+                    $timestamp = strtotime('next Sunday 02:00:00');
+                }
+            } else {
+                // Next upcoming Sunday
+                $timestamp = strtotime('next Sunday 02:00:00');
+            }
             wp_schedule_event($timestamp, 'centershop_weekly', self::TOKEN_REFRESH_HOOK);
         }
     }
