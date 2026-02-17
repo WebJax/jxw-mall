@@ -151,6 +151,12 @@ class CenterShop_FB_Tenant_Auth {
      * Handle OAuth callback
      */
     private function handle_oauth_callback() {
+        // Check if this is a page selection form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_page'])) {
+            $this->handle_page_selection_submission();
+            return;
+        }
+        
         // Check for errors
         if (isset($_GET['error'])) {
             $error_message = isset($_GET['error_description']) 
@@ -236,12 +242,49 @@ class CenterShop_FB_Tenant_Auth {
             return;
         }
         
+        // Store pages in transient for page selection form
+        $transient_key = 'centershop_fb_pages_' . $shop_id . '_' . substr($token, 0, 16);
+        set_transient($transient_key, $pages_result, HOUR_IN_SECONDS);
+        
         // Show page selection
         $this->load_template('tenant-page-selection', array(
             'shop_id' => $shop_id,
             'token' => $token,
-            'pages' => $pages_result
+            'pages' => $pages_result,
+            'transient_key' => $transient_key
         ));
+    }
+    
+    /**
+     * Handle page selection form submission
+     */
+    private function handle_page_selection_submission() {
+        $shop_id = isset($_POST['shop_id']) ? intval($_POST['shop_id']) : 0;
+        $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : '';
+        $selected_index = isset($_POST['selected_page']) ? intval($_POST['selected_page']) : -1;
+        $transient_key = isset($_POST['transient_key']) ? sanitize_text_field($_POST['transient_key']) : '';
+        
+        // Validate token
+        $token_data = $this->connections->validate_magic_token($token);
+        if (is_wp_error($token_data)) {
+            $this->render_error_page($token_data->get_error_message());
+            return;
+        }
+        
+        // Get pages from transient
+        $pages = get_transient($transient_key);
+        if ($pages === false || !isset($pages[$selected_index])) {
+            $this->render_error_page(__('Session udløbet. Prøv venligst igen.', 'centershop_txtdomain'));
+            return;
+        }
+        
+        $selected_page = $pages[$selected_index];
+        
+        // Delete transient
+        delete_transient($transient_key);
+        
+        // Save and show success
+        $this->save_connection_and_show_success($shop_id, $token, $selected_page);
     }
     
     /**
