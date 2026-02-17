@@ -114,6 +114,11 @@ class CenterShop_FB_Shortcodes {
         $image_url = get_post_meta($post->ID, '_centershop_fb_image_url', true);
         $permalink = get_post_meta($post->ID, '_centershop_fb_permalink', true);
         $fb_date = get_post_meta($post->ID, '_centershop_fb_created_time', true);
+        $fb_post_id = get_post_meta($post->ID, '_centershop_fb_post_id', true);
+        
+        // Get engagement data from database
+        $db = CenterShop_FB_Database::get_instance();
+        $db_post = $fb_post_id ? $db->get_post_by_fb_id($fb_post_id) : null;
         
         // Get excerpt
         $content = $post->post_content;
@@ -147,6 +152,20 @@ class CenterShop_FB_Shortcodes {
                 <div class="centershop-fb-post-text">
                     <?php echo nl2br(esc_html($content)); ?>
                 </div>
+                
+                <?php if ($db_post && ($db_post->likes_count > 0 || $db_post->comments_count > 0 || $db_post->shares_count > 0)): ?>
+                    <div class="centershop-fb-engagement">
+                        <?php if ($db_post->likes_count > 0): ?>
+                            <span class="centershop-fb-likes">👍 <?php echo number_format($db_post->likes_count); ?></span>
+                        <?php endif; ?>
+                        <?php if ($db_post->comments_count > 0): ?>
+                            <span class="centershop-fb-comments">💬 <?php echo number_format($db_post->comments_count); ?></span>
+                        <?php endif; ?>
+                        <?php if ($db_post->shares_count > 0): ?>
+                            <span class="centershop-fb-shares">↗️ <?php echo number_format($db_post->shares_count); ?></span>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
                 
                 <div class="centershop-fb-post-meta">
                     <?php if ($atts['show_date'] === 'yes' && $fb_date): ?>

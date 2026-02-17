@@ -114,6 +114,28 @@
     text-decoration: underline;
 }
 
+/* Engagement metrics */
+.centershop-fb-engagement {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+}
+
+.centershop-fb-engagement span {
+    color: #666;
+}
+
+.centershop-fb-likes,
+.centershop-fb-comments,
+.centershop-fb-shares {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 /* No posts message */
 .centershop-fb-no-posts {
     text-align: center;
