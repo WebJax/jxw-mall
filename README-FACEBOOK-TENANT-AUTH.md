@@ -337,36 +337,128 @@ Page tokens from user accounts are long-lived (60 days) but do expire. The syste
 2. Use refresh endpoint to renew
 3. Email admin if refresh fails
 
-## Future Enhancements
+## New Features (Version 2.2.0)
 
-### Instagram Support
+### Instagram Support ✅
 
-The architecture supports Instagram with minimal changes:
+Instagram Business Accounts are now fully supported alongside Facebook Pages:
 
-1. Update OAuth scope to include Instagram permissions
-2. Add Instagram Graph API calls
-3. Set `connection_type = 'instagram'` when saving
-4. Use Instagram-specific field names
+**Features:**
+- Automatically detects Instagram Business Accounts connected to Facebook Pages
+- Users can select between Facebook Pages and Instagram accounts during connection
+- Connection UI shows distinct badges for Instagram vs Facebook
+- Instagram posts can be imported using Graph API (future implementation)
 
-### Token Auto-Refresh
+**OAuth Permissions:**
+The system now requests these additional Instagram permissions:
+- `instagram_basic` - Basic profile information
+- `instagram_manage_insights` - View insights and metrics
+- `instagram_content_publish` - Access to content publishing features
 
-Add cron job to automatically refresh expiring tokens:
-
+**API Endpoints:**
 ```php
+// Get Instagram account info
+$api->get_instagram_account($instagram_account_id, $access_token);
+
+// Get Instagram media (posts)
+$api->get_instagram_media($instagram_account_id, $limit, $since, $access_token);
+```
+
+**Connection Type:**
+When saving connections, the system automatically sets `connection_type = 'instagram'` for Instagram accounts and `'facebook'` for Facebook Pages. This is stored in the database and used for filtering and display.
+
+### Token Auto-Refresh ✅
+
+Automatic token refresh prevents connection interruptions:
+
+**How It Works:**
+- Weekly cron job (`centershop_fb_token_refresh`) runs every Sunday at 2 AM
+- Checks for tokens expiring within 7 days
+- Automatically refreshes tokens using Facebook Graph API
+- Sends email notification to admin if refresh fails
+
+**Implementation:**
+```php
+// Cron hook is automatically scheduled on plugin activation
 add_action('centershop_fb_token_refresh', function() {
-    // Check for tokens expiring in 7 days
-    // Refresh using Facebook API
-    // Email admin if refresh fails
+    $connections = CenterShop_FB_Connections::get_instance();
+    
+    // Get connections expiring soon
+    $expiring = $connections->get_expiring_connections(7);
+    
+    // Refresh each token
+    foreach ($expiring as $connection) {
+        $connections->refresh_token($connection->id);
+    }
 });
 ```
 
-### Multi-Admin Support
+**Email Notifications:**
+When token refresh fails, administrators receive an email with:
+- List of affected shops
+- Page/account names
+- Expiration dates
+- Error messages
+- Recommended actions
 
-Allow shop owners to have multiple admins who can disconnect:
+**Token Lifetime:**
+- Facebook long-lived tokens: 60 days
+- Automatically refreshed 7 days before expiration
+- New expiration date is updated in database
 
-- Add auth tokens to shop meta
-- Allow shop owners to manage own connections
-- Send disconnect notifications to both admin and shop
+### Multi-Admin Support ✅
+
+Shop managers can now manage their own Facebook/Instagram connections:
+
+**Capabilities:**
+- Shop managers have `centershop_manage_connections` capability
+- Can generate magic links for their own shop
+- Can disconnect their own connections
+- Cannot access other shops' connections
+
+**Permission Validation:**
+```php
+$connections = CenterShop_FB_Connections::get_instance();
+
+// Check if user can manage shop
+if ($connections->user_can_manage_shop($shop_id, $user_id)) {
+    // Allow operation
+}
+```
+
+**Disconnect Notifications:**
+When a connection is disconnected, the system sends:
+1. **Email to Admin** - Always sent with disconnector's name
+2. **Email to Shop Owner** - Only sent if disconnected by admin (not if shop owner disconnects their own)
+
+**Usage Example:**
+```php
+// Shop manager generates magic link for their shop
+$connections->create_magic_token($shop_id, get_current_user_id());
+
+// Shop manager disconnects with notifications
+$connections->disconnect_page_with_notification($connection_id, get_current_user_id());
+```
+
+**Security:**
+- All AJAX handlers validate user permissions
+- Shop managers can only access their assigned shop
+- Admins retain full access to all shops
+- Strict type comparison prevents ID manipulation
+
+## Future Enhancements
+
+### Instagram Post Import
+While Instagram connections are supported, the post import functionality needs to be extended:
+- Modify `CenterShop_FB_Importer` to handle Instagram media
+- Use `get_instagram_media()` for Instagram accounts
+- Map Instagram fields to database schema
+- Display Instagram posts alongside Facebook posts
+
+### Advanced Analytics
+- Track engagement metrics for Instagram posts
+- Compare Facebook vs Instagram performance
+- Generate reports for shop owners
 
 ## Code Files
 
@@ -400,6 +492,33 @@ For issues or questions:
 5. Check browser console for JavaScript errors
 
 ## Changelog
+
+### Version 2.2.0 (Latest)
+
+**New Features:**
+- ✅ **Instagram Support**: Full integration with Instagram Business Accounts
+  - OAuth permissions updated to include Instagram scopes
+  - API methods for Instagram account info and media retrieval
+  - Connection UI distinguishes between Facebook and Instagram
+  - Connection type stored in database for filtering
+
+- ✅ **Token Auto-Refresh**: Automatic token renewal system
+  - Weekly cron job checks for expiring tokens
+  - Tokens refreshed 7 days before expiration
+  - Email notifications on refresh failures
+  - Prevents connection interruptions
+
+- ✅ **Multi-Admin Support**: Shop managers can manage connections
+  - Shop managers have `centershop_manage_connections` capability
+  - Permission validation for all operations
+  - Disconnect notifications to admin and shop owner
+  - Secure access control with strict type comparisons
+
+**Improvements:**
+- Enhanced error logging for Instagram account failures
+- Added comments explaining token expiration defaults
+- Improved type safety in shop ID comparisons
+- Better security in AJAX handlers
 
 ### Version 2.1.0
 
