@@ -1348,10 +1348,6 @@ class CenterShop_FB_Settings {
     public function ajax_generate_magic_link() {
         check_ajax_referer('centershop_fb_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => __('Ingen tilladelse', 'centershop_txtdomain')));
-        }
-        
         $shop_id = isset($_POST['shop_id']) ? intval($_POST['shop_id']) : 0;
         
         if (!$shop_id) {
@@ -1359,7 +1355,13 @@ class CenterShop_FB_Settings {
         }
         
         $connections = CenterShop_FB_Connections::get_instance();
-        $result = $connections->create_magic_token($shop_id);
+        
+        // Check if user can manage this shop
+        if (!$connections->user_can_manage_shop($shop_id)) {
+            wp_send_json_error(array('message' => __('Ingen tilladelse til at administrere denne butik', 'centershop_txtdomain')));
+        }
+        
+        $result = $connections->create_magic_token($shop_id, get_current_user_id());
         
         if (is_wp_error($result)) {
             wp_send_json_error(array('message' => $result->get_error_message()));
@@ -1436,10 +1438,6 @@ class CenterShop_FB_Settings {
     public function ajax_disconnect_shop() {
         check_ajax_referer('centershop_fb_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => __('Ingen tilladelse', 'centershop_txtdomain')));
-        }
-        
         $connection_id = isset($_POST['connection_id']) ? intval($_POST['connection_id']) : 0;
         
         if (!$connection_id) {
@@ -1447,10 +1445,12 @@ class CenterShop_FB_Settings {
         }
         
         $connections = CenterShop_FB_Connections::get_instance();
-        $result = $connections->disconnect_page($connection_id);
         
-        if ($result === false) {
-            wp_send_json_error(array('message' => __('Kunne ikke afbryde forbindelse', 'centershop_txtdomain')));
+        // Use disconnect_page_with_notification which checks permissions and sends emails
+        $result = $connections->disconnect_page_with_notification($connection_id, get_current_user_id());
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
         }
         
         wp_send_json_success(array('message' => __('Forbindelse afbrudt', 'centershop_txtdomain')));

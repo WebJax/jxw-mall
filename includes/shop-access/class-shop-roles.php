@@ -74,6 +74,7 @@ class CenterShop_Shop_Roles {
                 'centershop_view_planner' => true,
                 'centershop_upload_media' => true,
                 'centershop_edit_own_shop' => true,
+                'centershop_manage_connections' => true,
             )
         );
     }
