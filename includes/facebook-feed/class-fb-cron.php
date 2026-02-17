@@ -210,7 +210,15 @@ class CenterShop_FB_Cron {
         $message .= __("2. Generer nye magic links til berørte butikker\n", 'centershop_txtdomain');
         $message .= __("3. Send links til butikkerne for at genoprette forbindelsen\n", 'centershop_txtdomain');
         
-        wp_mail($admin_email, $subject, $message);
+        $sent = wp_mail($admin_email, $subject, $message);
+        
+        if (!$sent && defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf(
+                'CenterShop Token Refresh: Failed to send failure notification email to %s with subject "%s".',
+                $admin_email,
+                $subject
+            ));
+        }
     }
     
     /**

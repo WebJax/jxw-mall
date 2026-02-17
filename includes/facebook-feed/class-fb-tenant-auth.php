@@ -400,6 +400,7 @@ class CenterShop_FB_Tenant_Auth {
         $admin_email = get_option('admin_email');
         
         $platform_name = $connection_type === 'instagram' ? 'Instagram' : 'Facebook';
+        $shop_name = $shop ? $shop->post_title : "Butik ID {$shop_id}";
         
         $subject = sprintf(
             __('[%s] Ny %s forbindelse', 'centershop_txtdomain'),
@@ -410,7 +411,7 @@ class CenterShop_FB_Tenant_Auth {
         $message = sprintf(
             __("En butik har forbundet deres %s:\n\nButik: %s\n%s: %s\n\nOpslag vil nu blive importeret automatisk.", 'centershop_txtdomain'),
             $platform_name,
-            $shop->post_title,
+            $shop_name,
             $platform_name,
             $page_name
         );

@@ -208,6 +208,16 @@ class CenterShop_FB_API_Handler {
      * Get Instagram Business Account info
      */
     public function get_instagram_account($instagram_account_id, $access_token) {
+        // Validate Instagram account ID (should be numeric)
+        if (empty($instagram_account_id) || !preg_match('/^[0-9]+$/', $instagram_account_id)) {
+            return new WP_Error('invalid_instagram_id', __('Ugyldig Instagram konto ID', 'centershop_txtdomain'));
+        }
+        
+        // Validate access token
+        if (empty($access_token) || !is_string($access_token)) {
+            return new WP_Error('invalid_token', __('Ugyldig access token', 'centershop_txtdomain'));
+        }
+        
         $result = $this->request($instagram_account_id, array(
             'fields' => 'id,username,name,profile_picture_url',
             'access_token' => $access_token
@@ -224,6 +234,22 @@ class CenterShop_FB_API_Handler {
      * Get Instagram media (posts)
      */
     public function get_instagram_media($instagram_account_id, $limit = 10, $since = null, $access_token = null) {
+        // Validate Instagram account ID (should be alphanumeric)
+        if (empty($instagram_account_id) || !preg_match('/^[0-9]+$/', $instagram_account_id)) {
+            return new WP_Error('invalid_instagram_id', __('Ugyldig Instagram konto ID', 'centershop_txtdomain'));
+        }
+        
+        // Validate limit parameter (should be between 1 and 100)
+        $limit = intval($limit);
+        if ($limit < 1 || $limit > 100) {
+            $limit = 10; // Default to 10 if invalid
+        }
+        
+        // Validate since parameter if provided (should be numeric timestamp)
+        if ($since !== null && !is_numeric($since)) {
+            return new WP_Error('invalid_since', __('Ugyldig since parameter', 'centershop_txtdomain'));
+        }
+        
         // Use provided token or fall back to global token
         $token = $access_token ? $access_token : $this->access_token;
         
@@ -255,6 +281,11 @@ class CenterShop_FB_API_Handler {
      * Exchanges a valid long-lived token for a new one with extended expiration
      */
     public function refresh_access_token($access_token) {
+        // Validate access token
+        if (empty($access_token) || !is_string($access_token)) {
+            return new WP_Error('invalid_token', __('Ugyldig access token', 'centershop_txtdomain'));
+        }
+        
         $result = $this->request('oauth/access_token', array(
             'grant_type' => 'fb_exchange_token',
             'client_id' => get_option('centershop_fb_app_id', ''),
