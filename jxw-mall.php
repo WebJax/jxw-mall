@@ -43,6 +43,7 @@ define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 function centershop_load_modules() {
     // Core modules
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-admin-menu.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-settings.php';
     
     // Shop Access modules
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/shop-access/class-shop-roles.php';
@@ -70,6 +71,7 @@ function centershop_load_modules() {
     
     // Initialize modules
     CenterShop_Admin_Menu::get_instance();
+    CenterShop_Settings::get_instance();
     CenterShop_Shop_Roles::get_instance();
     CenterShop_Shop_User_Admin::get_instance();
     CenterShop_Planner_Post_Type::get_instance();
