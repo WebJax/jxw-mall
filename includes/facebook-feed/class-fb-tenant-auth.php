@@ -267,7 +267,6 @@ class CenterShop_FB_Tenant_Auth {
                         $ig_info->get_error_message()
                     ));
                 }
-                }
             }
         }
         
