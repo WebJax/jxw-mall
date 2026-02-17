@@ -136,7 +136,10 @@ class CenterShop_FB_Importer {
         // Update last sync time for connection
         if ($connection_id) {
             $connections_handler = CenterShop_FB_Connections::get_instance();
-            $connections_handler->update_last_sync($connection_id);
+            $updated = $connections_handler->update_last_sync($connection_id);
+            if ($updated === false) {
+                error_log('CenterShop_FB_Importer: Failed to update last sync for connection ID ' . $connection_id);
+            }
         }
         
         return array(
