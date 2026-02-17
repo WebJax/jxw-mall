@@ -849,12 +849,42 @@ class CenterShop_FB_Settings {
             // Copy link to clipboard
             $('#centershop-fb-copy-link').on('click', function() {
                 var $input = $('#centershop-fb-magic-link-input');
-                $input.select();
-                document.execCommand('copy');
-                $(this).text('✓ Kopieret!');
-                setTimeout(function() {
-                    $('#centershop-fb-copy-link').text('<?php _e('Kopier Link', 'centershop_txtdomain'); ?>');
-                }, 2000);
+                var $btn = $(this);
+                var link = $input.val();
+                
+                // Use modern Clipboard API with fallback
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link).then(function() {
+                        $btn.text('✓ Kopieret!');
+                        setTimeout(function() {
+                            $btn.text('<?php _e('Kopier Link', 'centershop_txtdomain'); ?>');
+                        }, 2000);
+                    }).catch(function() {
+                        // Fallback to old method if Clipboard API fails
+                        $input.select();
+                        try {
+                            document.execCommand('copy');
+                            $btn.text('✓ Kopieret!');
+                            setTimeout(function() {
+                                $btn.text('<?php _e('Kopier Link', 'centershop_txtdomain'); ?>');
+                            }, 2000);
+                        } catch(err) {
+                            alert('Kunne ikke kopiere. Vælg teksten og tryk Ctrl+C');
+                        }
+                    });
+                } else {
+                    // Fallback for older browsers
+                    $input.select();
+                    try {
+                        document.execCommand('copy');
+                        $btn.text('✓ Kopieret!');
+                        setTimeout(function() {
+                            $btn.text('<?php _e('Kopier Link', 'centershop_txtdomain'); ?>');
+                        }, 2000);
+                    } catch(err) {
+                        alert('Kunne ikke kopiere. Vælg teksten og tryk Ctrl+C');
+                    }
+                }
             });
             
             // Send email
