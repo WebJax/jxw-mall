@@ -94,7 +94,7 @@ class CenterShop_Settings {
      * Render general section description
      */
     public function render_general_section() {
-        echo '<p>' . __('Konfigurer generelle indstillinger for CenterShop plugin.', 'centershop_txtdomain') . '</p>';
+        echo '<p>' . esc_html__('Konfigurer generelle indstillinger for CenterShop plugin.', 'centershop_txtdomain') . '</p>';
     }
     
     /**
@@ -108,7 +108,7 @@ class CenterShop_Settings {
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text" />
         <p class="description">
-            <?php _e('Navnet på pluginet som vises i admin interface.', 'centershop_txtdomain'); ?>
+            <?php esc_html_e('Navnet på pluginet som vises i admin interface.', 'centershop_txtdomain'); ?>
         </p>
         <?php
     }
@@ -124,7 +124,7 @@ class CenterShop_Settings {
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text" />
         <p class="description">
-            <?php _e('E-mail adresse for kontakt vedrørende CenterShop funktionalitet.', 'centershop_txtdomain'); ?>
+            <?php esc_html_e('E-mail adresse for kontakt vedrørende CenterShop funktionalitet.', 'centershop_txtdomain'); ?>
         </p>
         <?php
     }
@@ -140,7 +140,7 @@ class CenterShop_Settings {
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text" />
         <p class="description">
-            <?php _e('Google Maps API nøgle til visning af kort (valgfrit).', 'centershop_txtdomain'); ?>
+            <?php esc_html_e('Google Maps API nøgle til visning af kort (valgfrit).', 'centershop_txtdomain'); ?>
         </p>
         <?php
     }
