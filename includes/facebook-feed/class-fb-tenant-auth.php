@@ -260,7 +260,7 @@ class CenterShop_FB_Tenant_Auth {
         }
         
         // Store pages in transient for page selection form
-        $transient_key = 'centershop_fb_pages_' . $effective_shop_id . '_' . substr($token, 0, 16);
+        $transient_key = 'centershop_fb_pages_' . $effective_shop_id . '_' . hash('sha256', $token);
         set_transient($transient_key, $pages_result, HOUR_IN_SECONDS);
         
         // Show page selection
@@ -276,15 +276,31 @@ class CenterShop_FB_Tenant_Auth {
      * Handle page selection form submission
      */
     private function handle_page_selection_submission() {
-        $shop_id = isset($_POST['shop_id']) ? intval($_POST['shop_id']) : 0;
+        $client_shop_id = isset($_POST['shop_id']) ? intval($_POST['shop_id']) : 0;
         $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : '';
         $selected_index = isset($_POST['selected_page']) ? intval($_POST['selected_page']) : -1;
         $transient_key = isset($_POST['transient_key']) ? sanitize_text_field($_POST['transient_key']) : '';
+        $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field($_POST['_wpnonce']) : '';
+        
+        // Verify nonce for CSRF protection
+        if (!wp_verify_nonce($nonce, 'centershop_fb_page_selection_' . $token)) {
+            $this->render_error_page(__('Ugyldig sikkerhedstoken. Prøv venligst igen.', 'centershop_txtdomain'));
+            return;
+        }
         
         // Validate token
         $token_data = $this->connections->validate_magic_token($token);
         if (is_wp_error($token_data)) {
             $this->render_error_page($token_data->get_error_message());
+            return;
+        }
+        
+        // Use shop_id from validated token, not from client POST data
+        $effective_shop_id = (int) $token_data->shop_id;
+        
+        // Verify client-provided shop_id matches token if provided
+        if ($client_shop_id && (string) $client_shop_id !== (string) $effective_shop_id) {
+            $this->render_error_page(__('Ugyldig forespørgsel: butik-id matcher ikke godkendt token.', 'centershop_txtdomain'));
             return;
         }
         
@@ -300,8 +316,8 @@ class CenterShop_FB_Tenant_Auth {
         // Delete transient
         delete_transient($transient_key);
         
-        // Save and show success
-        $this->save_connection_and_show_success($shop_id, $token, $selected_page);
+        // Save and show success using validated shop_id
+        $this->save_connection_and_show_success($effective_shop_id, $token, $selected_page);
     }
     
     /**

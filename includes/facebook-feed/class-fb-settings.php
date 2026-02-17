@@ -1401,6 +1401,12 @@ class CenterShop_FB_Settings {
             wp_send_json_error(array('message' => __('Ingen email adresse for denne butik', 'centershop_txtdomain')));
         }
         
+        // Validate email address
+        $shop_email = sanitize_email($shop_email);
+        if (!is_email($shop_email)) {
+            wp_send_json_error(array('message' => __('Ugyldig email adresse for denne butik', 'centershop_txtdomain')));
+        }
+        
         $mall_name = get_bloginfo('name');
         $shop_name = $shop->post_title;
         
