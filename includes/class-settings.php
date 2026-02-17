@@ -52,7 +52,7 @@ class CenterShop_Settings {
         
         register_setting('centershop_settings', 'centershop_contact_email', array(
             'type' => 'string',
-            'default' => get_option('admin_email'),
+            'default' => '',
             'sanitize_callback' => 'sanitize_email'
         ));
         
@@ -135,7 +135,7 @@ class CenterShop_Settings {
     public function render_google_maps_field() {
         $value = get_option('centershop_google_maps_api_key', '');
         ?>
-        <input type="text" 
+        <input type="password" 
                name="centershop_google_maps_api_key" 
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text" />
