@@ -11,7 +11,7 @@
     padding: 15px 0;
     border-top: 1px solid #e0e0e0;
     border-bottom: 1px solid #e0e0e0;
-
+    justify-content: center;
 }
 
 .jxw-shop-pill {
@@ -111,7 +111,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .jxw-connected-shops {
-        gap: 6px;
+        gap: 10px;
     }
     
     .jxw-shop-pill {
@@ -142,4 +142,15 @@
 .jxw-connected-shops.inline .jxw-shop-pill {
     font-size: 12px;
     padding: 4px 10px;
+}
+
+
+.jxw-connected-shops:before {
+    content: 'Butikker omtalt i denne artikel';
+    font-size: .6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background-color: white;
+    padding-inline: 10px;
+    margin-top: -23px;
 }

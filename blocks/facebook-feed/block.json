@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "centershop/facebook-feed",
+  "title": "Facebook Feed",
+  "category": "widgets",
+  "icon": "facebook",
+  "description": "Vis Facebook posts fra butikker",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "count": {
+      "type": "number",
+      "default": 10
+    },
+    "shopId": {
+      "type": "number",
+      "default": 0
+    },
+    "layout": {
+      "type": "string",
+      "default": "grid"
+    },
+    "columns": {
+      "type": "number",
+      "default": 3
+    },
+    "showDate": {
+      "type": "boolean",
+      "default": true
+    },
+    "showShop": {
+      "type": "boolean",
+      "default": true
+    },
+    "excerptLength": {
+      "type": "number",
+      "default": 150
+    }
+  },
+  "textdomain": "centershop_txtdomain",
+  "editorScript": "file:./index.js"
+}

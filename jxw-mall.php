@@ -64,6 +64,16 @@ function centershop_load_modules() {
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-settings.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-posts-list.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-shortcodes.php';
+    
+    // Instagram Feed modules
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-database.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-post-type.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-api-handler.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-importer.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-cron.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-settings.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-posts-list.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-shortcodes.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-tenant-auth.php';
     
     // Post-Shop connection module
@@ -85,6 +95,13 @@ function centershop_load_modules() {
     CenterShop_FB_Cron::get_instance();
     CenterShop_FB_Settings::get_instance();
     CenterShop_FB_Posts_List::get_instance();
+    CenterShop_IG_Database::get_instance();
+    CenterShop_IG_Post_Type::get_instance();
+    CenterShop_IG_API_Handler::get_instance();
+    CenterShop_IG_Importer::get_instance();
+    CenterShop_IG_Cron::get_instance();
+    CenterShop_IG_Settings::get_instance();
+    CenterShop_IG_Posts_List::get_instance();
     CenterShop_FB_Tenant_Auth::get_instance();
 }
 add_action('plugins_loaded', 'centershop_load_modules');
@@ -97,6 +114,10 @@ function centershop_activate() {
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-database.php';
     CenterShop_FB_Database::create_table();
     
+    // Create Instagram posts database table
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/instagram-feed/class-ig-database.php';
+    CenterShop_IG_Database::create_table();
+    
     // Create Facebook connections tables
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-connections.php';
     CenterShop_FB_Connections::create_tables();
@@ -108,8 +129,12 @@ function centershop_activate() {
     if (!wp_next_scheduled('centershop_fb_import_cron')) {
         wp_schedule_event(strtotime('03:00:00'), 'daily', 'centershop_fb_import_cron');
     }
+    if (!wp_next_scheduled('centershop_ig_import_cron')) {
+        wp_schedule_event(strtotime('03:30:00'), 'daily', 'centershop_ig_import_cron');
+    }
 }
 register_activation_hook(__FILE__, 'centershop_activate');
+    wp_clear_scheduled_hook('centershop_ig_import_cron');
 
 /**
  * Plugin deactivation hook
@@ -302,6 +327,32 @@ function centershop_register_blocks() {
         'editor_script' => 'centershop-opening-hours-editor',
         'style' => 'centershop-opening-hours-style'
     ));
+    
+    // Register Facebook feed block
+    wp_register_script(
+        'centershop-facebook-feed-editor',
+        plugins_url('blocks/facebook-feed/index.js', __FILE__),
+        array('wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-data', 'wp-server-side-render'),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/facebook-feed/index.js')
+    );
+    
+    register_block_type( __DIR__ . '/blocks/facebook-feed', array(
+        'render_callback' => 'centershop_render_facebook_feed_block',
+        'editor_script' => 'centershop-facebook-feed-editor'
+    ));
+    
+    // Register Instagram feed block
+    wp_register_script(
+        'centershop-instagram-feed-editor',
+        plugins_url('blocks/instagram-feed/index.js', __FILE__),
+        array('wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-data', 'wp-server-side-render'),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/instagram-feed/index.js')
+    );
+    
+    register_block_type( __DIR__ . '/blocks/instagram-feed', array(
+        'render_callback' => 'centershop_render_instagram_feed_block',
+        'editor_script' => 'centershop-instagram-feed-editor'
+    ));
 }
 add_action( 'init', 'centershop_register_blocks' );
 
@@ -327,6 +378,18 @@ function centershop_render_shop_list_block( $attributes, $content ) {
 function centershop_render_single_shop_block( $attributes, $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/single-shop/render.php';
+    return ob_get_clean();
+}
+
+function centershop_render_facebook_feed_block( $attributes, $content ) {
+    ob_start();
+    include plugin_dir_path( __FILE__ ) . 'blocks/facebook-feed/render.php';
+    return ob_get_clean();
+}
+
+function centershop_render_instagram_feed_block( $attributes, $content ) {
+    ob_start();
+    include plugin_dir_path( __FILE__ ) . 'blocks/instagram-feed/render.php';
     return ob_get_clean();
 }
 
