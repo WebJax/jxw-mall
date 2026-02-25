@@ -53,6 +53,10 @@ class CenterShop_FloorPlan {
         // AJAX for frontend
         add_action('wp_ajax_search_shops', array($this, 'ajax_search_shops'));
         add_action('wp_ajax_nopriv_search_shops', array($this, 'ajax_search_shops'));
+        
+        // Enable SVG uploads
+        add_filter('upload_mimes', array($this, 'allow_svg_upload'));
+        add_filter('wp_check_filetype_and_ext', array($this, 'fix_svg_mime_type'), 10, 4);
     }
     
     /**
@@ -314,6 +318,12 @@ class CenterShop_FloorPlan {
             wp_send_json_error('Invalid attachment');
         }
         
+        // Verify it's an SVG file
+        $filetype = wp_check_filetype($url);
+        if (!in_array($filetype['type'], array('image/svg+xml', 'image/svg'))) {
+            wp_send_json_error('File must be an SVG');
+        }
+        
         update_option(self::OPTION_SVG, $url);
         
         wp_send_json_success(array('url' => $url));
@@ -397,6 +407,37 @@ class CenterShop_FloorPlan {
         }
         
         wp_send_json_success($results);
+    }
+    
+    /**
+     * Allow SVG uploads
+     */
+    public function allow_svg_upload($mimes) {
+        $mimes['svg'] = 'image/svg+xml';
+        $mimes['svgz'] = 'image/svg+xml';
+        return $mimes;
+    }
+    
+    /**
+     * Fix SVG mime type detection
+     */
+    public function fix_svg_mime_type($data, $file, $filename, $mimes) {
+        $ext = isset($data['ext']) ? $data['ext'] : '';
+        
+        if (strlen($ext) < 1) {
+            $exploded = explode('.', $filename);
+            $ext = strtolower(end($exploded));
+        }
+        
+        if ($ext === 'svg') {
+            $data['type'] = 'image/svg+xml';
+            $data['ext'] = 'svg';
+        } elseif ($ext === 'svgz') {
+            $data['type'] = 'image/svg+xml';
+            $data['ext'] = 'svgz';
+        }
+        
+        return $data;
     }
     
     /**
