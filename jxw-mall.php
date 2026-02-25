@@ -138,7 +138,6 @@ function centershop_activate() {
     }
 }
 register_activation_hook(__FILE__, 'centershop_activate');
-    wp_clear_scheduled_hook('centershop_ig_import_cron');
 
 /**
  * Plugin deactivation hook
@@ -147,6 +146,7 @@ function centershop_deactivate() {
     // Clear cron jobs
     wp_clear_scheduled_hook('centershop_fb_import_cron');
     wp_clear_scheduled_hook('centershop_fb_token_refresh');
+    wp_clear_scheduled_hook('centershop_ig_import_cron');
 }
 register_deactivation_hook(__FILE__, 'centershop_deactivate');
 
@@ -396,13 +396,13 @@ function centershop_render_opening_hours_block( $attributes, $content ) {
 
 function centershop_render_shop_list_block( $attributes, $content ) {
     ob_start();
-function centershop_render_floorplan_block( $attributes, $content ) {
-    ob_start();
-    include plugin_dir_path( __FILE__ ) . 'blocks/floorplan/render.php';
+    include plugin_dir_path( __FILE__ ) . 'blocks/shop-list/render.php';
     return ob_get_clean();
 }
 
-    include plugin_dir_path( __FILE__ ) . 'blocks/shop-list/render.php';
+function centershop_render_floorplan_block( $attributes, $content ) {
+    ob_start();
+    include plugin_dir_path( __FILE__ ) . 'blocks/floorplan/render.php';
     return ob_get_clean();
 }
 
