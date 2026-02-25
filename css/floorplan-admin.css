@@ -1,0 +1,291 @@
+/* CenterShop Floorplan Admin Styles */
+
+.centershop-floorplan-admin {
+    background: #f5f5f5;
+    margin: -10px -20px;
+    padding: 20px;
+}
+
+.centershop-floorplan-content {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.floorplan-sidebar {
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.floorplan-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.floorplan-canvas-wrapper {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    min-height: 500px;
+    position: relative;
+}
+
+#floorplan-canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+}
+
+#floorplan-svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    user-select: none;
+}
+
+#floorplan-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#floorplan-overlay polygon {
+    pointer-events: auto;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+#floorplan-overlay polygon:hover {
+    opacity: 0.7;
+}
+
+#floorplan-overlay polygon.active {
+    stroke-width: 4;
+    stroke: #e74c3c;
+}
+
+.floorplan-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+    color: #999;
+}
+
+.floorplan-empty .dashicons {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+}
+
+.floorplan-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+/* Sidebar styles */
+.postbox h2 {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.postbox .inside {
+    padding: 12px;
+}
+
+.svg-uploaded {
+    margin-top: 10px;
+    color: #46b450;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.svg-uploaded .dashicons {
+    color: #46b450;
+}
+
+/* Areas list */
+#areas-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.area-item {
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.area-item:hover {
+    background: #f0f0f0;
+}
+
+.area-item.active {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.area-item strong {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.area-item .shop-name {
+    font-size: 12px;
+    color: #666;
+}
+
+.area-item .delete-area {
+    background: none;
+    border: none;
+    color: #dc3232;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+
+.area-item .delete-area:hover {
+    background: #dc3232;
+    color: white;
+}
+
+.area-item .delete-area .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.no-areas {
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+#add-area-btn {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Area editor */
+#area-editor {
+    min-height: 200px;
+}
+
+.area-form label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.area-form input[type="text"],
+.area-form select {
+    margin-top: 5px;
+}
+
+.area-form input[type="color"] {
+    width: 100%;
+    height: 40px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.area-form .button {
+    margin-right: 5px;
+}
+
+.delete-area-btn {
+    color: #dc3232;
+}
+
+.delete-area-btn:hover {
+    color: #a00;
+}
+
+/* Drawing mode */
+#floorplan-canvas.drawing {
+    cursor: crosshair;
+}
+
+.drawing-point {
+    fill: #e74c3c;
+    stroke: white;
+    stroke-width: 2;
+}
+
+.drawing-line {
+    stroke: #e74c3c;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+    fill: none;
+}
+
+.temp-polygon {
+    fill: rgba(231, 76, 60, 0.3);
+    stroke: #e74c3c;
+    stroke-width: 2;
+}
+
+/* Messages */
+.floorplan-message {
+    position: fixed;
+    top: 32px;
+    right: 20px;
+    background: white;
+    padding: 15px 20px;
+    border-left: 4px solid #46b450;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 100000;
+    animation: slideIn 0.3s;
+}
+
+.floorplan-message.error {
+    border-left-color: #dc3232;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .centershop-floorplan-content {
+        flex-direction: column;
+    }
+    
+    .floorplan-sidebar {
+        flex: 1;
+    }
+}

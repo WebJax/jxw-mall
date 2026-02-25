@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "centershop/floorplan",
+    "title": "Center Grundplan",
+    "category": "widgets",
+    "icon": "location-alt",
+    "description": "Vis interaktiv grundplan over centret med butikslokaler",
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "attributes": {
+        "shopId": {
+            "type": "string",
+            "default": ""
+        },
+        "showSearch": {
+            "type": "boolean",
+            "default": true
+        },
+        "height": {
+            "type": "string",
+            "default": "600px"
+        }
+    },
+    "textdomain": "centershop_txtdomain",
+    "editorScript": "file:./index.js",
+    "style": "file:./style.css"
+}

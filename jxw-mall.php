@@ -79,6 +79,9 @@ function centershop_load_modules() {
     // Post-Shop connection module
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
     
+    // Floorplan module
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-floorplan.php';
+    
     // Initialize modules
     CenterShop_Admin_Menu::get_instance();
     CenterShop_Settings::get_instance();
@@ -103,6 +106,7 @@ function centershop_load_modules() {
     CenterShop_IG_Settings::get_instance();
     CenterShop_IG_Posts_List::get_instance();
     CenterShop_FB_Tenant_Auth::get_instance();
+    CenterShop_FloorPlan::get_instance();
 }
 add_action('plugins_loaded', 'centershop_load_modules');
 
@@ -353,6 +357,27 @@ function centershop_register_blocks() {
         'render_callback' => 'centershop_render_instagram_feed_block',
         'editor_script' => 'centershop-instagram-feed-editor'
     ));
+    
+    // Register Floorplan block
+    wp_register_script(
+        'centershop-floorplan-editor',
+        plugins_url('blocks/floorplan/index.js', __FILE__),
+        array('wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-data'),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/floorplan/index.js')
+    );
+    
+    wp_register_style(
+        'centershop-floorplan-style',
+        plugins_url('blocks/floorplan/style.css', __FILE__),
+        array(),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/floorplan/style.css')
+    );
+    
+    register_block_type( __DIR__ . '/blocks/floorplan', array(
+        'render_callback' => 'centershop_render_floorplan_block',
+        'editor_script' => 'centershop-floorplan-editor',
+        'style' => 'centershop-floorplan-style'
+    ));
 }
 add_action( 'init', 'centershop_register_blocks' );
 
@@ -371,6 +396,12 @@ function centershop_render_opening_hours_block( $attributes, $content ) {
 
 function centershop_render_shop_list_block( $attributes, $content ) {
     ob_start();
+function centershop_render_floorplan_block( $attributes, $content ) {
+    ob_start();
+    include plugin_dir_path( __FILE__ ) . 'blocks/floorplan/render.php';
+    return ob_get_clean();
+}
+
     include plugin_dir_path( __FILE__ ) . 'blocks/shop-list/render.php';
     return ob_get_clean();
 }
