@@ -153,18 +153,18 @@ class CenterShop_FloorPlan {
             <div class="centershop-floorplan-content">
                 <div class="floorplan-sidebar">
                     <div class="postbox">
-                        <h2 class="hndle"><?php _e('Upload SVG grundplan', 'centershop_txtdomain'); ?></h2>
+                        <h2 class="hndle"><?php _e('Upload grundplan billede', 'centershop_txtdomain'); ?></h2>
                         <div class="inside">
                             <button type="button" class="button button-primary" id="upload-svg-btn">
-                                <?php _e('Vælg SVG fil', 'centershop_txtdomain'); ?>
+                                <?php _e('Vælg billedfil', 'centershop_txtdomain'); ?>
                             </button>
                             <p class="description">
-                                <?php _e('Upload en SVG-fil af centerets grundplan. Du kan derefter definere klikbare områder.', 'centershop_txtdomain'); ?>
+                                <?php _e('Upload et billede af centerets grundplan (JPG, PNG, SVG m.fl.). Du kan derefter definere klikbare områder.', 'centershop_txtdomain'); ?>
                             </p>
                             <?php if ($svg_url): ?>
                                 <p class="svg-uploaded">
                                     <span class="dashicons dashicons-yes-alt"></span>
-                                    <?php _e('SVG uploadet', 'centershop_txtdomain'); ?>
+                                    <?php _e('Billede uploadet', 'centershop_txtdomain'); ?>
                                 </p>
                             <?php endif; ?>
                         </div>
@@ -318,10 +318,10 @@ class CenterShop_FloorPlan {
             wp_send_json_error('Invalid attachment');
         }
         
-        // Verify it's an SVG file
+        // Verify it's an image file
         $filetype = wp_check_filetype($url);
-        if (!in_array($filetype['type'], array('image/svg+xml', 'image/svg'))) {
-            wp_send_json_error('File must be an SVG');
+        if (strpos($filetype['type'], 'image/') !== 0) {
+            wp_send_json_error('File must be an image');
         }
         
         update_option(self::OPTION_SVG, $url);
