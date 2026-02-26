@@ -175,7 +175,7 @@ class CenterShop_FloorPlan {
                         <div class="inside">
                             <div id="areas-list">
                                 <?php if (empty($areas)): ?>
-                                    <p class="no-areas"><?php _e('Ingen områder defineret endnu. Klik på SVG\'en for at tilføje områder.', 'centershop_txtdomain'); ?></p>
+                                    <p class="no-areas"><?php _e('Ingen områder defineret endnu. Klik på grundplanen for at tilføje områder.', 'centershop_txtdomain'); ?></p>
                                 <?php else: ?>
                                     <?php foreach ($areas as $index => $area): ?>
                                         <div class="area-item" data-index="<?php echo $index; ?>">
@@ -229,7 +229,7 @@ class CenterShop_FloorPlan {
                         <?php else: ?>
                             <div class="floorplan-empty">
                                 <span class="dashicons dashicons-images-alt2"></span>
-                                <p><?php _e('Upload en SVG grundplan for at komme i gang', 'centershop_txtdomain'); ?></p>
+                                <p><?php _e('Upload et grundplan billede for at komme i gang', 'centershop_txtdomain'); ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -319,8 +319,8 @@ class CenterShop_FloorPlan {
         }
         
         // Verify it's an image file
-        $filetype = wp_check_filetype($url);
-        if (strpos($filetype['type'], 'image/') !== 0) {
+        $mime_type = get_post_mime_type($attachment_id);
+        if (!$mime_type || strpos($mime_type, 'image/') !== 0) {
             wp_send_json_error('File must be an image');
         }
         
