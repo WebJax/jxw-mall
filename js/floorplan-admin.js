@@ -157,7 +157,7 @@
             e.preventDefault();
             
             if (!svgUrl) {
-                alert('Upload først en SVG grundplan');
+                alert('Upload først et grundplan billede');
                 return;
             }
             
