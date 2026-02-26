@@ -52,12 +52,12 @@
             e.preventDefault();
             
             const mediaUploader = wp.media({
-                title: 'Vælg SVG grundplan',
+                title: 'Vælg grundplan billede',
                 button: {
-                    text: 'Brug denne fil'
+                    text: 'Brug dette billede'
                 },
                 library: {
-                    type: 'image/svg+xml'
+                    type: 'image'
                 },
                 multiple: false
             });
