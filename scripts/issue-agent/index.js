@@ -12,10 +12,15 @@
  * Issues are tracked via a hidden HTML comment in their body:
  *   <!-- plan_key: <key> -->
  *
+ * Milestones are tracked via the same comment embedded in their description:
+ *   <!-- plan_key: M1 --> Human-readable description text
+ *
  * The "auto-managed" section of an issue body is bounded by:
  *   <!-- BEGIN AUTO -->
  *   <!-- END AUTO -->
- * Content outside that zone is preserved on updates.
+ * Content outside that zone is preserved on updates. The AUTO zone holds
+ * all plan-sourced content (spec.body for tasks; spec.body + task list for
+ * epics), so changes to the plan propagate to existing issues on re-run.
  *
  * Environment variables (set by the workflow):
  *   GITHUB_TOKEN  – token with issues/milestones write access
@@ -55,6 +60,12 @@ const PLAN_FILE =
 const AUTO_BEGIN = "<!-- BEGIN AUTO -->";
 const AUTO_END = "<!-- END AUTO -->";
 const PLAN_KEY_RE = /<!--\s*plan_key:\s*([^\s>]+)\s*-->/;
+
+/** Builds the milestone description prefix that embeds the plan key. */
+function milestoneDescription(key, description) {
+  const desc = (description || "").trim();
+  return desc ? `<!-- plan_key: ${key} --> ${desc}` : `<!-- plan_key: ${key} -->`;
+}
 
 // ─── API clients ──────────────────────────────────────────────────────────────
 
@@ -166,21 +177,41 @@ async function ensureMilestones(milestonesSpec) {
     per_page: 100,
   });
   const allMilestones = [...existing, ...existingClosed];
-  const byTitle = new Map(allMilestones.map((m) => [m.title, m]));
+
+  // Index by the plan_key embedded in the milestone description (stable key).
+  // Fall back to title matching for milestones created without a plan_key marker.
+  const byPlanKey = new Map();
+  const byTitle = new Map();
+  for (const m of allMilestones) {
+    if (m.description) {
+      const match = PLAN_KEY_RE.exec(m.description);
+      if (match) byPlanKey.set(match[1], m);
+    }
+    byTitle.set(m.title, m);
+  }
 
   const milestoneNumbers = {};
 
   for (const spec of milestonesSpec) {
-    if (byTitle.has(spec.title)) {
-      const cur = byTitle.get(spec.title);
+    // Prefer plan_key match (survives title renames), fall back to title match.
+    const cur = byPlanKey.get(spec.key) || byTitle.get(spec.title);
+    const wantedDesc = milestoneDescription(spec.key, spec.description);
+
+    if (cur) {
       milestoneNumbers[spec.key] = cur.number;
-      const desc = (spec.description || "").trim();
-      if (cur.description !== desc) {
+      const titleChanged = cur.title !== spec.title;
+      const descChanged = cur.description !== wantedDesc;
+      const dueDateChanged =
+        spec.due_on !== undefined && cur.due_on !== spec.due_on;
+
+      if (titleChanged || descChanged || dueDateChanged) {
         await octokit.issues.updateMilestone({
           owner: OWNER,
           repo: REPO,
           milestone_number: cur.number,
-          description: desc,
+          title: spec.title,
+          description: wantedDesc,
+          ...(spec.due_on ? { due_on: spec.due_on } : {}),
         });
         log("update", `milestone "${spec.title}"`);
       } else {
@@ -191,7 +222,7 @@ async function ensureMilestones(milestonesSpec) {
         owner: OWNER,
         repo: REPO,
         title: spec.title,
-        description: (spec.description || "").trim(),
+        description: wantedDesc,
         ...(spec.due_on ? { due_on: spec.due_on } : {}),
       });
       milestoneNumbers[spec.key] = created.data.number;
@@ -217,6 +248,8 @@ async function buildPlanKeyMap() {
   });
   const map = new Map();
   for (const issue of allIssues) {
+    // listForRepo returns both issues and pull requests; skip PRs.
+    if (issue.pull_request) continue;
     if (!issue.body) continue;
     const match = PLAN_KEY_RE.exec(issue.body);
     if (match) map.set(match[1], issue);
@@ -227,8 +260,16 @@ async function buildPlanKeyMap() {
 /**
  * Ensure a single issue exists and is up-to-date.
  * Returns the issue number.
+ *
+ * @param {object}  spec              Plan spec for the issue.
+ * @param {number|null} milestoneNumber
+ * @param {Map}     planKeyMap        plan_key → issue (mutated on create).
+ * @param {object}  [opts]
+ * @param {boolean} [opts.skipBodyUpdate=false] Skip AUTO zone body update
+ *                  (used for epics whose body is managed by updateEpicTaskList).
  */
-async function ensureIssue(spec, milestoneNumber, planKeyMap) {
+async function ensureIssue(spec, milestoneNumber, planKeyMap, opts = {}) {
+  const { skipBodyUpdate = false } = opts;
   const keyComment = planKeyComment(spec.key);
   const labels = spec.labels || [];
 
@@ -249,6 +290,15 @@ async function ensureIssue(spec, milestoneNumber, planKeyMap) {
     const existingLabels = (existing.labels || []).map((l) => l.name).sort();
     if (JSON.stringify(existingLabels) !== JSON.stringify([...labels].sort()))
       updates.labels = labels;
+
+    // Propagate spec.body changes via the AUTO zone, preserving human edits
+    // outside it. Epics skip this because updateEpicTaskList owns their body.
+    if (!skipBodyUpdate) {
+      const existingBody = existing.body || "";
+      const newAutoContent = (spec.body || "").trim();
+      const newBody = mergeAutoZone(existingBody, newAutoContent);
+      if (newBody !== existingBody) updates.body = newBody;
+    }
 
     if (Object.keys(updates).length > 0) {
       await octokit.issues.update({
@@ -281,18 +331,23 @@ async function ensureIssue(spec, milestoneNumber, planKeyMap) {
   return created.data.number;
 }
 
-/** Build the full body for a new issue */
+/** Build the full body for a new issue. The plan-managed content lives inside
+ *  the AUTO zone so that future runs can update it without touching human edits
+ *  outside the zone. */
 function buildIssueBody(spec, keyComment) {
-  const baseBody = (spec.body || "").trim();
-  const autoContent = ""; // empty for task issues on creation
-  return `${keyComment}\n\n${baseBody}\n\n${autoZone(autoContent)}`;
+  const autoContent = (spec.body || "").trim();
+  return `${keyComment}\n\n${autoZone(autoContent)}`;
 }
 
 /**
- * Update an epic issue's AUTO zone with the current task list.
+ * Update an epic issue's AUTO zone with the plan body and current task list.
  * Preserves all content outside the AUTO zone.
+ *
+ * @param {number}   epicNumber   Issue number of the epic.
+ * @param {string}   epicBody     The plan-sourced body for the epic (spec.body).
+ * @param {Array}    taskNumbers  Array of { title, number } for each task.
  */
-async function updateEpicTaskList(epicNumber, taskNumbers, planKeyMap) {
+async function updateEpicTaskList(epicNumber, epicBody, taskNumbers) {
   const issue = await octokit.issues.get({
     owner: OWNER,
     repo: REPO,
@@ -303,7 +358,11 @@ async function updateEpicTaskList(epicNumber, taskNumbers, planKeyMap) {
   const taskListLines = taskNumbers
     .map(({ title, number }) => `- [ ] #${number} ${title}`)
     .join("\n");
-  const newAutoContent = `## Tasks\n\n${taskListLines}`;
+  // AUTO zone owns both the plan-sourced epic description and the task list.
+  const bodyPart = (epicBody || "").trim();
+  const newAutoContent = bodyPart
+    ? `${bodyPart}\n\n---\n\n## Tasks\n\n${taskListLines}`
+    : `## Tasks\n\n${taskListLines}`;
 
   const newBody = mergeAutoZone(existingBody, newAutoContent);
   if (newBody !== existingBody) {
@@ -313,10 +372,10 @@ async function updateEpicTaskList(epicNumber, taskNumbers, planKeyMap) {
       issue_number: epicNumber,
       body: newBody,
     });
-    log("update", `epic #${epicNumber} task list`);
+    log("update", `epic #${epicNumber} body + task list`);
   } else {
     console.log(
-      `  ⬜ SKIP   epic #${epicNumber} task list (no changes)`
+      `  ⬜ SKIP   epic #${epicNumber} body + task list (no changes)`
     );
   }
 }
@@ -331,16 +390,6 @@ async function getOwnerNodeId() {
     { login: OWNER }
   );
   return resp.repositoryOwner.id;
-}
-
-async function getRepoNodeId() {
-  const resp = await gql(
-    `query($owner: String!, $name: String!) {
-      repository(owner: $owner, name: $name) { id }
-    }`,
-    { owner: OWNER, name: REPO }
-  );
-  return resp.repository.id;
 }
 
 async function findOrCreateProject(projectName, ownerNodeId) {
@@ -459,8 +508,11 @@ async function main() {
   for (const epic of plan.epics || []) {
     const milestoneNumber = milestoneNumbers[epic.milestone] || null;
 
-    // Ensure epic issue
-    const epicNumber = await ensureIssue(epic, milestoneNumber, planKeyMap);
+    // Ensure epic issue. Body is managed by updateEpicTaskList below so it
+    // can include both the plan description and the task list in one AUTO zone.
+    const epicNumber = await ensureIssue(epic, milestoneNumber, planKeyMap, {
+      skipBodyUpdate: true,
+    });
     allIssueNumbers.push(epicNumber);
 
     // Ensure each task sub-issue
@@ -471,10 +523,8 @@ async function main() {
       allIssueNumbers.push(taskNumber);
     }
 
-    // Update epic body with task list in AUTO zone
-    if (taskEntries.length > 0) {
-      await updateEpicTaskList(epicNumber, taskEntries, planKeyMap);
-    }
+    // Update epic body: plan description + task list, both inside AUTO zone
+    await updateEpicTaskList(epicNumber, epic.body || "", taskEntries);
   }
 
   // 5. GitHub Project v2

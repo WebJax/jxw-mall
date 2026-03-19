@@ -70,5 +70,5 @@ jobs:
           PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO: ${{ github.event.repository.name }}
-          PLAN_FILE: ${{ github.workspace }}/${{ inputs.plan_file || '.github/issue-plan.yml' }}
+          PLAN_FILE: ${{ github.workspace }}/${{ github.event.inputs.plan_file || '.github/issue-plan.yml' }}
         run: node index.js
