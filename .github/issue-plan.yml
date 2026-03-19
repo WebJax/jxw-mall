@@ -1,0 +1,587 @@
+# JXW Mall WordPress Plugin – Issue Plan
+# This file is read by the issue-agent workflow (.github/workflows/issue-agent.yml).
+# Running the workflow is idempotent: it creates or updates labels, milestones,
+# epics and sub-issues without creating duplicates.
+#
+# Each issue is tracked via a hidden HTML comment in its body:
+#   <!-- plan_key: <key> -->
+# The agent uses this key to find and update existing issues.
+
+project:
+  name: "JXW Mall Plugin Development"
+  description: "Internal WordPress plugin – Database + Admin UI"
+
+# ─── Labels ────────────────────────────────────────────────────────────────────
+labels:
+  # Type
+  - name: "type:feature"
+    color: "0075ca"
+    description: "New feature or request"
+  - name: "type:bug"
+    color: "d73a4a"
+    description: "Something isn't working"
+  - name: "type:chore"
+    color: "e4e669"
+    description: "Refactor, ops, tooling, maintenance"
+  - name: "type:docs"
+    color: "0052cc"
+    description: "Documentation only"
+  - name: "type:epic"
+    color: "8b2fc9"
+    description: "Milestone overview issue (Epic)"
+
+  # Area
+  - name: "area:admin"
+    color: "bfd4f2"
+    description: "wp-admin UI"
+  - name: "area:db"
+    color: "c2e0c6"
+    description: "Database schema, migrations, queries"
+  - name: "area:security"
+    color: "e11d48"
+    description: "Security, capabilities, nonces"
+  - name: "area:infra"
+    color: "f9d0c4"
+    description: "CI/CD, tooling, build system"
+  - name: "area:rest-api"
+    color: "fef2c0"
+    description: "REST API endpoints"
+
+  # Priority
+  - name: "prio:high"
+    color: "b60205"
+    description: "High priority"
+  - name: "prio:medium"
+    color: "fbca04"
+    description: "Medium priority"
+  - name: "prio:low"
+    color: "0e8a16"
+    description: "Low priority"
+
+  # Status
+  - name: "status:blocked"
+    color: "d93f0b"
+    description: "Blocked by another issue or external factor"
+
+# ─── Milestones ────────────────────────────────────────────────────────────────
+milestones:
+  - key: M1
+    title: "M1 - Foundation (v0.1)"
+    description: >
+      Plugin kan installeres, konfigureres i wp-admin, og DB-laget er sikkert og versioneret.
+
+  - key: M2
+    title: "M2 - Core workflow (v0.2)"
+    description: >
+      Den primære forretningsfunktion virker end-to-end med UI og DB.
+
+  - key: M3
+    title: "M3 - Hardening (v0.3)"
+    description: >
+      Stabilitet, performance og driftsikkerhed.
+
+  - key: M4
+    title: "M4 - Internal release (v1.0)"
+    description: >
+      Klar til intern drift og overdragelse.
+
+# ─── Epics & Tasks ─────────────────────────────────────────────────────────────
+epics:
+  # ── M1 Foundation ────────────────────────────────────────────────────────────
+  - key: M1-epic
+    milestone: M1
+    title: "[Epic] M1 - Foundation (v0.1)"
+    labels:
+      - "type:epic"
+      - "type:chore"
+      - "prio:high"
+    body: |
+      ## Formål
+      Pluginet kan installeres, konfigureres i wp-admin, og DB-laget er sikkert og versioneret.
+
+      ## Scope
+      **In:**
+      - Plugin-skelet og autoload
+      - Database-versionstyring og migrations
+      - Admin settings-side og baseline UI
+      - Capabilities + nonces
+
+      **Out:**
+      - Kernefunktionalitet (domænelogik) – det er M2
+      - Performance-optimering – det er M3
+
+      ## Acceptkriterier
+      - [ ] Plugin kan aktiveres uden fejl på WP 6.x
+      - [ ] DB oprettes korrekt og versionsstyres via migrations
+      - [ ] Admin UI viser settings-side og kan gemme valide indstillinger
+      - [ ] Alle admin-handlinger er beskyttet med nonce + capability check
+
+    tasks:
+      # A. Plugin skeleton
+      - key: M1-bootstrap
+        title: "Bootstrap plugin structure + autoload"
+        labels:
+          - "type:chore"
+          - "area:infra"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Opsæt den grundlæggende plugin-struktur med PSR-4-inspireret autoloading.
+
+          ## Acceptkriterier
+          - [ ] Mappestruktur: `includes/`, `admin/`, `db/`, `templates/`
+          - [ ] Autoloader registreret i `jxw-mall.php`
+          - [ ] Plugin aktiveres og deaktiveres uden PHP-fejl
+          - [ ] Plugin-konstanter defineret (`JXW_MALL_VERSION`, `JXW_MALL_PATH`, `JXW_MALL_URL`)
+
+      - key: M1-constants
+        title: "Define constants + environment detection"
+        labels:
+          - "type:chore"
+          - "area:infra"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Definer plugin-konstanter og environment-detection (dev/staging/prod).
+
+          ## Acceptkriterier
+          - [ ] `JXW_MALL_ENV` detekteres fra `WP_ENV` eller `wp-config.php` konstant
+          - [ ] Debug-output undertrykkes i prod
+          - [ ] Konstanter er dokumenteret i `README.md`
+
+      - key: M1-hooks
+        title: "Activation/deactivation hooks scaffolding"
+        labels:
+          - "type:chore"
+          - "area:infra"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér `register_activation_hook` og `register_deactivation_hook`.
+
+          ## Acceptkriterier
+          - [ ] Aktivering kører DB-migrations
+          - [ ] Deaktivering rydder op (crons, flushes rewrite rules)
+          - [ ] Hooks er unit-testbare (adskilt fra hook-registrering)
+
+      # B. Database
+      - key: M1-db-schema
+        title: "DB schema proposal (tables, indexes, relationships)"
+        labels:
+          - "type:chore"
+          - "area:db"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Design og dokumentér DB-skema for pluginets custom tables.
+
+          ## Acceptkriterier
+          - [ ] ER-diagram eller tabel-specifikation i `docs/db-schema.md`
+          - [ ] Tabeller navngivet med `{$wpdb->prefix}jxw_` præfiks
+          - [ ] Primærnøgler, foreign keys og indexes er specificeret
+          - [ ] Skemaet er reviewed og godkendt
+
+      - key: M1-db-migrations
+        title: "Implement DB versioning + migrations runner"
+        labels:
+          - "type:feature"
+          - "area:db"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér et migrations-system der versionstyrer DB-skema-ændringer.
+
+          ## Acceptkriterier
+          - [ ] Migrations-version gemmes i `wp_options` (`jxw_mall_db_version`)
+          - [ ] Migrations køres automatisk ved plugin-aktivering og plugin-opdatering
+          - [ ] Migrations er idempotente (kan køres flere gange uden fejl)
+          - [ ] Fejlende migration logger fejl og afbryder uden at korruptere data
+
+      - key: M1-db-tables
+        title: "Create tables on activation (dbDelta)"
+        labels:
+          - "type:feature"
+          - "area:db"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Opret custom DB-tabeller via `dbDelta()` eller custom SQL ved plugin-aktivering.
+
+          ## Acceptkriterier
+          - [ ] Tabeller oprettes korrekt på fresh install
+          - [ ] `dbDelta()` anvendes til at opdatere eksisterende tabeller
+          - [ ] Tabel-creation er wrappet i en `Migration` klasse
+          - [ ] Rollback-strategi dokumenteret
+
+      - key: M1-db-dao
+        title: "Repository/DAO layer (read/write abstraction)"
+        labels:
+          - "type:feature"
+          - "area:db"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Implementér et Repository/DAO-lag så UI-lag ikke skriver direkte SQL.
+
+          ## Acceptkriterier
+          - [ ] `JXW_Repository` base-klasse med `find()`, `findAll()`, `save()`, `delete()`
+          - [ ] Al SQL er prepared statements (`$wpdb->prepare()`)
+          - [ ] Repositories er unit-testbare med mock `$wpdb`
+          - [ ] Ingen direkte `$wpdb->query()` i admin-koden
+
+      # C. Admin UI
+      - key: M1-admin-menu
+        title: "Admin menu + settings page scaffold"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Opret admin-menu og settings-side i wp-admin.
+
+          ## Acceptkriterier
+          - [ ] Top-level menu item `JXW Mall` tilføjet
+          - [ ] Settings-side registreret med `add_settings_section()` + `add_settings_field()`
+          - [ ] Siden er tilgængelig for `manage_options` capability
+          - [ ] Assets (CSS/JS) kun loaded på plugin-sider
+
+      - key: M1-settings-storage
+        title: "Settings storage (wp_options) + validation/sanitization"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér settings-storage med korrekt validering og sanitering.
+
+          ## Acceptkriterier
+          - [ ] Alle settings gemmes i `wp_options` med korrekt `sanitize_callback`
+          - [ ] Input valideres server-side før gemning
+          - [ ] Admin notice vises ved succesfuld/fejlet gemning
+          - [ ] Settings har sensible defaults
+
+      - key: M1-security
+        title: "Capabilities + nonce checks across admin actions"
+        labels:
+          - "type:feature"
+          - "area:security"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér capability checks og nonce-verifikation på alle admin-handlinger.
+
+          ## Acceptkriterier
+          - [ ] `current_user_can()` checks på alle admin-callbacks
+          - [ ] Nonces verificeres på alle POST-handlinger
+          - [ ] `check_admin_referer()` eller `wp_verify_nonce()` bruges konsekvent
+          - [ ] Ingen CSRF-vektorer i forms
+
+      # D. Observability
+      - key: M1-logging
+        title: "Logging strategy (custom table or error_log)"
+        labels:
+          - "type:chore"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Definer og implementér logging-strategi for pluginet.
+
+          ## Acceptkriterier
+          - [ ] Logger-klasse med `log($level, $message, $context)` interface
+          - [ ] I dev: logger til `error_log` + WP Debug Log
+          - [ ] I prod: kritiske fejl gemmes i custom `jxw_mall_logs` tabel
+          - [ ] Log-rotation/oprydning planlagt
+
+      - key: M1-admin-notices
+        title: "Admin notices for migration failures"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Vis admin notices når DB-migrations fejler eller kræver opmærksomhed.
+
+          ## Acceptkriterier
+          - [ ] Error notice vises i wp-admin ved fejlet migration
+          - [ ] Notice inkluderer actionable information (hvad gik galt, hvad man skal gøre)
+          - [ ] Notices kan dismisses (transient-baseret)
+
+  # ── M2 Core workflow ─────────────────────────────────────────────────────────
+  - key: M2-epic
+    milestone: M2
+    title: "[Epic] M2 - Core workflow (v0.2)"
+    labels:
+      - "type:epic"
+      - "type:feature"
+      - "prio:high"
+    body: |
+      ## Formål
+      Den primære forretningsfunktion virker end-to-end med admin UI og DB.
+
+      ## Scope
+      **In:**
+      - CRUD service-lag
+      - Admin list table (WP_List_Table)
+      - Create/edit screen med validering
+      - Permissions matrix
+
+      **Out:**
+      - Performance-optimering (M3)
+      - Offentlig dokumentation (M4)
+
+      ## Acceptkriterier
+      - [ ] Admin-brugere kan oprette, læse, redigere og slette records
+      - [ ] Al CRUD er sikret med capabilities og nonces
+      - [ ] WP_List_Table viser records med pagination og bulk actions
+
+    tasks:
+      - key: M2-usecases
+        title: "Define core use-cases + user flows (admin)"
+        labels:
+          - "type:chore"
+          - "area:admin"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Dokumentér og afklar kernefunktionalitetens use cases og user flows.
+
+          ## Acceptkriterier
+          - [ ] Use case-diagram eller flowchart i `docs/use-cases.md`
+          - [ ] Happy path og edge cases beskrevet
+          - [ ] Godkendt af stakeholder inden implementering starter
+
+      - key: M2-crud-service
+        title: "CRUD service layer"
+        labels:
+          - "type:feature"
+          - "area:db"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér service-lag med CRUD-operationer bygget ovenpå DAO-laget fra M1.
+
+          ## Acceptkriterier
+          - [ ] `JXW_Service` klasse med `create()`, `read()`, `update()`, `delete()`
+          - [ ] Business logic adskilt fra persistence-laget
+          - [ ] Events/hooks (actions) fyret ved create/update/delete
+          - [ ] Validering i service-laget (ikke kun i UI)
+
+      - key: M2-list-table
+        title: "Admin list table (WP_List_Table) for records"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér WP_List_Table til at vise records i wp-admin.
+
+          ## Acceptkriterier
+          - [ ] Udvider `WP_List_Table` med korrekte columns
+          - [ ] Pagination fungerer korrekt
+          - [ ] Sortable columns implementeret
+          - [ ] Søgefunktion tilføjet (search box)
+
+      - key: M2-create-edit
+        title: "Create/edit screen + validation"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Implementér create/edit-skærme med server-side validering.
+
+          ## Acceptkriterier
+          - [ ] Formular til oprettelse og redigering af records
+          - [ ] Server-side validering med tydelige fejlmeddelelser
+          - [ ] Nonce-beskyttelse på alle form-submissions
+          - [ ] Redirect after POST (PRG pattern)
+
+      - key: M2-bulk-actions
+        title: "Bulk actions + pagination"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Tilføj bulk actions og sørg for pagination i list table.
+
+          ## Acceptkriterier
+          - [ ] Minimum "Delete" som bulk action
+          - [ ] Bulk actions verificerer nonce + capabilities
+          - [ ] Pagination skalerer til store datasets (LIMIT/OFFSET)
+
+      - key: M2-permissions
+        title: "Permissions matrix"
+        labels:
+          - "type:chore"
+          - "area:security"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Definer og implementér en permissions-matrix for pluginets funktioner.
+
+          ## Acceptkriterier
+          - [ ] Permissions-matrix dokumenteret i `docs/permissions.md`
+          - [ ] Custom capabilities tilføjet (fx `jxw_mall_manage_records`)
+          - [ ] Capabilities tildelt relevante roller ved plugin-aktivering
+          - [ ] Capabilities fjernet ved deaktivering/afinstallering
+
+  # ── M3 Hardening ─────────────────────────────────────────────────────────────
+  - key: M3-epic
+    milestone: M3
+    title: "[Epic] M3 - Hardening (v0.3)"
+    labels:
+      - "type:epic"
+      - "type:chore"
+      - "prio:medium"
+    body: |
+      ## Formål
+      Stabilitet, performance og driftsikkerhed.
+
+      ## Acceptkriterier
+      - [ ] Performance-review gennemført og kritiske queries optimeret
+      - [ ] Caching-strategi implementeret
+      - [ ] Security-audit gennemført uden kritiske fund
+
+    tasks:
+      - key: M3-performance
+        title: "Performance review: indexes + query plans"
+        labels:
+          - "type:chore"
+          - "area:db"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Gennemgå og optimer DB-queries og indexes.
+
+          ## Acceptkriterier
+          - [ ] EXPLAIN ANALYZE på alle kritiske queries
+          - [ ] Composite indexes tilføjet hvor nødvendigt
+          - [ ] Query-count pr. side-load dokumenteret og acceptable
+
+      - key: M3-caching
+        title: "Caching strategy (object cache / transients)"
+        labels:
+          - "type:feature"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Implementér caching for hyppigt tilgåede data.
+
+          ## Acceptkriterier
+          - [ ] WP Object Cache bruges til korttids-cache
+          - [ ] Transients til persistence-cache med TTL
+          - [ ] Cache invalideres korrekt ved write-operationer
+
+      - key: M3-error-handling
+        title: "Error handling + retries for critical operations"
+        labels:
+          - "type:feature"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Robustgør fejlhåndtering i kritiske operationer.
+
+          ## Acceptkriterier
+          - [ ] Try/catch blokke om alle DB-operationer
+          - [ ] Retry-logik for transiente fejl (fx DB timeout)
+          - [ ] Graceful degradation: plugin fejler ikke hele WP-siden
+
+      - key: M3-security-audit
+        title: "Security review: XSS/CSRF/SQLi audit"
+        labels:
+          - "type:chore"
+          - "area:security"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Gennemfør en sikkerhedsreview af hele pluginet.
+
+          ## Acceptkriterier
+          - [ ] Al output escaped med `esc_html()`, `esc_attr()`, `wp_kses_post()` o.l.
+          - [ ] Ingen interpolerede variabler i SQL (kun `$wpdb->prepare()`)
+          - [ ] CSRF-beskyttelse verificeret på alle state-changing endpoints
+          - [ ] Plugin Checksum (evt. WPScan) kørt og fund adresseret
+
+  # ── M4 Internal release ───────────────────────────────────────────────────────
+  - key: M4-epic
+    milestone: M4
+    title: "[Epic] M4 - Internal release (v1.0)"
+    labels:
+      - "type:epic"
+      - "type:chore"
+      - "prio:medium"
+    body: |
+      ## Formål
+      Pluginet er klar til intern drift og overdragelse til driftsansvarlig.
+
+      ## Acceptkriterier
+      - [ ] Dokumentation komplet og godkendt
+      - [ ] Release checklist gennemgået
+      - [ ] Plugin installeret og fungerer i staging-miljø
+
+    tasks:
+      - key: M4-ux-polish
+        title: "Admin UX polish + help text"
+        labels:
+          - "type:feature"
+          - "area:admin"
+          - "prio:low"
+        body: |
+          ## Opgave
+          Finpuds admin UI og tilføj hjælpetekster.
+
+          ## Acceptkriterier
+          - [ ] Contextual help tabs tilføjet på settings-sider
+          - [ ] Tooltips/beskrivende tekst på alle felter
+          - [ ] Konsistent UI-sprog (dansk/engelsk)
+
+      - key: M4-ops-docs
+        title: "Ops docs: install, rollback, troubleshooting"
+        labels:
+          - "type:docs"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Skriv driftsdokumentation til den interne driftsansvarlige.
+
+          ## Acceptkriterier
+          - [ ] Installationsguide (krav, afhængigheder, trin)
+          - [ ] Rollback-procedure ved fejlet opdatering
+          - [ ] Fejlfindingsguide (common issues + løsninger)
+
+      - key: M4-backup-docs
+        title: "Backup/restore notes for custom tables"
+        labels:
+          - "type:docs"
+          - "prio:medium"
+        body: |
+          ## Opgave
+          Dokumentér backup og restore-procedure for pluginets custom DB-tabeller.
+
+          ## Acceptkriterier
+          - [ ] Hvilke tabeller skal backup'es (og hvornår)
+          - [ ] mysqldump-kommandoer med korrekte flags
+          - [ ] Restore-procedure testet i staging
+
+      - key: M4-release-checklist
+        title: "Release checklist"
+        labels:
+          - "type:chore"
+          - "prio:high"
+        body: |
+          ## Opgave
+          Lav og gennemgå en release checklist inden v1.0 internal release.
+
+          ## Acceptkriterier
+          - [ ] Version bumped i plugin header
+          - [ ] Changelog opdateret
+          - [ ] Alle M1–M3 issues lukket
+          - [ ] Staging-test godkendt
+          - [ ] Backup taget inden deployment til prod
