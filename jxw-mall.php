@@ -191,7 +191,7 @@ function centershop_template_include( $template ) {
 	}
 	
 	// Check if we're on the butikslister page template
-	if ( is_page_template( 'visbutikslister.php' ) ) {
+	if ( 'visbutikslister.php' === get_page_template_slug() ) {
 		$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/visbutikslister.php';
 		if ( file_exists( $plugin_template ) ) {
 			return $plugin_template;
@@ -208,18 +208,6 @@ function centershop_add_page_templates( $templates ) {
 	return $templates;
 }
 add_filter( 'theme_page_templates', 'centershop_add_page_templates' );
-
-// Load plugin page templates
-function centershop_load_plugin_templates( $template ) {
-	if ( get_page_template_slug() === 'visbutikslister.php' ) {
-		$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/visbutikslister.php';
-		if ( file_exists( $plugin_template ) ) {
-			return $plugin_template;
-		}
-	}
-	return $template;
-}
-add_filter( 'page_template', 'centershop_load_plugin_templates' );
 
 // Register Gutenberg blocks
 function centershop_register_blocks() {
