@@ -2,11 +2,7 @@
 /**
  * Centralt Admin Menu System for CenterShop
  * 
- * Håndterer hovedmenu og alle undermenuer for:
- * - Butikker
- * - SoMe Planner
- * - Facebook Feed
- * - Butik-adgange
+ * Håndterer hovedmenu og undermenuer for butiksfunktionalitet.
  */
 
 if (!defined('ABSPATH')) {
@@ -115,46 +111,6 @@ class CenterShop_Admin_Menu {
             array($this, 'render_export_emails_redirect')
         );
         
-        // SoMe Planner
-        add_submenu_page(
-            self::MENU_SLUG,
-            __('SoMe Planner', 'centershop_txtdomain'),
-            __('SoMe Planner', 'centershop_txtdomain'),
-            'edit_posts',
-            self::MENU_SLUG . '-planner',
-            array($this, 'render_planner_page')
-        );
-        
-        // Facebook Feed
-        add_submenu_page(
-            self::MENU_SLUG,
-            __('Facebook Feed', 'centershop_txtdomain'),
-            __('Facebook Feed', 'centershop_txtdomain'),
-            'manage_options',
-            self::MENU_SLUG . '-facebook',
-            array($this, 'render_facebook_page')
-        );
-        
-        // Facebook Posts List
-        add_submenu_page(
-            self::MENU_SLUG,
-            __('Facebook Opslag', 'centershop_txtdomain'),
-            __('Facebook Opslag', 'centershop_txtdomain'),
-            'manage_options',
-            self::MENU_SLUG . '-facebook-posts',
-            array($this, 'render_facebook_posts_page')
-        );
-        
-        // Butik-adgange (kun for admins)
-        add_submenu_page(
-            self::MENU_SLUG,
-            __('Butik-adgange', 'centershop_txtdomain'),
-            __('Butik-adgange', 'centershop_txtdomain'),
-            'manage_options',
-            self::MENU_SLUG . '-shop-access',
-            array($this, 'render_shop_access_page')
-        );
-        
         // Indstillinger
         add_submenu_page(
             self::MENU_SLUG,
@@ -206,15 +162,6 @@ class CenterShop_Admin_Menu {
      * Render dashboard page
      */
     public function render_dashboard() {
-        $current_user = wp_get_current_user();
-        $is_shop_manager = in_array('shop_manager', (array) $current_user->roles);
-        
-        // Hvis butik-bruger, vis deres dashboard
-        if ($is_shop_manager) {
-            $this->render_shop_dashboard();
-            return;
-        }
-        
         // Admin dashboard
         ?>
         <div class="wrap centershop-dashboard">
@@ -234,43 +181,6 @@ class CenterShop_Admin_Menu {
                     </a>
                 </div>
                 
-                <div class="centershop-widget">
-                    <h2><?php _e('SoMe Posts', 'centershop_txtdomain'); ?></h2>
-                    <?php
-                    $post_count = wp_count_posts('centershop_post');
-                    $count = isset($post_count->publish) ? $post_count->publish : 0;
-                    ?>
-                    <p class="centershop-stat"><?php echo $count; ?></p>
-                    <p><?php _e('planlagte opslag', 'centershop_txtdomain'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=centershop-planner'); ?>" class="button">
-                        <?php _e('Åbn planner', 'centershop_txtdomain'); ?>
-                    </a>
-                </div>
-                
-                <div class="centershop-widget">
-                    <h2><?php _e('Facebook Feed', 'centershop_txtdomain'); ?></h2>
-                    <?php
-                    $fb_count = wp_count_posts('centershop_fb_post');
-                    $fb_total = isset($fb_count->publish) ? $fb_count->publish : 0;
-                    ?>
-                    <p class="centershop-stat"><?php echo $fb_total; ?></p>
-                    <p><?php _e('importerede opslag', 'centershop_txtdomain'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=centershop-facebook'); ?>" class="button">
-                        <?php _e('Indstillinger', 'centershop_txtdomain'); ?>
-                    </a>
-                </div>
-                
-                <div class="centershop-widget">
-                    <h2><?php _e('Butik-brugere', 'centershop_txtdomain'); ?></h2>
-                    <?php
-                    $shop_users = get_users(array('role' => 'shop_manager'));
-                    ?>
-                    <p class="centershop-stat"><?php echo count($shop_users); ?></p>
-                    <p><?php _e('butik-logins', 'centershop_txtdomain'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=centershop-shop-access'); ?>" class="button">
-                        <?php _e('Administrer', 'centershop_txtdomain'); ?>
-                    </a>
-                </div>
             </div>
             
             <!-- Seneste aktivitet -->
@@ -278,65 +188,6 @@ class CenterShop_Admin_Menu {
                 <h2><?php _e('Seneste aktivitet', 'centershop_txtdomain'); ?></h2>
                 <?php $this->render_recent_activity(); ?>
             </div>
-        </div>
-        <?php
-    }
-    
-    /**
-     * Render shop dashboard for shop_manager role
-     */
-    private function render_shop_dashboard() {
-        $current_user = wp_get_current_user();
-        $shop_id = get_user_meta($current_user->ID, 'centershop_shop_id', true);
-        $shop = $shop_id ? get_post($shop_id) : null;
-        
-        ?>
-        <div class="wrap centershop-shop-dashboard">
-            <h1><?php 
-                if ($shop) {
-                    printf(__('Velkommen, %s', 'centershop_txtdomain'), $shop->post_title);
-                } else {
-                    _e('Min butik', 'centershop_txtdomain');
-                }
-            ?></h1>
-            
-            <?php if (!$shop): ?>
-                <div class="notice notice-warning">
-                    <p><?php _e('Din bruger er ikke tilknyttet en butik endnu. Kontakt administrator.', 'centershop_txtdomain'); ?></p>
-                </div>
-            <?php else: ?>
-                <div class="centershop-dashboard-widgets">
-                    <div class="centershop-widget">
-                        <h2><?php _e('Min butik', 'centershop_txtdomain'); ?></h2>
-                        <p><?php echo esc_html($shop->post_title); ?></p>
-                        <a href="<?php echo get_edit_post_link($shop_id); ?>" class="button button-primary">
-                            <?php _e('Rediger butik', 'centershop_txtdomain'); ?>
-                        </a>
-                    </div>
-                    
-                    <div class="centershop-widget">
-                        <h2><?php _e('SoMe Planner', 'centershop_txtdomain'); ?></h2>
-                        <p><?php _e('Upload billeder og video til centrets SoMe', 'centershop_txtdomain'); ?></p>
-                        <a href="<?php echo admin_url('admin.php?page=centershop-planner'); ?>" class="button button-primary">
-                            <?php _e('Åbn planner', 'centershop_txtdomain'); ?>
-                        </a>
-                    </div>
-                    
-                    <div class="centershop-widget">
-                        <h2><?php _e('Mine uploads', 'centershop_txtdomain'); ?></h2>
-                        <?php
-                        $uploads = get_posts(array(
-                            'post_type' => 'centershop_post',
-                            'meta_key' => '_centershop_shop_id',
-                            'meta_value' => $shop_id,
-                            'posts_per_page' => -1
-                        ));
-                        ?>
-                        <p class="centershop-stat"><?php echo count($uploads); ?></p>
-                        <p><?php _e('uploads i alt', 'centershop_txtdomain'); ?></p>
-                    </div>
-                </div>
-            <?php endif; ?>
         </div>
         <?php
     }
@@ -384,38 +235,6 @@ class CenterShop_Admin_Menu {
             );
         }
         echo '</ul>';
-    }
-    
-    /**
-     * Render planner page
-     */
-    public function render_planner_page() {
-        // Loaded via some-planner module
-        do_action('centershop_render_planner');
-    }
-    
-    /**
-     * Render facebook page
-     */
-    public function render_facebook_page() {
-        // Loaded via facebook-feed module
-        do_action('centershop_render_facebook_settings');
-    }
-    
-    /**
-     * Render facebook posts page
-     */
-    public function render_facebook_posts_page() {
-        // Loaded via facebook-feed module
-        do_action('centershop_render_facebook_posts');
-    }
-    
-    /**
-     * Render shop access page
-     */
-    public function render_shop_access_page() {
-        // Loaded via shop-access module
-        do_action('centershop_render_shop_access');
     }
     
     /**

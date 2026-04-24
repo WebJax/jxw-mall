@@ -2,7 +2,7 @@
 /*
 Plugin Name: JXW Mall
 Plugin URI:  http://www.jaxweb.dk
-Description: Butiksoversigt, SoMe Planner og Facebook Feed for butikscentre
+Description: Butiksoversigt for butikscentre
 Version:     2.0.0
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
@@ -44,90 +44,13 @@ function centershop_load_modules() {
     // Core modules
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-admin-menu.php';
     
-    // Shop Access modules
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/shop-access/class-shop-roles.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/shop-access/class-shop-user-admin.php';
-    
-    // SoMe Planner modules
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/some-planner/class-planner-post-type.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/some-planner/class-planner-calendar.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/some-planner/class-planner-templates.php';
-    
-    // Facebook Feed modules
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-database.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-connections.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-post-type.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-api-handler.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-importer.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-cron.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-settings.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-posts-list.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-shortcodes.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-tenant-auth.php';
-    
     // Post-Shop connection module
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
     
     // Initialize modules
     CenterShop_Admin_Menu::get_instance();
-    CenterShop_Shop_Roles::get_instance();
-    CenterShop_Shop_User_Admin::get_instance();
-    CenterShop_Planner_Post_Type::get_instance();
-    CenterShop_Planner_Calendar::get_instance();
-    CenterShop_Planner_Templates::get_instance();
-    CenterShop_FB_Database::get_instance();
-    CenterShop_FB_Connections::get_instance();
-    CenterShop_FB_Post_Type::get_instance();
-    CenterShop_FB_API_Handler::get_instance();
-    CenterShop_FB_Importer::get_instance();
-    CenterShop_FB_Cron::get_instance();
-    CenterShop_FB_Settings::get_instance();
-    CenterShop_FB_Posts_List::get_instance();
-    CenterShop_FB_Tenant_Auth::get_instance();
 }
 add_action('plugins_loaded', 'centershop_load_modules');
-
-/**
- * Plugin activation hook
- */
-function centershop_activate() {
-    // Create Facebook posts database table
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-database.php';
-    CenterShop_FB_Database::create_table();
-    
-    // Create Facebook connections tables
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-connections.php';
-    CenterShop_FB_Connections::create_tables();
-    
-    // Flush rewrite rules for new endpoints
-    flush_rewrite_rules();
-    
-    // Setup cron jobs
-    if (!wp_next_scheduled('centershop_fb_import_cron')) {
-        wp_schedule_event(strtotime('03:00:00'), 'daily', 'centershop_fb_import_cron');
-    }
-}
-register_activation_hook(__FILE__, 'centershop_activate');
-
-/**
- * Plugin deactivation hook
- */
-function centershop_deactivate() {
-    // Clear cron jobs
-    wp_clear_scheduled_hook('centershop_fb_import_cron');
-    wp_clear_scheduled_hook('centershop_fb_token_refresh');
-}
-register_deactivation_hook(__FILE__, 'centershop_deactivate');
-
-/**
- * Track shop manager last login
- */
-function centershop_track_login($user_login, $user) {
-    if (in_array('shop_manager', (array) $user->roles)) {
-        update_user_meta($user->ID, 'centershop_last_login', time());
-    }
-}
-add_action('wp_login', 'centershop_track_login', 10, 2);
 
 function centershop_setup_post_types()
 {
@@ -343,33 +266,13 @@ add_action('init', 'centershop_register_meta_fields');
  
 function centershop_install()
 {
-    // Load required classes
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/shop-access/class-shop-roles.php';
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/facebook-feed/class-fb-cron.php';
-    
     // trigger our function that registers the custom post type
     centershop_setup_post_types();
-    
-    // Create shop_manager role
-    CenterShop_Shop_Roles::create_role();
-    
-    // Schedule Facebook cron
-    CenterShop_FB_Cron::schedule();
  
     // clear the permalinks after the post type has been registered
     flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'centershop_install' );
-/**
- * Plugin uninstall - remove role (optional)
- */
-function centershop_uninstall() {
-    // Load required class
-    require_once CENTERSHOP_PLUGIN_DIR . 'includes/shop-access/class-shop-roles.php';
-    
-    CenterShop_Shop_Roles::remove_role();
-}
-// register_uninstall_hook( __FILE__, 'centershop_uninstall' );
 
 function centershop_export_emails_page() {
     ?>
