@@ -3,7 +3,7 @@
 Plugin Name: JXW Mall
 Plugin URI:  http://www.jaxweb.dk
 Description: Butiksoversigt for butikscentre
-Version:     2.0.0
+Version:     1.5.0
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
 License:     GPL2
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('CENTERSHOP_VERSION', '2.0.0');
+define('CENTERSHOP_VERSION', '1.5.0');
 define('CENTERSHOP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 
