@@ -1,0 +1,86 @@
+/* Opening Hours v2 – Admin metabox styles */
+
+.jxw-oh-migration-notice {
+    background: #fff8e1;
+    border-left: 4px solid #f0b429;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
+
+.jxw-oh-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+}
+
+.jxw-oh-table th,
+.jxw-oh-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.jxw-oh-table th {
+    font-weight: 600;
+    background: #f9f9f9;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #555;
+}
+
+.jxw-oh-day-name {
+    min-width: 80px;
+}
+
+.jxw-oh-inherit-col,
+.jxw-oh-status-col {
+    text-align: center;
+}
+
+.jxw-oh-time-input {
+    width: 110px;
+}
+
+.jxw-oh-time-input:disabled,
+.jxw-oh-status-select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.jxw-oh-center-hint {
+    color: #888;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.jxw-oh-center-hint-col {
+    min-width: 120px;
+}
+
+.jxw-oh-day-row.jxw-oh-inherited td:not(.jxw-oh-day-name):not(.jxw-oh-inherit-col) {
+    opacity: 0.5;
+}
+
+/* Exceptions table */
+.jxw-oh-exceptions-table {
+    margin-bottom: 8px;
+}
+
+.jxw-oh-exceptions-table th,
+.jxw-oh-exceptions-table td {
+    padding: 5px 7px;
+}
+
+.jxw-oh-exc-input {
+    width: 100%;
+    min-width: 90px;
+}
+
+.jxw-oh-exc-time:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#jxw-oh-add-exc {
+    margin-top: 4px;
+}

@@ -2,7 +2,7 @@
 /*
 Plugin Name: JXW Mall
 Plugin URI:  http://www.jaxweb.dk
-Description: Butiksoversigt for butikscentre
+Description: Butiksoversigt i Dianalund Centret med kort og åbningstider
 Version:     1.5.0
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
@@ -57,6 +57,7 @@ function centershop_setup_post_types()
     // register the three custom post type
 
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
+  require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");
   register_post_type( 'butiksside', $args );
   add_action('save_post', 'save_butiks_meta', 999, 2); // save the custom fields
   
@@ -84,6 +85,24 @@ function centershop_setup_post_types()
 		wp_enqueue_style( 'centershop-zindex-styles', plugins_url('/css/centershop-zindex-styles.css', __FILE__ ) );
 		wp_enqueue_media();
 		wp_enqueue_script('cpt-get-logo-cpt-js',  plugins_url('/js/get-logo-cpt.js', __FILE__ ) );
+
+		// Opening Hours v2 admin assets (only on butiksside edit screens)
+		$screen = get_current_screen();
+		if ( $screen && $screen->post_type === 'butiksside' && in_array( $screen->base, [ 'post', 'post-new' ], true ) ) {
+			wp_enqueue_style(
+				'jxw-opening-hours-admin',
+				plugins_url( '/css/opening-hours-admin.css', __FILE__ ),
+				[],
+				filemtime( plugin_dir_path( __FILE__ ) . 'css/opening-hours-admin.css' )
+			);
+			wp_enqueue_script(
+				'jxw-opening-hours-admin',
+				plugins_url( '/js/opening-hours-admin.js', __FILE__ ),
+				[],
+				filemtime( plugin_dir_path( __FILE__ ) . 'js/opening-hours-admin.js' ),
+				true
+			);
+		}
 	}
 	
 	add_action('admin_enqueue_scripts','enqueue_datepicker_ui_for_associations');

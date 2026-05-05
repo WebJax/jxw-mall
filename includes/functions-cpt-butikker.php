@@ -50,29 +50,9 @@
 
 
  function add_butik_metaboxes(){
-		 add_meta_box("butik_open_info", "Åbningstider", "butik_open_meta_options", "butiksside", "normal", "high");
+		 add_meta_box( 'butik_open_info', 'Åbningstider', 'jxw_opening_hours_v2_metabox_html', 'butiksside', 'normal', 'high' );
 		 add_meta_box("butik_kontakt_info", "Kontakt information", "butik_kontakt_meta_options", "butiksside", "side", "high" );
 		 add_meta_box("butik_logo_pic", "Logo", "butik_logo_meta_options", "butiksside", "side", "low" );	 	
- }  
-
- function butik_open_meta_options(){
-		global $post;
-		// Noncename needed to verify where the data originated
-		echo '<input type="hidden" name="butiksmeta_noncename" id="butiksmeta_noncename" value="' . 
-		wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
-
-		// Get the location data if its already been entered
-		$butik_payed_open = get_post_meta($post->ID, 'butik_aabentider', true);
-		if ($butik_payed_open == '') {
-			$butik_payed_open = "<table><tr><td>Mandag</td><td>10:00 - 18:00</td></tr><tr><td>Tirsdag</td><td>10:00 - 18:00</td></tr><tr><td>Onsdag</td><td>10:00 - 18:00</td></tr><tr><td>Torsdag</td><td>10:00 - 18:00</td></tr><tr><td>Fredag</td><td>10:00 - 18:00</td></tr><tr><td>Lørdag</td><td>10:00 - 13:00</td></tr><tr><td>Søndag</td><td>Lukket</td></tr></table>";
-		} 
-		wp_editor( $butik_payed_open, 'butik_aabentider', array(
-    'wpautop'       => true,
-    'media_buttons' => false,
-    'textarea_name' => 'butik_aabentider',
-    'textarea_rows' => 10,
-		'teeny'					=> true
-		) );
  }  
 
 function butik_kontakt_meta_options(){
@@ -148,7 +128,6 @@ function save_butiks_meta($post_id, $post) {
 	// OK, we're authenticated: we need to find and save the data
 	// We'll put it into an array to make it easier to loop though.
 	
-	if (isset($_POST['butik_aabentider'])) $events_meta['butik_aabentider'] = $_POST['butik_aabentider'];
 	if (isset($_POST['butik_payed_name'])) $events_meta['butik_payed_name'] = $_POST['butik_payed_name'];
 	if (isset($_POST['butik_payed_adress'])) $events_meta['butik_payed_adress'] = $_POST['butik_payed_adress'];
 	if (isset($_POST['butik_payed_postal'])) $events_meta['butik_payed_postal'] = $_POST['butik_payed_postal'];
