@@ -43,12 +43,16 @@ define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 function centershop_load_modules() {
     // Core modules
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-admin-menu.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-settings.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-floorplan.php';
     
     // Post-Shop connection module
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
     
     // Initialize modules
     CenterShop_Admin_Menu::get_instance();
+    CenterShop_Settings::get_instance();
+    CenterShop_FloorPlan::get_instance();
 }
 add_action('plugins_loaded', 'centershop_load_modules');
 

@@ -133,11 +133,14 @@ function jxw_render_butik_hours_html( int $post_id ): string {
         $label  = esc_html( $exception['label'] ?? 'Særlige åbningstider' );
         $status = $exception['status'] ?? 'closed';
         if ( $status === 'closed' ) {
-            $time_str = 'Lukket';
+            $from_fmt = $exception['from_date'] ? date_i18n( 'j. M Y', strtotime( $exception['from_date'] ) ) : '';
+            $to_fmt   = $exception['to_date']   ? date_i18n( 'j. M Y', strtotime( $exception['to_date'] ) )   : '';
+            $detail   = $from_fmt && $to_fmt ? '<span class="exception-dates">Fra: ' . $from_fmt . ' til: ' . $to_fmt . '</span>' : '';
+            $html .= '<p class="butik-exception-row"><strong>' . $label . '</strong>' . $detail . '</p>';
         } else {
             $time_str = esc_html( $exception['from'] ?? '' ) . ' – ' . esc_html( $exception['to'] ?? '' );
+            $html .= '<p class="butik-exception-row"><strong>' . $label . ':</strong> ' . $time_str . '</p>';
         }
-        $html .= '<p class="butik-exception-row"><strong>' . $label . ':</strong> ' . $time_str . '</p>';
     }
 
     $html .= '<table class="butik-aabentider-tabel">';

@@ -49,6 +49,14 @@
   margin-top: -30px;
 }
 
-.erhvervsliste-postnrby {
-  
+.butik-socialmedia {
+    margin: 2rem 0 0;
+}
+
+tr.idag {font-weight: 900;}
+
+.butik-exception-row .exception-dates {
+    font-size: .7rem;
+    display: block;
+    margin-top: -5px;
 }

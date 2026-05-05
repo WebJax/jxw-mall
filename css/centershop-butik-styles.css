@@ -140,8 +140,9 @@ img.listbutiklogo {
 /* Butik info */
 .butikinfo {
     background-color: #efefef;
-    font-size: .9rem;
+    font-size: 1rem;
     line-height: 1.2;
+    padding: 10px;
 }
 
 .butiksliste .butikinfo, .listbutiklogo {

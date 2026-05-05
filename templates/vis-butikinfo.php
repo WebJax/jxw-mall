@@ -5,7 +5,7 @@
   <?php echo $post->butik_payed_adress;?><br/>
   <?php echo $post->butik_payed_postal." ".$post->butik_payed_city; ?><br/>
   <?php echo "Telefon: ".$post->butik_payed_phone; ?><br/>
-  <div style="margin: 2rem auto -1rem;">
+  <div class="butik-socialmedia">
   <?php 
   $logo = false; 
   if ($post->butik_payed_mail != '') { 
