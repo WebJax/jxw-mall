@@ -229,15 +229,19 @@ class CenterShop_Shopping_Hours {
    * AJAX functions
    **/
   public function shoppinghours_register_custom_closing_day() {
-    $registered = "registered";
-    echo $registered;
-    wp_die();
+    check_ajax_referer( 'centershop_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+      wp_send_json_error( array( 'message' => __( 'Adgang nægtet.', 'centershop_txtdomain' ) ), 403 );
+    }
+    wp_send_json_success( array( 'message' => 'registered' ) );
   }
 
   public function shoppinghours_deregister_custom_closing_day() {
-    $deregistered = "deregistering";
-    echo $deregistered;
-    wp_die();
+    check_ajax_referer( 'centershop_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+      wp_send_json_error( array( 'message' => __( 'Adgang nægtet.', 'centershop_txtdomain' ) ), 403 );
+    }
+    wp_send_json_success( array( 'message' => 'deregistering' ) );
   }
 
   /**

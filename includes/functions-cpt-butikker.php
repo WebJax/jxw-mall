@@ -57,9 +57,7 @@
 
 function butik_kontakt_meta_options(){
 		global $post;
-		// Noncename needed to verify where the data originated
-		echo '<input type="hidden" name="kontaktbutiksmeta_noncename" id="kontaktbutiksmeta_noncename" value="' . 
-		wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
+		wp_nonce_field( plugin_basename(__FILE__), 'kontaktbutiksmeta_noncename' );
 
 		// Get the location data if its already been entered
 		$butik_payed_name = get_post_meta($post->ID, 'butik_payed_name', true);
@@ -74,33 +72,31 @@ function butik_kontakt_meta_options(){
 	
 		?>
 		<table>
-			<tr><td><label for="butik_payed_name">Butiksnavn:</label><br/><input type="text" value="<?php echo $butik_payed_name;?>" name="butik_payed_name" id="butik_payed_name"/></td></tr>
-			<tr><td><label for="butik_payed_adress">Adresse:</label><br/><input type="text" value="<?php echo $butik_payed_adress;?>" name="butik_payed_adress" id="butik_payed_adress"/></td></tr>
-			<tr><td><label for="butik_payed_postal">Postnr:</label><br/><input type="text" value="<?php echo $butik_payed_postal;?>" name="butik_payed_postal" id="butik_payed_postal"/></td></tr>
-			<tr><td><label for="butik_payed_city">By:</label><br/><input type="text" value="<?php echo $butik_payed_city;?>" name="butik_payed_city" id="butik_payed_city"/></td></tr>
-			<tr><td><label for="butik_payed_phone">Telefon:</label><br/><input type="text" value="<?php echo $butik_payed_phone;?>" name="butik_payed_phone" id="butik_payed_phone"/></td></tr>
-			<tr><td><label for="butik_payed_mail">Email:</label><br/><input type="text" value="<?php echo $butik_payed_mail;?>" name="butik_payed_mail" id="butik_payed_mail"/></td></tr>
-			<tr><td><label for="butik_payed_web">Hjemmeside:</label><br/><input type="text" value="<?php echo $butik_payed_web;?>" name="butik_payed_web" id="butik_payed_web"/></td></tr>
-			<tr><td><label for="butik_payed_fb">Facebook:</label><br/><input type="text" value="<?php echo $butik_payed_fb;?>" name="butik_payed_fb" id="butik_payed_fb"/></td></tr>
-			<tr><td><label for="butik_payed_insta">Instagram:</label><br/><input type="text" value="<?php echo $butik_payed_insta;?>" name="butik_payed_insta" id="butik_payed_insta"/></td></tr>
+			<tr><td><label for="butik_payed_name">Butiksnavn:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_name ); ?>" name="butik_payed_name" id="butik_payed_name"/></td></tr>
+			<tr><td><label for="butik_payed_adress">Adresse:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_adress ); ?>" name="butik_payed_adress" id="butik_payed_adress"/></td></tr>
+			<tr><td><label for="butik_payed_postal">Postnr:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_postal ); ?>" name="butik_payed_postal" id="butik_payed_postal"/></td></tr>
+			<tr><td><label for="butik_payed_city">By:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_city ); ?>" name="butik_payed_city" id="butik_payed_city"/></td></tr>
+			<tr><td><label for="butik_payed_phone">Telefon:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_phone ); ?>" name="butik_payed_phone" id="butik_payed_phone"/></td></tr>
+			<tr><td><label for="butik_payed_mail">Email:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_mail ); ?>" name="butik_payed_mail" id="butik_payed_mail"/></td></tr>
+			<tr><td><label for="butik_payed_web">Hjemmeside:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_web ); ?>" name="butik_payed_web" id="butik_payed_web"/></td></tr>
+			<tr><td><label for="butik_payed_fb">Facebook:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_fb ); ?>" name="butik_payed_fb" id="butik_payed_fb"/></td></tr>
+			<tr><td><label for="butik_payed_insta">Instagram:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_insta ); ?>" name="butik_payed_insta" id="butik_payed_insta"/></td></tr>
 		</table>
 <?php
  }  
 
 function butik_logo_meta_options() {
 	global $post;
-	// Noncename needed to verify where the data originated
-	echo '<input type="hidden" name="logobutiksmeta_noncename" id="logobutiksmeta_noncename" value="' . 
-	wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
+	wp_nonce_field( plugin_basename(__FILE__), 'logobutiksmeta_noncename' );
 	$image_src = '';
 	$image_id = get_post_meta( $post->ID, 'allround-cpt_logo_id', true );
 	$image_src = wp_get_attachment_url( $image_id );
 	?>
-	<img id="allround-cpt-logo" src="<?php echo $image_src ?>" style="max-width:100%;" />
-	<input type="hidden" name="allround-cpt_logo_id" id="allround-cpt_logo_id" value="<?php echo $image_id; ?>" />
+	<img id="allround-cpt-logo" src="<?php echo esc_url( $image_src ); ?>" style="max-width:100%;" />
+	<input type="hidden" name="allround-cpt_logo_id" id="allround-cpt_logo_id" value="<?php echo esc_attr( $image_id ); ?>" />
 	<p>
-		<a title="<?php esc_attr_e( 'Hent logo' ) ?>" href="#" id="hent-logo" class="<?php echo ( $image_id ? 'hidden' : '' ); ?>"><?php _e( 'Hent logo' ) ?></a>
-		<a title="<?php esc_attr_e( 'Fjern logo' ) ?>" href="#" id="fjern-logo" class="<?php echo ( ! $image_id ? 'hidden' : '' ); ?>"><?php _e( 'Fjern logo' ) ?></a>
+		<a title="<?php esc_attr_e( 'Hent logo' ); ?>" href="#" id="hent-logo" class="<?php echo esc_attr( $image_id ? 'hidden' : '' ); ?>"><?php _e( 'Hent logo' ); ?></a>
+		<a title="<?php esc_attr_e( 'Fjern logo' ); ?>" href="#" id="fjern-logo" class="<?php echo esc_attr( ! $image_id ? 'hidden' : '' ); ?>"><?php _e( 'Fjern logo' ); ?></a>
 	</p>
 	<?php
 }
@@ -109,15 +105,14 @@ function butik_logo_meta_options() {
 
 function save_butiks_meta($post_id, $post) {
 	
-	// verify this came from the our screen and with proper authorization,
-	// because save_post can be triggered at other times
-	if ( isset($_POST['butiksmeta_noncename']) && !wp_verify_nonce( $_POST['butiksmeta_noncename'], plugin_basename(__FILE__) )) {
+	if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
 		return $post->ID;
 	}
-	if ( isset($_POST['butiksmeta_noncename']) && !wp_verify_nonce( $_POST['kontaktbutiksmeta_noncename'], plugin_basename(__FILE__) )) {
-		return $post->ID;
-	}
-	if ( isset($_POST['butiksmeta_noncename']) && !wp_verify_nonce( $_POST['logobutiksmeta_noncename'], plugin_basename(__FILE__) )) {
+	if (
+		! isset( $_POST['kontaktbutiksmeta_noncename'], $_POST['logobutiksmeta_noncename'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kontaktbutiksmeta_noncename'] ) ), plugin_basename(__FILE__) ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['logobutiksmeta_noncename'] ) ), plugin_basename(__FILE__) )
+	) {
 		return $post->ID;
 	}
 
@@ -128,16 +123,16 @@ function save_butiks_meta($post_id, $post) {
 	// OK, we're authenticated: we need to find and save the data
 	// We'll put it into an array to make it easier to loop though.
 	
-	if (isset($_POST['butik_payed_name'])) $events_meta['butik_payed_name'] = $_POST['butik_payed_name'];
-	if (isset($_POST['butik_payed_adress'])) $events_meta['butik_payed_adress'] = $_POST['butik_payed_adress'];
-	if (isset($_POST['butik_payed_postal'])) $events_meta['butik_payed_postal'] = $_POST['butik_payed_postal'];
-	if (isset($_POST['butik_payed_city'])) $events_meta['butik_payed_city'] = $_POST['butik_payed_city'];
-	if (isset($_POST['butik_payed_phone'])) $events_meta['butik_payed_phone'] = $_POST['butik_payed_phone'];
-	if (isset($_POST['butik_payed_mail'])) $events_meta['butik_payed_mail'] = $_POST['butik_payed_mail'];
-	if (isset($_POST['butik_payed_web'])) $events_meta['butik_payed_web'] = $_POST['butik_payed_web'];
-	if (isset($_POST['butik_payed_fb'])) $events_meta['butik_payed_fb'] = $_POST['butik_payed_fb'];
-	if (isset($_POST['butik_payed_insta'])) $events_meta['butik_payed_insta'] = $_POST['butik_payed_insta'];
-	if (isset($_POST['allround-cpt_logo_id'])) $events_meta['allround-cpt_logo_id'] = $_POST['allround-cpt_logo_id'];		
+	if (isset($_POST['butik_payed_name'])) $events_meta['butik_payed_name'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_name'] ) );
+	if (isset($_POST['butik_payed_adress'])) $events_meta['butik_payed_adress'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_adress'] ) );
+	if (isset($_POST['butik_payed_postal'])) $events_meta['butik_payed_postal'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_postal'] ) );
+	if (isset($_POST['butik_payed_city'])) $events_meta['butik_payed_city'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_city'] ) );
+	if (isset($_POST['butik_payed_phone'])) $events_meta['butik_payed_phone'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_phone'] ) );
+	if (isset($_POST['butik_payed_mail'])) $events_meta['butik_payed_mail'] = sanitize_email( wp_unslash( $_POST['butik_payed_mail'] ) );
+	if (isset($_POST['butik_payed_web'])) $events_meta['butik_payed_web'] = esc_url_raw( wp_unslash( $_POST['butik_payed_web'] ) );
+	if (isset($_POST['butik_payed_fb'])) $events_meta['butik_payed_fb'] = esc_url_raw( wp_unslash( $_POST['butik_payed_fb'] ) );
+	if (isset($_POST['butik_payed_insta'])) $events_meta['butik_payed_insta'] = esc_url_raw( wp_unslash( $_POST['butik_payed_insta'] ) );
+	if (isset($_POST['allround-cpt_logo_id'])) $events_meta['allround-cpt_logo_id'] = absint( $_POST['allround-cpt_logo_id'] );		
 	
 	// Add values of $events_meta as custom fields
 	if (isset($events_meta)) {
@@ -240,4 +235,3 @@ function butikker_quick_edit_data($post_id) {
     }       
     return $widget_set_id;  
 }
-

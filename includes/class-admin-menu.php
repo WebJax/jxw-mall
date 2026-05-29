@@ -174,9 +174,9 @@ class CenterShop_Admin_Menu {
                     <?php
                     $shop_count = wp_count_posts('butiksside');
                     ?>
-                    <p class="centershop-stat"><?php echo $shop_count->publish; ?></p>
+                    <p class="centershop-stat"><?php echo esc_html( $shop_count->publish ); ?></p>
                     <p><?php _e('aktive butikker', 'centershop_txtdomain'); ?></p>
-                    <a href="<?php echo admin_url('edit.php?post_type=butiksside'); ?>" class="button">
+                    <a href="<?php echo esc_url( admin_url('edit.php?post_type=butiksside') ); ?>" class="button">
                         <?php _e('Se alle', 'centershop_txtdomain'); ?>
                     </a>
                 </div>
@@ -231,7 +231,7 @@ class CenterShop_Admin_Menu {
                 '<li><span class="activity-type activity-%s"></span> %s <span class="activity-time">%s</span></li>',
                 esc_attr($activity['type']),
                 wp_kses_post($activity['text']),
-                human_time_diff($activity['time']) . ' ' . __('siden', 'centershop_txtdomain')
+                esc_html( human_time_diff($activity['time']) . ' ' . __('siden', 'centershop_txtdomain') )
             );
         }
         echo '</ul>';

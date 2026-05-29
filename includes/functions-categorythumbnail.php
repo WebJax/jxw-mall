@@ -1,18 +1,18 @@
 <?php
 // Add thumbnail for any category
 
-function addTitleFieldToCat(){
-    $image_id = get_term_meta($_POST['tag_ID'], '_thumbnail', true);
+function addTitleFieldToCat( $term ){
+    $image_id = get_term_meta( $term->term_id, '_thumbnail', true );
   	$image_src = wp_get_attachment_url( $image_id );
     ?> 
     <tr class="form-field">
         <th scope="row" valign="top"><label for="cat_thumbnail"><?php _e('Category Thumbnail'); ?></label></th>
         <td>
-          <img id="allround-cpt-logo" src="<?php echo $image_src ?>" style="max-width:100%;" />
-          <input type="hidden" name="allround-cpt_logo_id" id="allround-cpt_logo_id" value="<?php echo $image_id; ?>" />
+          <img id="allround-cpt-logo" src="<?php echo esc_url( $image_src ); ?>" style="max-width:100%;" />
+          <input type="hidden" name="allround-cpt_logo_id" id="allround-cpt_logo_id" value="<?php echo esc_attr( $image_id ); ?>" />
           <p>
-            <a title="<?php esc_attr_e( 'Hent logo' ) ?>" href="#" id="hent-logo" class="<?php echo ( $image_id ? 'hidden' : '' ); ?>"><button class="button button-primary button-large"><?php _e( 'Hent logo' ) ?></button></a>
-            <a title="<?php esc_attr_e( 'Fjern logo' ) ?>" href="#" id="fjern-logo" class="<?php echo ( ! $image_id ? 'hidden' : '' ); ?>"><button class="button button-primary button-large"><?php _e( 'Fjern logo' ) ?></button></a>
+            <a title="<?php esc_attr_e( 'Hent logo' ); ?>" href="#" id="hent-logo" class="<?php echo esc_attr( $image_id ? 'hidden' : '' ); ?>"><button class="button button-primary button-large"><?php _e( 'Hent logo' ); ?></button></a>
+            <a title="<?php esc_attr_e( 'Fjern logo' ); ?>" href="#" id="fjern-logo" class="<?php echo esc_attr( ! $image_id ? 'hidden' : '' ); ?>"><button class="button button-primary button-large"><?php _e( 'Fjern logo' ); ?></button></a>
           </p>
         </td>
     </tr>
@@ -22,8 +22,15 @@ function addTitleFieldToCat(){
 add_action ( 'edit_category_form_fields', 'addTitleFieldToCat');
 
 function saveCategoryFields() {
+    $tag_id = isset( $_POST['tag_ID'] ) ? absint( $_POST['tag_ID'] ) : 0;
+    if ( ! $tag_id || ! current_user_can( 'manage_categories' ) ) {
+        return;
+    }
+    if ( ! check_admin_referer( 'update-tag_' . $tag_id ) ) {
+        return;
+    }
     if ( isset( $_POST['cat_thumbnail'] ) ) {
-        update_term_meta($_POST['tag_ID'], '_pagetitle', $_POST['cat_thumbnail']);
+        update_term_meta( $tag_id, '_pagetitle', sanitize_text_field( wp_unslash( $_POST['cat_thumbnail'] ) ) );
     }
 }
 add_action ( 'edited_category', 'saveCategoryFields');
@@ -41,4 +48,3 @@ function enqueue_image_loader_for_categories() {
 }
 
 add_action('admin_enqueue_scripts','enqueue_image_loader_for_categories');
-

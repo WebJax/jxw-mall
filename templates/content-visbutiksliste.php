@@ -9,7 +9,7 @@ $butikkategorier = get_terms( array (
 echo '<h4 class="kategori-overskrift">Kategorier</h4>';
 echo '<ul class="butikskategorier">';
 foreach ($butikkategorier as $butikkategori) {
-  echo '<li class="butikskategori-overskrift" data-cat="'.$butikkategori->term_id.'">'.$butikkategori->name.'</li>';
+  echo '<li class="butikskategori-overskrift" data-cat="' . esc_attr( $butikkategori->term_id ) . '">' . esc_html( $butikkategori->name ) . '</li>';
 }
 echo '</ul>';
 

@@ -178,12 +178,12 @@ class CenterShop_FloorPlan {
                                     <p class="no-areas"><?php _e('Ingen områder defineret endnu. Klik på grundplanen for at tilføje områder.', 'centershop_txtdomain'); ?></p>
                                 <?php else: ?>
                                     <?php foreach ($areas as $index => $area): ?>
-                                        <div class="area-item" data-index="<?php echo $index; ?>">
+                                        <div class="area-item" data-index="<?php echo esc_attr( $index ); ?>">
                                             <strong><?php echo esc_html($area['label']); ?></strong>
                                             <?php if (!empty($area['shop_id'])): ?>
-                                                <span class="shop-name">(<?php echo get_the_title($area['shop_id']); ?>)</span>
+                                                <span class="shop-name">(<?php echo esc_html( get_the_title( $area['shop_id'] ) ); ?>)</span>
                                             <?php endif; ?>
-                                            <button type="button" class="delete-area" data-index="<?php echo $index; ?>">
+                                            <button type="button" class="delete-area" data-index="<?php echo esc_attr( $index ); ?>">
                                                 <span class="dashicons dashicons-trash"></span>
                                             </button>
                                         </div>
@@ -216,7 +216,7 @@ class CenterShop_FloorPlan {
                                     <?php foreach ($areas as $index => $area): ?>
                                         <polygon 
                                             class="floorplan-area" 
-                                            data-index="<?php echo $index; ?>"
+                                            data-index="<?php echo esc_attr( $index ); ?>"
                                             data-shop-id="<?php echo esc_attr($area['shop_id'] ?? ''); ?>"
                                             points="<?php echo esc_attr($area['points']); ?>"
                                             fill="rgba(52, 152, 219, 0.3)"
@@ -258,7 +258,7 @@ class CenterShop_FloorPlan {
                         <select class="widefat area-shop">
                             <option value=""><?php _e('Ingen butik', 'centershop_txtdomain'); ?></option>
                             <?php foreach ($shops as $shop): ?>
-                                <option value="<?php echo $shop->ID; ?>" {{selected_<?php echo $shop->ID; ?>}}>
+                                <option value="<?php echo esc_attr( $shop->ID ); ?>" {{selected_<?php echo esc_attr( $shop->ID ); ?>}}>
                                     <?php echo esc_html($shop->post_title); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -478,9 +478,9 @@ class CenterShop_FloorPlan {
                 <svg class="floorplan-overlay-svg">
                     <?php foreach ($areas as $index => $area): ?>
                         <polygon 
-                            class="floorplan-area-front <?php echo $atts['shop_id'] && $atts['shop_id'] == ($area['shop_id'] ?? '') ? 'selected' : ''; ?>" 
+                            class="floorplan-area-front <?php echo esc_attr( $atts['shop_id'] && $atts['shop_id'] == ($area['shop_id'] ?? '') ? 'selected' : '' ); ?>" 
                             data-shop-id="<?php echo esc_attr($area['shop_id'] ?? ''); ?>"
-                            data-shop-name="<?php echo $area['shop_id'] ? esc_attr(get_the_title($area['shop_id'])) : ''; ?>"
+                            data-shop-name="<?php echo esc_attr( ! empty( $area['shop_id'] ) ? get_the_title( $area['shop_id'] ) : '' ); ?>"
                             points="<?php echo esc_attr($area['points']); ?>"
                             fill="<?php echo esc_attr($area['color'] ?? 'rgba(52, 152, 219, 0.3)'); ?>"
                             stroke="#3498db"

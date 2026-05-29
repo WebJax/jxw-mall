@@ -60,16 +60,16 @@ function diana_brancheliste( $diana_branche_attr ) {
     echo '<div class="erhvervsliste-slider">';
 		while ($my_query->have_posts()) : $my_query->the_post(); 
       $cat_array = get_the_category(); ?>
-			<a href="<?php the_permalink() ?>" rel="bookmark" title="Permanent Link til <?php the_title_attribute(); ?>">
+			<a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark" title="<?php echo esc_attr( sprintf( 'Permanent Link til %s', get_the_title() ) ); ?>">
 				<div class="erhvervsliste">
 					<div class="erhvervsliste-thumbnail-sliderimage">
             <?php 
             $butikerhverv_thumbnail = get_the_post_thumbnail(get_the_ID(), 'medium');
 						$payed = get_post_meta(get_the_ID(), 'butik_payed_payedbutik', true);
 						if ($payed && $payed != 'Intet') { 
-              echo $butikerhverv_thumbnail;
+              echo wp_kses_post( $butikerhverv_thumbnail );
             } else {
-              echo $branche_thumbnail;
+              echo wp_kses_post( $branche_thumbnail );
             }
               
             ?>
@@ -77,8 +77,8 @@ function diana_brancheliste( $diana_branche_attr ) {
           <div class="erhvervsliste-kontakt">
 						<h5><?php the_title(); ?></h5>
 		        <?php 
-            echo '<p class="erhvervsliste-adresse">'.get_post_meta (get_the_ID(), 'butik_payed_adress', true).'</p>';
-            echo '<p class="erhvervsliste-postnrby">'.get_post_meta (get_the_ID(), 'butik_payed_postal', true)." ".get_post_meta (get_the_ID(), 'butik_payed_city', true).'</p>'; ?>
+            echo '<p class="erhvervsliste-adresse">' . esc_html( get_post_meta( get_the_ID(), 'butik_payed_adress', true ) ) . '</p>';
+            echo '<p class="erhvervsliste-postnrby">' . esc_html( trim( get_post_meta( get_the_ID(), 'butik_payed_postal', true ) . ' ' . get_post_meta( get_the_ID(), 'butik_payed_city', true ) ) ) . '</p>'; ?>
           </div>
 				</div>
 			</a> <?php
