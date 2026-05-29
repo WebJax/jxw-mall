@@ -16,36 +16,52 @@ class CenterShop_Shopping_Hours {
   public function shoppinghours_setup_settings_page() { ?>
     <div class="wrap centershop-opening-hours-wrap">
       <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-      
+
       <?php if (isset($_GET['settings-updated'])) : ?>
         <div class="notice notice-success is-dismissible">
-          <p>Åbningstider er blevet gemt.</p>
+          <p><?php esc_html_e('Åbningstider er blevet gemt.', 'centershop_txtdomain'); ?></p>
         </div>
       <?php endif; ?>
-      
+
+      <p class="description">
+        <?php esc_html_e('Angiv centrets generelle åbningstider herunder. Individuelle butikker kan vælge at arve disse tider eller angive egne. Brug hjælpefanen øverst til højre for yderligere vejledning.', 'centershop_txtdomain'); ?>
+      </p>
+
       <div class="centershop-admin-grid">
         <div class="shoppinghours-settings">
           <form method="post" action="options.php">
           <?php settings_fields( 'shoppinghours-group' ); ?>
           <?php do_settings_sections( 'shoppinghours-group' ); ?>
           <table class="form-table shoppinghours">
-            <tr>
-              <th>Ugedag</th>
-              <th>Åbner</th>
-              <th>Lukker</th>
-              <th>Helt lukket</th>
-            </tr>
+            <thead>
+              <tr>
+                <th><?php esc_html_e('Ugedag', 'centershop_txtdomain'); ?></th>
+                <th><?php esc_html_e('Åbner', 'centershop_txtdomain'); ?>
+                  <span class="dashicons dashicons-editor-help centershop-field-tip"
+                        title="<?php esc_attr_e('Tidspunkt centret åbner, f.eks. 10:00', 'centershop_txtdomain'); ?>"></span>
+                </th>
+                <th><?php esc_html_e('Lukker', 'centershop_txtdomain'); ?>
+                  <span class="dashicons dashicons-editor-help centershop-field-tip"
+                        title="<?php esc_attr_e('Tidspunkt centret lukker, f.eks. 18:00', 'centershop_txtdomain'); ?>"></span>
+                </th>
+                <th><?php esc_html_e('Helt lukket', 'centershop_txtdomain'); ?>
+                  <span class="dashicons dashicons-editor-help centershop-field-tip"
+                        title="<?php esc_attr_e('Afkryds hvis centret er lukket hele dagen', 'centershop_txtdomain'); ?>"></span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
             <?php
             $weekdays = [
-              'mandag' => 'Mandag',
-              'tirsdag' => 'Tirsdag', 
-              'onsdag' => 'Onsdag',
-              'torsdag' => 'Torsdag',
-              'fredag' => 'Fredag',
-              'lordag' => 'Lørdag',
-              'sondag' => 'Søndag'
+              'mandag' => __('Mandag', 'centershop_txtdomain'),
+              'tirsdag' => __('Tirsdag', 'centershop_txtdomain'),
+              'onsdag' => __('Onsdag', 'centershop_txtdomain'),
+              'torsdag' => __('Torsdag', 'centershop_txtdomain'),
+              'fredag' => __('Fredag', 'centershop_txtdomain'),
+              'lordag' => __('Lørdag', 'centershop_txtdomain'),
+              'sondag' => __('Søndag', 'centershop_txtdomain'),
             ];
-            
+
             foreach ($weekdays as $day_key => $day_label) {
               $aaben = get_option($day_key.'_aaben', '');
               $lukket = get_option($day_key.'_lukket', '');
@@ -58,29 +74,43 @@ class CenterShop_Shopping_Hours {
               <td align="center"><input type="checkbox" id="<?php echo esc_attr($day_key); ?>_heltlukket" name="<?php echo esc_attr($day_key); ?>_heltlukket" value="1" <?php checked($heltlukket, true); ?> class="centershop-closed-toggle" /></td>
             </tr>
             <?php } ?>
+            </tbody>
           </table>
-          <h2 class="hellig-overskrift">EKSTRA TEKST</h2>
+
+          <h2 class="hellig-overskrift"><?php esc_html_e('Ekstra tekst', 'centershop_txtdomain'); ?></h2>
+          <p class="description"><?php esc_html_e('Valgfri besked der vises under åbningstiderne på hjemmesiden, f.eks. ved ændrede tider i ferier eller på helligdage.', 'centershop_txtdomain'); ?></p>
           <table class="form-table shoppinghours">
             <tr valign="top">
-              <td><textarea name="centershop_ekstra_tekst" rows="4" cols="101" placeholder="F.eks: 'Bemærk ændrede åbningstider i sommerferien'"><?php echo esc_textarea( get_option('centershop_ekstra_tekst', '') ); ?></textarea></td>
+              <td>
+                <textarea name="centershop_ekstra_tekst"
+                          id="centershop_ekstra_tekst"
+                          rows="4" cols="101"
+                          placeholder="<?php esc_attr_e('F.eks: Bemærk ændrede åbningstider i sommerferien', 'centershop_txtdomain'); ?>"
+                          aria-describedby="centershop_ekstra_tekst_desc"><?php echo esc_textarea( get_option('centershop_ekstra_tekst', '') ); ?></textarea>
+              </td>
             </tr>
           </table>
-          <h2 class="hellig-overskrift">HELLIGDAGE</h2>
+
+          <h2 class="hellig-overskrift"><?php esc_html_e('Helligdage', 'centershop_txtdomain'); ?></h2>
+          <p class="description"><?php esc_html_e('Åbningstider for de danske helligdage. Datoerne beregnes automatisk for indeværende år.', 'centershop_txtdomain'); ?></p>
           <table class="form-table shoppinghours">
-            <tr>
-              <th>Helligdag</th>
-              <th>Dato</th>
-              <th>Åbner</th>
-              <th>Lukker</th>
-              <th>Helt lukket</th>
-            </tr>
+            <thead>
+              <tr>
+                <th><?php esc_html_e('Helligdag', 'centershop_txtdomain'); ?></th>
+                <th><?php esc_html_e('Dato', 'centershop_txtdomain'); ?></th>
+                <th><?php esc_html_e('Åbner', 'centershop_txtdomain'); ?></th>
+                <th><?php esc_html_e('Lukker', 'centershop_txtdomain'); ?></th>
+                <th><?php esc_html_e('Helt lukket', 'centershop_txtdomain'); ?></th>
+              </tr>
+            </thead>
+            <tbody>
                <?php
               $allehelligdage = $this->shoppinghours_beregn_danske_helligdage();
               foreach ($allehelligdage as $helligdag) {
                 $helligdag_aaben = $this->clean($helligdag[0]).'_aaben';
                 $helligdag_lukket = $this->clean($helligdag[0]).'_lukket';
                 $helligdag_heltlukket = $this->clean($helligdag[0]).'_heltlukket';
-                
+
                 $aaben = get_option($helligdag_aaben, '');
                 $lukket = get_option($helligdag_lukket, '');
                 $heltlukket = get_option($helligdag_heltlukket, false);
@@ -93,15 +123,16 @@ class CenterShop_Shopping_Hours {
                   <td align="center"><input type="checkbox" id="<?php echo esc_attr($helligdag_heltlukket); ?>" name="<?php echo esc_attr($helligdag_heltlukket); ?>" value="1" <?php checked($heltlukket, true); ?> class="centershop-closed-toggle" /></td>
                 </tr>
                 <?php
-              }?>         
+              }?>
+            </tbody>
           </table>
-          <?php submit_button('Gem Åbningstider', 'primary large'); ?>
+          <?php submit_button(__('Gem åbningstider', 'centershop_txtdomain'), 'primary large'); ?>
           </form>
         </div>
-        
+
         <div class="shoppinghours-demo">
-          <h2>Eksempel Visning</h2>
-          <p class="description">Sådan ser åbningstiderne ud på hjemmesiden</p>
+          <h2><?php esc_html_e('Eksempelvisning', 'centershop_txtdomain'); ?></h2>
+          <p class="description"><?php esc_html_e('Sådan ser åbningstiderne ud på hjemmesiden.', 'centershop_txtdomain'); ?></p>
           <div class="shoppinghours-container">
             <?php include(plugin_dir_path(__FILE__) . '../templates/vis-center-aabningstider.php'); ?>
           </div>
