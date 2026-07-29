@@ -62,7 +62,27 @@ function centershop_setup_post_types()
 
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");
-  register_post_type( 'butiksside', $args );
+  register_post_type( 'butiksside', $args = array(
+    'labels' => array(
+        'name' => 'Butikker',
+        'singular_name' => 'Butik',
+        'add_new' => 'Tilføj butik',
+        'add_new_item' => 'Tilføj ny butik',
+        'edit_item' => 'Rediger butik',
+        'new_item' => 'Ny butik',
+        'view_item' => 'Se butik',
+        'search_items' => 'Søg butikker',
+        'not_found' =>  'Ingen butikker fundet',
+        'not_found_in_trash' => 'Ingen butikker fundet i papirkurven', 
+        'parent_item_colon' => '',
+        'menu_name' => 'Butikker'
+    ),
+    'public' => true,
+    'has_archive' => true,
+    'rewrite' => array('slug' => 'butiksside'),
+    'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
+    )
+  );
   add_action('save_post', 'save_butiks_meta', 999, 2); // save the custom fields
   
   // Initialize shopping hours functionality
@@ -127,7 +147,7 @@ function centershop_enqueue_styles() {
 add_action( 'wp_enqueue_scripts', 'centershop_enqueue_styles' );
 
 // Override theme templates with plugin templates
-function centershop_template_include( $template ) {
+function centershop_template_include( string $plugin_template ) {
 	// Check if we're on a single butiksside post
 	if ( is_singular( 'butiksside' ) ) {
 		$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-butiksside.php';
@@ -144,12 +164,12 @@ function centershop_template_include( $template ) {
 		}
 	}
 	
-	return $template;
+	return $plugin_template;
 }
 add_filter( 'template_include', 'centershop_template_include', 99 );
 
 // Add plugin templates to page template dropdown
-function centershop_add_page_templates( $templates ) {
+function centershop_add_page_templates( array $templates ) {
 	$templates['visbutikslister.php'] = 'Butiksliste';
 	return $templates;
 }
@@ -238,25 +258,25 @@ function centershop_register_blocks() {
 add_action( 'init', 'centershop_register_blocks' );
 
 // Render callbacks for blocks
-function centershop_render_logo_carousel_block( $attributes, $content ) {
+function centershop_render_logo_carousel_block( string $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/shop-logo-carousel/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_opening_hours_block( $attributes, $content ) {
+function centershop_render_opening_hours_block( string $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/opening-hours/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_shop_list_block( $attributes, $content ) {
+function centershop_render_shop_list_block( string $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/shop-list/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_single_shop_block( $attributes, $content ) {
+function centershop_render_single_shop_block( string $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/single-shop/render.php';
     return ob_get_clean();
