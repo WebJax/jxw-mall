@@ -94,53 +94,74 @@ class CenterShop_Settings {
      * Render general section description
      */
     public function render_general_section() {
-        echo '<p>' . esc_html__('Konfigurer generelle indstillinger for CenterShop plugin.', 'centershop_txtdomain') . '</p>';
+        echo '<p>' . esc_html__('Konfigurer generelle indstillinger for CenterShop-pluginet. Hold musen over hjælpeikonet (?) ved hvert felt for en kort forklaring, eller brug hjælpefanen øverst til højre for detaljerede beskrivelser.', 'centershop_txtdomain') . '</p>';
     }
-    
+
     /**
      * Render plugin name field
      */
     public function render_plugin_name_field() {
         $value = get_option('centershop_plugin_name', 'CenterShop');
         ?>
-        <input type="text" 
-               name="centershop_plugin_name" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text" />
-        <p class="description">
-            <?php esc_html_e('Navnet på pluginet som vises i admin interface.', 'centershop_txtdomain'); ?>
+        <input type="text"
+               id="centershop_plugin_name"
+               name="centershop_plugin_name"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               aria-describedby="centershop_plugin_name_desc" />
+        <span class="dashicons dashicons-editor-help centershop-field-tip"
+              title="<?php esc_attr_e('Det navn, der vises i admin-navigationen. Standard er "CenterShop".', 'centershop_txtdomain'); ?>"
+              aria-label="<?php esc_attr_e('Hjælp til Plugin navn', 'centershop_txtdomain'); ?>"></span>
+        <p class="description" id="centershop_plugin_name_desc">
+            <?php esc_html_e('Vises i admin-navigationen. Standard: CenterShop.', 'centershop_txtdomain'); ?>
         </p>
         <?php
     }
-    
+
     /**
      * Render contact email field
      */
     public function render_contact_email_field() {
         $value = get_option('centershop_contact_email', get_option('admin_email'));
         ?>
-        <input type="email" 
-               name="centershop_contact_email" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text" />
-        <p class="description">
-            <?php esc_html_e('E-mail adresse for kontakt vedrørende CenterShop funktionalitet.', 'centershop_txtdomain'); ?>
+        <input type="email"
+               id="centershop_contact_email"
+               name="centershop_contact_email"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               aria-describedby="centershop_contact_email_desc" />
+        <span class="dashicons dashicons-editor-help centershop-field-tip"
+              title="<?php esc_attr_e('Den e-mailadresse, der modtager systemnotifikationer fra pluginet.', 'centershop_txtdomain'); ?>"
+              aria-label="<?php esc_attr_e('Hjælp til Kontakt e-mail', 'centershop_txtdomain'); ?>"></span>
+        <p class="description" id="centershop_contact_email_desc">
+            <?php esc_html_e('Modtager systemnotifikationer fra CenterShop. Standard er webstedets administrator-e-mail.', 'centershop_txtdomain'); ?>
         </p>
         <?php
     }
-    
+
     /**
      * Render Google Maps API key field
      */
     public function render_google_maps_field() {
         $value = get_option('centershop_google_maps_api_key', '');
         ?>
-        <input type="password" 
-               name="centershop_google_maps_api_key" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text" />
-        <p class="description">
-            <?php esc_html_e('Google Maps API nøgle til visning af kort (valgfrit).', 'centershop_txtdomain'); ?>
+        <input type="password"
+               id="centershop_google_maps_api_key"
+               name="centershop_google_maps_api_key"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               aria-describedby="centershop_google_maps_desc" />
+        <span class="dashicons dashicons-editor-help centershop-field-tip"
+              title="<?php esc_attr_e('Kræves for at vise kortfunktioner. Hent en nøgle via Google Cloud Console.', 'centershop_txtdomain'); ?>"
+              aria-label="<?php esc_attr_e('Hjælp til Google Maps API nøgle', 'centershop_txtdomain'); ?>"></span>
+        <p class="description" id="centershop_google_maps_desc">
+            <?php
+            printf(
+                /* translators: %s: link to Google Cloud Console */
+                esc_html__('Nødvendig for kortvisning (valgfrit). Hent en nøgle på %s.', 'centershop_txtdomain'),
+                '<a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>'
+            );
+            ?>
         </p>
         <?php
     }

@@ -37,6 +37,7 @@ class CenterShop_Admin_Menu {
     private function __construct() {
         add_action('admin_menu', array($this, 'register_menus'), 5);
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+        add_action('current_screen', array($this, 'add_help_tabs'));
     }
     
     /**
@@ -238,6 +239,68 @@ class CenterShop_Admin_Menu {
     }
     
     /**
+     * Add contextual help tabs to CenterShop admin pages.
+     */
+    public function add_help_tabs($screen) {
+        if (strpos($screen->id, self::MENU_SLUG) === false) {
+            return;
+        }
+
+        // --- Settings page ---
+        if ($screen->id === 'centershop_page_' . self::MENU_SLUG . '-settings') {
+            $screen->add_help_tab(array(
+                'id'      => 'centershop_settings_overview',
+                'title'   => __('Oversigt', 'centershop_txtdomain'),
+                'content' =>
+                    '<p>' . __('På denne side konfigurerer du de overordnede indstillinger for CenterShop-pluginet.', 'centershop_txtdomain') . '</p>' .
+                    '<p>' . __('Klik på "Gem indstillinger" for at gemme ændringerne.', 'centershop_txtdomain') . '</p>',
+            ));
+
+            $screen->add_help_tab(array(
+                'id'      => 'centershop_settings_fields',
+                'title'   => __('Feltbeskrivelser', 'centershop_txtdomain'),
+                'content' =>
+                    '<p><strong>' . __('Plugin navn', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Det navn, der vises i admin-navigationen. Standard er "CenterShop".', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Kontakt e-mail', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Den e-mailadresse, der modtager systemnotifikationer fra pluginet.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Google Maps API nøgle', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Kræves for at vise centrets kort. Hent en nøgle via Google Cloud Console.', 'centershop_txtdomain') . '</p>',
+            ));
+
+            $screen->set_help_sidebar(
+                '<p><strong>' . __('Nyttige links', 'centershop_txtdomain') . '</strong></p>' .
+                '<p><a href="https://console.cloud.google.com/" target="_blank">' . __('Google Cloud Console', 'centershop_txtdomain') . '</a></p>'
+            );
+        }
+
+        // --- Opening hours page ---
+        if ($screen->id === 'centershop_page_centershop-opening-hours') {
+            $screen->add_help_tab(array(
+                'id'      => 'centershop_hours_overview',
+                'title'   => __('Om åbningstider', 'centershop_txtdomain'),
+                'content' =>
+                    '<p>' . __('Her angiver du centrets generelle åbningstider for alle ugens dage samt helligdage.', 'centershop_txtdomain') . '</p>' .
+                    '<p>' . __('Individuelle butikker kan vælge at arve disse tider eller angive egne åbningstider.', 'centershop_txtdomain') . '</p>',
+            ));
+
+            $screen->add_help_tab(array(
+                'id'      => 'centershop_hours_howto',
+                'title'   => __('Brug af formularen', 'centershop_txtdomain'),
+                'content' =>
+                    '<p><strong>' . __('Åbner / Lukker', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Angiv tidspunktet i formatet TT:MM, f.eks. 10:00 og 18:00.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Helt lukket', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Afkryds dette felt, hvis centret er lukket hele dagen.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Ekstra tekst', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Valgfri besked der vises under åbningstiderne, f.eks. ved ændrede tider i ferier.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Helligdage', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Åbningstider for de danske helligdage beregnes automatisk for indeværende år.', 'centershop_txtdomain') . '</p>',
+            ));
+        }
+    }
+
+    /**
      * Render settings page
      */
     public function render_settings_page() {
@@ -248,7 +311,7 @@ class CenterShop_Admin_Menu {
                 <?php
                 settings_fields('centershop_settings');
                 do_settings_sections('centershop_settings');
-                submit_button();
+                submit_button(__('Gem indstillinger', 'centershop_txtdomain'));
                 ?>
             </form>
         </div>

@@ -3,6 +3,8 @@
 
 jQuery(document).ready(function($) {
     'use strict';
+
+    var ajaxUrl = shoppinghours_ajax_data.url; // Use the localized variable for AJAX URL
     
     // Handle "helt lukket" checkbox toggle
     function toggleTimeInputs() {
