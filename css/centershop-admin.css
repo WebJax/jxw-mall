@@ -134,6 +134,26 @@
     color: #b32d2e !important;
 }
 
+/* Field help-tip icon */
+.centershop-field-tip {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    font-size: 14px;
+    line-height: 16px;
+    color: #646970;
+    vertical-align: middle;
+    margin-left: 4px;
+    cursor: help;
+    transition: color 0.15s ease;
+}
+
+.centershop-field-tip:hover,
+.centershop-field-tip:focus {
+    color: #2271b1;
+    outline: none;
+}
+
 /* Media gallery in meta box */
 .centershop-media-gallery {
     padding: 10px 0;
