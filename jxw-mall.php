@@ -36,6 +36,7 @@ if (!defined('ABSPATH')) {
 define('CENTERSHOP_VERSION', '1.5.0');
 define('CENTERSHOP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
+require_once CENTERSHOP_PLUGIN_DIR . 'includes/plugin-lifecycle.php';
 
 /**
  * Load all plugin modules
@@ -45,7 +46,7 @@ function centershop_load_modules() {
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-admin-menu.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-settings.php';
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/class-floorplan.php';
-    
+
     // Post-Shop connection module
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
     
@@ -307,15 +308,7 @@ function centershop_register_meta_fields() {
 }
 add_action('init', 'centershop_register_meta_fields');
  
-function centershop_install()
-{
-    // trigger our function that registers the custom post type
-    centershop_setup_post_types();
- 
-    // clear the permalinks after the post type has been registered
-    flush_rewrite_rules();
-}
-register_activation_hook( __FILE__, 'centershop_install' );
+centershop_register_lifecycle_hooks( __FILE__ );
 
 function centershop_export_emails_page() {
     ?>
