@@ -187,15 +187,23 @@ add_action('wp_enqueue_scripts', 'jxw_enqueue_shop_pills_styles');
  */
 function jxw_get_posts_for_shop($shop_id) {
     global $wpdb;
-    
-    $query = $wpdb->prepare(
-        "SELECT post_id FROM {$wpdb->postmeta} 
-        WHERE meta_key = '_jxw_connected_shops' 
-        AND meta_value LIKE %s",
-        '%"' . $shop_id . '"%'
-    );
-    
-    $post_ids = $wpdb->get_col($query);
+
+    try {
+        $query = $wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->postmeta} 
+            WHERE meta_key = '_jxw_connected_shops' 
+            AND meta_value LIKE %s",
+            '%"' . $shop_id . '"%'
+        );
+    } catch (Throwable $exception) {
+        return array();
+    }
+
+    $post_ids = jxw_get_col_with_retry($wpdb, $query);
+
+    if (is_wp_error($post_ids)) {
+        return array();
+    }
     
     if (empty($post_ids)) {
         return array();
@@ -208,6 +216,49 @@ function jxw_get_posts_for_shop($shop_id) {
         'orderby' => 'date',
         'order' => 'DESC'
     ));
+}
+
+/**
+ * Detect if a DB error is likely transient.
+ */
+function jxw_is_transient_db_error($error_message) {
+    if (!is_string($error_message) || $error_message === '') {
+        return false;
+    }
+
+    return (bool) preg_match('/timeout|timed out|gone away|lost connection|deadlock|lock wait timeout/i', $error_message);
+}
+
+/**
+ * Execute get_col with retries for transient DB errors.
+ */
+function jxw_get_col_with_retry($wpdb, $query, $max_attempts = 3, $retry_delay_us = 200000) {
+    $last_error = '';
+
+    for ($attempt = 1; $attempt <= $max_attempts; $attempt++) {
+        try {
+            $result = $wpdb->get_col($query);
+            $last_error = (string) $wpdb->last_error;
+
+            if ($last_error === '') {
+                return $result;
+            }
+
+            if (!jxw_is_transient_db_error($last_error) || $attempt === $max_attempts) {
+                break;
+            }
+        } catch (Throwable $exception) {
+            $last_error = $exception->getMessage();
+
+            if (!jxw_is_transient_db_error($last_error) || $attempt === $max_attempts) {
+                break;
+            }
+        }
+
+        usleep($retry_delay_us);
+    }
+
+    return new WP_Error('jxw_db_query_failed', __('Kunne ikke hente relaterede indlæg lige nu.', 'centershop_txtdomain'));
 }
 
 /**
