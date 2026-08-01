@@ -56,7 +56,7 @@ function jxw_render_shop_connection_meta_box($post) {
     echo '<div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff;">';
     
     foreach ($shops as $shop) {
-        $checked = in_array($shop->ID, $selected_shops) ? 'checked' : '';
+        $checked = in_array($shop->ID, $selected_shops) ? 'checked="checked"' : '';
         echo '<label style="display: block; margin-bottom: 8px;">';
         echo '<input type="checkbox" name="jxw_connected_shops[]" value="' . esc_attr($shop->ID) . '" ' . $checked . '> ';
         echo esc_html($shop->post_title);
@@ -187,6 +187,7 @@ add_action('wp_enqueue_scripts', 'jxw_enqueue_shop_pills_styles');
  */
 function jxw_get_posts_for_shop($shop_id) {
     global $wpdb;
+    $shop_id = absint( $shop_id );
 
     try {
         $query = $wpdb->prepare(
@@ -276,13 +277,13 @@ function jxw_display_shop_related_posts($shop_id = null) {
     }
     
     $output = '<div class="jxw-shop-related-posts">';
-    $output .= '<h3>Nyheder fra ' . get_the_title($shop_id) . '</h3>';
+    $output .= '<h3>' . sprintf( esc_html__( 'Nyheder fra %s', 'centershop_txtdomain' ), esc_html( get_the_title( $shop_id ) ) ) . '</h3>';
     $output .= '<ul>';
     
     foreach ($posts as $post) {
         $output .= '<li>';
-        $output .= '<a href="' . get_permalink($post->ID) . '">' . esc_html($post->post_title) . '</a>';
-        $output .= ' - ' . get_the_date('d. F Y', $post->ID);
+        $output .= '<a href="' . esc_url( get_permalink( $post->ID ) ) . '">' . esc_html($post->post_title) . '</a>';
+        $output .= ' - ' . esc_html( get_the_date('d. F Y', $post->ID) );
         $output .= '</li>';
     }
     

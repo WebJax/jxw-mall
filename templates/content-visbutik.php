@@ -35,7 +35,7 @@
         <?php
           $image_id = get_post_meta( $post->ID, 'allround-cpt_logo_id', true );
           if (!empty($image_id)) {
-            echo '<img id="allround-cpt-logo" src="'.wp_get_attachment_url( $image_id ).'" style="max-width:100%;" />';
+            echo '<img id="allround-cpt-logo" src="' . esc_url( wp_get_attachment_url( $image_id ) ) . '" style="max-width:100%;" />';
           } 
           include plugin_dir_path( __FILE__ ) . 'vis-butikinfo.php';
         ?>

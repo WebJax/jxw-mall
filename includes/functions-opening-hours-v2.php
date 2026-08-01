@@ -526,7 +526,7 @@ function jxw_opening_hours_v2_metabox_html( WP_Post $post ) {
                 <td class="jxw-oh-status-col">
                     <select name="butik_oh_days[<?php echo esc_attr( $day_key ); ?>][status]"
                             class="jxw-oh-status-select"
-                            <?php echo $inherit ? 'disabled' : ''; ?>>
+                            <?php echo disabled( $inherit, true, false ); ?>>
                         <option value="open"   <?php selected( ! $closed ); ?>>Åben</option>
                         <option value="closed" <?php selected( $closed ); ?>>Lukket</option>
                     </select>
@@ -536,14 +536,14 @@ function jxw_opening_hours_v2_metabox_html( WP_Post $post ) {
                            name="butik_oh_days[<?php echo esc_attr( $day_key ); ?>][from]"
                            value="<?php echo esc_attr( $day_d['from'] ?? '' ); ?>"
                            class="jxw-oh-time-input"
-                           <?php echo ( $inherit || $closed ) ? 'disabled' : ''; ?> />
+                           <?php echo disabled( ( $inherit || $closed ), true, false ); ?> />
                 </td>
                 <td>
                     <input type="time"
                            name="butik_oh_days[<?php echo esc_attr( $day_key ); ?>][to]"
                            value="<?php echo esc_attr( $day_d['to'] ?? '' ); ?>"
                            class="jxw-oh-time-input"
-                           <?php echo ( $inherit || $closed ) ? 'disabled' : ''; ?> />
+                           <?php echo disabled( ( $inherit || $closed ), true, false ); ?> />
                 </td>
                 <td class="jxw-oh-center-hint"><?php echo esc_html( $c_hint ); ?></td>
             </tr>
@@ -567,17 +567,17 @@ function jxw_opening_hours_v2_metabox_html( WP_Post $post ) {
         <tbody id="jxw-oh-exceptions-body">
         <?php foreach ( $exceptions as $idx => $exc ) : ?>
             <tr class="jxw-oh-exc-row">
-                <td><input type="date" name="butik_oh_exceptions[<?php echo $idx; ?>][from_date]" value="<?php echo esc_attr( $exc['from_date'] ?? '' ); ?>" class="jxw-oh-exc-input" /></td>
-                <td><input type="date" name="butik_oh_exceptions[<?php echo $idx; ?>][to_date]"   value="<?php echo esc_attr( $exc['to_date'] ?? '' ); ?>" class="jxw-oh-exc-input" /></td>
+                <td><input type="date" name="butik_oh_exceptions[<?php echo esc_attr( $idx ); ?>][from_date]" value="<?php echo esc_attr( $exc['from_date'] ?? '' ); ?>" class="jxw-oh-exc-input" /></td>
+                <td><input type="date" name="butik_oh_exceptions[<?php echo esc_attr( $idx ); ?>][to_date]"   value="<?php echo esc_attr( $exc['to_date'] ?? '' ); ?>" class="jxw-oh-exc-input" /></td>
                 <td>
-                    <select name="butik_oh_exceptions[<?php echo $idx; ?>][status]" class="jxw-oh-exc-status">
+                    <select name="butik_oh_exceptions[<?php echo esc_attr( $idx ); ?>][status]" class="jxw-oh-exc-status">
                         <option value="closed" <?php selected( ( $exc['status'] ?? 'closed' ) === 'closed' ); ?>>Lukket</option>
                         <option value="open"   <?php selected( ( $exc['status'] ?? '' ) === 'open' ); ?>>Åben</option>
                     </select>
                 </td>
-                <td><input type="time" name="butik_oh_exceptions[<?php echo $idx; ?>][from]" value="<?php echo esc_attr( $exc['from'] ?? '' ); ?>" class="jxw-oh-exc-time" <?php echo ( ( $exc['status'] ?? 'closed' ) === 'closed' ) ? 'disabled' : ''; ?> /></td>
-                <td><input type="time" name="butik_oh_exceptions[<?php echo $idx; ?>][to]"   value="<?php echo esc_attr( $exc['to'] ?? '' ); ?>" class="jxw-oh-exc-time" <?php echo ( ( $exc['status'] ?? 'closed' ) === 'closed' ) ? 'disabled' : ''; ?> /></td>
-                <td><input type="text" name="butik_oh_exceptions[<?php echo $idx; ?>][label]" value="<?php echo esc_attr( $exc['label'] ?? '' ); ?>" placeholder="f.eks. Sommerlukket" class="jxw-oh-exc-input" /></td>
+                <td><input type="time" name="butik_oh_exceptions[<?php echo esc_attr( $idx ); ?>][from]" value="<?php echo esc_attr( $exc['from'] ?? '' ); ?>" class="jxw-oh-exc-time" <?php echo disabled( ( ( $exc['status'] ?? 'closed' ) === 'closed' ), true, false ); ?> /></td>
+                <td><input type="time" name="butik_oh_exceptions[<?php echo esc_attr( $idx ); ?>][to]"   value="<?php echo esc_attr( $exc['to'] ?? '' ); ?>" class="jxw-oh-exc-time" <?php echo disabled( ( ( $exc['status'] ?? 'closed' ) === 'closed' ), true, false ); ?> /></td>
+                <td><input type="text" name="butik_oh_exceptions[<?php echo esc_attr( $idx ); ?>][label]" value="<?php echo esc_attr( $exc['label'] ?? '' ); ?>" placeholder="f.eks. Sommerlukket" class="jxw-oh-exc-input" /></td>
                 <td><button type="button" class="button button-small jxw-oh-remove-exc">Fjern</button></td>
             </tr>
         <?php endforeach; ?>

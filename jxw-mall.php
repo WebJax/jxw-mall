@@ -313,11 +313,11 @@ centershop_register_lifecycle_hooks( __FILE__ );
 function centershop_export_emails_page() {
     ?>
     <div class="wrap">
-        <h1>Eksporter butik e-mails</h1>
-        <p>Klik på knappen nedenfor for at eksportere alle e-mail-adresser fra butikkerne til en tekstfil.</p>
+        <h1><?php esc_html_e( 'Eksporter butik e-mails', 'centershop_txtdomain' ); ?></h1>
+        <p><?php esc_html_e( 'Klik på knappen nedenfor for at eksportere alle e-mail-adresser fra butikkerne til en tekstfil.', 'centershop_txtdomain' ); ?></p>
         <form method="post">
             <?php wp_nonce_field('centershop_export_emails', 'centershop_email_export_nonce'); ?>
-            <input type="submit" name="centershop_export_emails" class="button button-primary" value="Eksporter e-mails">
+            <input type="submit" name="centershop_export_emails" class="button button-primary" value="<?php echo esc_attr__( 'Eksporter e-mails', 'centershop_txtdomain' ); ?>">
         </form>
     </div>
     <?php
@@ -342,15 +342,17 @@ function centershop_process_email_export() {
     foreach ($shops as $shop) {
         $email = get_post_meta($shop->ID, 'butik_payed_mail', true);
         $shop_name = get_the_title($shop->ID);
-        $emails[] = "$shop_name: $email";
+        if ( ! empty( $email ) && is_email( $email ) ) {
+            $emails[] = $shop_name . ': ' . $email;
+        }
     }
     
     if (empty($emails)) {
-        echo '<div class="notice notice-warning"><p>Ingen gyldige e-mail-adresser fundet.</p></div>';
+        echo '<div class="notice notice-warning"><p>' . esc_html__( 'Ingen gyldige e-mail-adresser fundet.', 'centershop_txtdomain' ) . '</p></div>';
         return;
     }
     
 	foreach ($emails as $email) {
-		echo $email . '<br>';
+		echo esc_html( $email ) . '<br>';
 	}
 }

@@ -8,10 +8,10 @@
   }
 ?>
 
-<li class="butik-paa-liste" data-shopcat="<?php echo $catId; ?>">
+<li class="butik-paa-liste" data-shopcat="<?php echo esc_attr( $catId ); ?>">
   <div class="butik-info-venstre">
     <a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>"  class="link-butikbillede testclass">
-  		<img src="<?php echo wp_get_attachment_url( get_post_meta( $post->ID, 'allround-cpt_logo_id', true ) ); ?>" class="listbutiklogo"/>
+  		<img src="<?php echo esc_url( wp_get_attachment_url( get_post_meta( $post->ID, 'allround-cpt_logo_id', true ) ) ); ?>" class="listbutiklogo"/>
     </a>
     <?php include plugin_dir_path( __FILE__ ) . 'vis-butikinfo.php'; ?>      
   </div>
@@ -19,4 +19,3 @@
     <?php include plugin_dir_path( __FILE__ ) . 'vis-aabningstider.php'; ?>    
   </div>
 </li>
-

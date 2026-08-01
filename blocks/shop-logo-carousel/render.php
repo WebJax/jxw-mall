@@ -68,7 +68,7 @@ $speed_per_slide = ($animation_speed * 1000) / count($shops);
 
 <script>
 (function() {
-    var ticker = document.getElementById('<?php echo $ticker_id; ?>');
+    var ticker = document.getElementById('<?php echo esc_js( $ticker_id ); ?>');
     if (!ticker) return;
     
     var swiperEl = ticker.querySelector('.swiper');

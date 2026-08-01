@@ -5,10 +5,10 @@
  */
 
 echo '<h2>[shoppingweek]</h2>';
-echo do_shortcode( '[shoppingweek]' );
+echo wp_kses_post( do_shortcode( '[shoppingweek]' ) );
 echo '<h2>[collected-shoppingweek]</h2>';
-echo do_shortcode( '[collected-shoppingweek]' );
+echo wp_kses_post( do_shortcode( '[collected-shoppingweek]' ) );
 echo '<h2>[shoppingtoday]</h2>';
-echo do_shortcode( '[shoppingtoday]' );
+echo wp_kses_post( do_shortcode( '[shoppingtoday]' ) );
 echo '<h2>[shopping-extra-text]</h2>';
-echo do_shortcode( '[shopping-extra-text]' );
+echo wp_kses_post( do_shortcode( '[shopping-extra-text]' ) );
