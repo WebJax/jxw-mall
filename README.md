@@ -24,6 +24,7 @@ Plugin’et indeholder bl.a. følgende blokke:
 - `centershop/floorplan` – interaktiv grundplan
 - `centershop/facebook-feed` – Facebook feed
 - `centershop/instagram-feed` – Instagram feed
+- `centershop/read-also` – "Læs også"-kort med søgning på artikler, begivenheder og sider
 
 ## Shortcodes
 

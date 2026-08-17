@@ -255,6 +255,27 @@ function centershop_register_blocks() {
         'editor_script' => 'centershop-opening-hours-editor',
         'style' => 'centershop-opening-hours-style'
     ));
+    
+    // Register read-also block
+    wp_register_script(
+        'centershop-read-also-editor',
+        plugins_url('blocks/read-also/index.js', __FILE__),
+        array('wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-data'),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/read-also/index.js')
+    );
+    
+    wp_register_style(
+        'centershop-read-also-style',
+        plugins_url('blocks/read-also/style.css', __FILE__),
+        array(),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/read-also/style.css')
+    );
+    
+    register_block_type( __DIR__ . '/blocks/read-also', array(
+        'render_callback' => 'centershop_render_read_also_block',
+        'editor_script' => 'centershop-read-also-editor',
+        'style' => 'centershop-read-also-style'
+    ));
 }
 add_action( 'init', 'centershop_register_blocks' );
 
@@ -280,6 +301,12 @@ function centershop_render_shop_list_block( string $attributes, string $content 
 function centershop_render_single_shop_block( string $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/single-shop/render.php';
+    return ob_get_clean();
+}
+
+function centershop_render_read_also_block( string $attributes, string $content ) {
+    ob_start();
+    include plugin_dir_path( __FILE__ ) . 'blocks/read-also/render.php';
     return ob_get_clean();
 }
 

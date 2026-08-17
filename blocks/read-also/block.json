@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "centershop/read-also",
+  "title": "Læs også",
+  "category": "widgets",
+  "icon": "megaphone",
+  "description": "Søg efter en artikel, begivenhed eller side og vis et klikbart kort med featured image, titel, dato og første linjer. Begivenheder viser desuden eventdato, starttid og sted.",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    },
+    "postType": {
+      "type": "string",
+      "default": ""
+    },
+    "excerptLength": {
+      "type": "number",
+      "default": 30
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "textdomain": "centershop_txtdomain",
+  "editorScript": "centershop-read-also-editor",
+  "style": "centershop-read-also-style"
+}
