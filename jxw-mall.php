@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: JXW Mall
+Plugin Name: Centershop
 Plugin URI:  http://www.jaxweb.dk
 Description: Butiksoversigt i Dianalund Centret med kort og åbningstider
 Version:     1.5.0
@@ -13,12 +13,12 @@ Domain Path: /languages
 */
 
 /*
-CenterButikker is free software: you can redistribute it and/or modify
+Centershop is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 2 of the License, or
 any later version.
  
-CenterButikker is distributed in the hope that it will be useful,
+Centershop is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.

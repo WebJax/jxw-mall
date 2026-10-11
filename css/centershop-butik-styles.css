@@ -129,7 +129,7 @@ li.butik-paa-liste {
     display: block;
 }
 
-img.listbutiklogo {
+.listbutiklogo {
     position: relative;
     width: auto !important;
     max-width: 160px !important;
@@ -149,7 +149,7 @@ img.listbutiklogo {
     padding: 0 2rem;
 }
 
-h4.butikerhvervnavn {
+.butikerhvervnavn {
     font-size: 1.3rem;
     margin-bottom: .5rem;
     line-height: 1;
@@ -196,6 +196,13 @@ h4.butikerhvervnavn {
 /* Gutenberg Blocks Styling */
 .centershop-block-list, .centershop-single-block {
     padding: 20px 0;
+    line-height: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.single-butiksside .wp-block-gallery {
+    margin-inline: 0rem;
 }
 
 /* Grid layout for list block */
@@ -208,13 +215,14 @@ h4.butikerhvervnavn {
 
 /* Shared item styles */
 .centershop-single-block .centershop-item {
-    max-width: 600px;
-    margin: 0 auto;
+	max-width: 600px;
+    line-height: 0;
+    display: inline-block;
 }
 
 /* Layout: Logo left, Info right */
 .centershop-layout {
-    display: flex;
+    display: inline-flex;
     gap: 15px;
     align-items: flex-start;
 }
@@ -274,6 +282,7 @@ h4.butikerhvervnavn {
     display: inline-block;
     text-decoration: none;
     transition: opacity 0.2s ease;
+	line-height: 0;
 }
 
 .centershop-icon:hover {
@@ -309,11 +318,38 @@ h4.butikerhvervnavn {
 
     .butikinfo {
         font-size: 1rem;
+        padding: .5rem .5rem 1.2rem;
+        margin-bottom: 1rem;
     }
 
     .aabningstider-box tr td {
-        font-size: .9rem;
+        font-size: .8rem;
+		padding-block: 12px;
     }
+	
+	.single-butiksside #allround-cpt-logo {
+	    display: none;
+	}
+
+	.single-butiksside .butiksnavn {
+		display: none;
+	}
+
+	.single-butiksside .three.columns>p {
+		display: none;
+	}
+
+	.single-butiksside .butikerhvervnavn {
+		font-size: 2.8rem;
+	}
+	
+	.aabningstider-box h5 {
+		font-size: 1rem;
+	}
+
+	.aabningstider-box td:last-child {
+		text-align: right;
+	}
 }
 
 /* Editor specific styles */
@@ -330,4 +366,8 @@ h4.butikerhvervnavn {
 p.centershop-address, p.centershop-phone {
     padding: 0;
     margin: 0;
+}
+
+.block-editor-block-list__layout .centershop-featured-image img {
+    max-width: 100%;
 }

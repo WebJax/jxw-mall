@@ -5,6 +5,7 @@
 
 .jxw-connected-shops {
     display: flex;
+    position: relative;
     flex-wrap: wrap;
     gap: 8px;
     margin: 20px 0;
@@ -36,6 +37,7 @@
     border: 1px solid rgb(240, 240, 240);
     background-color: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
 }
 
 .jxw-shop-pill:hover {
@@ -146,6 +148,7 @@
 
 
 .jxw-connected-shops:before {
+    position: absolute;
     content: 'Butikker omtalt i denne artikel';
     font-size: .6rem;
     font-weight: 600;
