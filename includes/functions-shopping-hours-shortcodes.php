@@ -31,17 +31,33 @@ class CenterShop_Shopping_Hours_Shortcodes
     }
 
     public function show_shopping_hour_week() {
+        $hours_api = new CenterShop_Shopping_Hours();
+        $week_dates = $hours_api->current_week_dates();
         $returning = '<div class="centeraabningstider ugeskema"><table>';
         
         for ($i = 0; $i < 7; $i++) {
             $week_day = $this->week_days[$i];
             $week_day_display = $this->week_days_display[$i];
             $class = ($week_day == $this->day_of_week) ? 'idag' : '';
+            $date = $week_dates[$i] ?? '';
+            $override = $date !== '' ? $hours_api->get_ekstra_dato_for($date) : null;
+            if ($override) {
+                $class .= ' ekstra-dato';
+            }
             
-            $returning .= '<tr class="ugedag '. $class .'">';
-            $returning .= '<td class="ugedag-navn">'.$week_day_display.'</td>';
+            $returning .= '<tr class="ugedag '. trim($class) .'">';
+            $returning .= '<td class="ugedag-navn">'. esc_html($week_day_display);
+            if ($override) {
+                $note = $hours_api->format_ekstra_dato_note($override);
+                if ($note !== '') {
+                    $returning .= '<span class="ekstra-dato-note">' . esc_html($note) . '</span>';
+                }
+            }
+            $returning .= '</td>';
             
-            if ($this->is_holliday) {
+            if ($override) {
+                $returning .= $this->render_hour_cells(!empty($override['closed']), $override['open'], $override['close']);
+            } elseif ($this->is_holliday) {
                 if (!$this->is_holliday[3]) {
                     $openhollyday = get_option($this->is_holliday[1], '');
                     $closehollyday = get_option($this->is_holliday[2], '');
@@ -68,39 +84,40 @@ class CenterShop_Shopping_Hours_Shortcodes
     }
 
     public function show_collected_shopping_hour_week() {
-        // Group days with identical opening hours
+        $hours_api = new CenterShop_Shopping_Hours();
+        $week_dates = $hours_api->current_week_dates();
+        // Group days with identical opening hours. An extra date stays on its own weekday.
         $days_groups = [];
         $processed = [];
         
         for ($i = 0; $i < 7; $i++) {
             if (isset($processed[$i])) continue;
             
-            $day = $this->week_days[$i];
-            $aaben = get_option($day.'_aaben', '');
-            $lukket = get_option($day.'_lukket', '');
-            $heltlukket = get_option($day.'_heltlukket', false);
-            
+            $resolved = $hours_api->resolve_hours_for_date($week_dates[$i]);
             $group = [
                 'days' => [$this->week_days_display[$i]],
-                'aaben' => $aaben,
-                'lukket' => $lukket,
-                'heltlukket' => $heltlukket
+                'aaben' => $resolved['open'],
+                'lukket' => $resolved['close'],
+                'heltlukket' => $resolved['closed'],
+                'note' => $resolved['override'] ? $hours_api->format_ekstra_dato_note($resolved) : '',
             ];
             
-            // Find consecutive days with same hours
-            for ($j = $i + 1; $j < 7; $j++) {
-                if (isset($processed[$j])) continue;
-                
-                $compare_day = $this->week_days[$j];
-                $compare_aaben = get_option($compare_day.'_aaben', '');
-                $compare_lukket = get_option($compare_day.'_lukket', '');
-                $compare_heltlukket = get_option($compare_day.'_heltlukket', false);
-                
-                if ($aaben === $compare_aaben && $lukket === $compare_lukket && $heltlukket === $compare_heltlukket) {
-                    $group['days'][] = $this->week_days_display[$j];
-                    $processed[$j] = true;
-                } else {
-                    break; // Stop at first non-matching day
+            // Find consecutive days with same hours. A special date breaks the run.
+            if (!$resolved['override']) {
+                for ($j = $i + 1; $j < 7; $j++) {
+                    if (isset($processed[$j])) continue;
+                    
+                    $compare = $hours_api->resolve_hours_for_date($week_dates[$j]);
+                    if ($compare['override']) {
+                        break;
+                    }
+                    
+                    if ($resolved['open'] === $compare['open'] && $resolved['close'] === $compare['close'] && $resolved['closed'] === $compare['closed']) {
+                        $group['days'][] = $this->week_days_display[$j];
+                        $processed[$j] = true;
+                    } else {
+                        break; // Stop at first non-matching day
+                    }
                 }
             }
             
@@ -117,6 +134,9 @@ class CenterShop_Shopping_Hours_Shortcodes
                 $returning .= esc_html($group['days'][0]) . ' til ' . esc_html(end($group['days']));
             } else {
                 $returning .= esc_html(implode(' - ', $group['days']));
+            }
+            if (!empty($group['note'])) {
+                $returning .= '<span class="ekstra-dato-note">' . esc_html($group['note']) . '</span>';
             }
             
             $returning .= '</div>';
@@ -135,13 +155,20 @@ class CenterShop_Shopping_Hours_Shortcodes
     }
 
     public function show_shopping_hours_today() {
-        $day = $this->day_of_week;
-        $heltlukket = get_option($day.'_heltlukket', false);
-        $aaben = get_option($day.'_aaben', '');
-        $lukket = get_option($day.'_lukket', '');
+        $hours_api = new CenterShop_Shopping_Hours();
+        $resolved = $hours_api->resolve_hours_for_date(current_time('Y-m-d'));
+        $heltlukket = $resolved['closed'];
+        $aaben = $resolved['open'];
+        $lukket = $resolved['close'];
         
         $returning = '<div class="todays-shopping-hours">';
         $returning .= '<p class="shopping-hour-title">Åbningstid i dag</p>';
+        if ($resolved['override']) {
+            $note = $hours_api->format_ekstra_dato_note($resolved);
+            if ($note !== '') {
+                $returning .= '<span class="ekstra-dato-note">' . esc_html($note) . '</span>';
+            }
+        }
         
         // Check if completely closed
         if ($heltlukket) {
@@ -179,6 +206,16 @@ class CenterShop_Shopping_Hours_Shortcodes
         $returning .= '</div>';
 
         return $returning;
+    }
+
+    /**
+     * Two hour cells, or a single closed cell.
+     */
+    private function render_hour_cells(bool $closed, string $open, string $close): string {
+        if ($closed || $open === '' || $close === '') {
+            return '<td colspan="2" class="lukket">Lukket</td>';
+        }
+        return '<td class="openhours">' . esc_html($open) . '</td><td class="closinghours">' . esc_html($close) . '</td>';
     }
 
     private function check_for_holliday() {

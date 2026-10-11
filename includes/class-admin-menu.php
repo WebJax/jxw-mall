@@ -294,6 +294,8 @@ class CenterShop_Admin_Menu {
                     __('Afkryds dette felt, hvis centret er lukket hele dagen.', 'centershop_txtdomain') . '</p>' .
                     '<p><strong>' . __('Ekstra tekst', 'centershop_txtdomain') . '</strong> &ndash; ' .
                     __('Valgfri besked der vises under åbningstiderne, f.eks. ved ændrede tider i ferier.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Ekstra datoer', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Enkeltstående datoer med ændrede åbningstider. De overskriver den almindelige ugedag på den valgte dato.', 'centershop_txtdomain') . '</p>' .
                     '<p><strong>' . __('Helligdage', 'centershop_txtdomain') . '</strong> &ndash; ' .
                     __('Åbningstider for de danske helligdage beregnes automatisk for indeværende år.', 'centershop_txtdomain') . '</p>',
             ));

@@ -189,6 +189,50 @@
     cursor: pointer;
 }
 
+/* Extra dates that replace a weekday */
+.centershop-ekstra-datoer-wrap {
+    overflow-x: auto;
+}
+
+.centershop-ekstra-dato,
+.centershop-ekstra-note {
+    padding: 6px 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.centershop-ekstra-dato:focus,
+.centershop-ekstra-note:focus {
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.centershop-ekstra-note {
+    width: 100%;
+    min-width: 140px;
+}
+
+.centershop-weekday-hint {
+    color: #646970;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.centershop-ekstra-dato-row.is-past {
+    opacity: 0.65;
+}
+
+.ekstra-dato-note {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 400 !important;
+    font-style: italic;
+    line-height: 1.3;
+}
+
 /* Headers */
 h2.hellig-overskrift {
     padding: 0;

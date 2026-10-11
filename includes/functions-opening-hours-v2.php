@@ -128,6 +128,9 @@ function jxw_render_butik_hours_html( int $post_id ): string {
     $exception  = jxw_get_active_exception( $post_id );
 
     $html = '';
+    $week_dates = function_exists( 'centershop_current_week_dates_by_key' )
+        ? centershop_current_week_dates_by_key()
+        : [];
 
     if ( $exception ) {
         $label  = esc_html( $exception['label'] ?? 'Særlige åbningstider' );
@@ -146,8 +149,34 @@ function jxw_render_butik_hours_html( int $post_id ): string {
     $html .= '<table class="butik-aabentider-tabel">';
     foreach ( JXW_OH_DAYS as $key => $label ) {
         $hours      = jxw_resolve_day_hours( $post_id, $key );
+        $date       = $week_dates[ $key ] ?? '';
+        $note       = '';
+        $day_data   = $data['days'][ $key ] ?? null;
+        $inherits   = ! $day_data || ! empty( $day_data['inherit'] );
+        if ( $inherits && $date !== '' && ! jxw_get_active_exception( $post_id, $date ) && function_exists( 'centershop_get_ekstra_dato' ) ) {
+            $center_override = centershop_get_ekstra_dato( $date );
+            if ( $center_override ) {
+                $override_open  = $center_override['open'] ?? '';
+                $override_close = $center_override['close'] ?? '';
+                if ( ! empty( $center_override['closed'] ) || $override_open === '' || $override_close === '' ) {
+                    $hours = [ 'status' => 'closed', 'from' => '', 'to' => '' ];
+                } else {
+                    $hours = [
+                        'status' => 'open',
+                        'from'   => $override_open,
+                        'to'     => $override_close,
+                    ];
+                }
+                $note = function_exists( 'centershop_format_ekstra_dato_note' )
+                    ? centershop_format_ekstra_dato_note( $center_override )
+                    : '';
+            }
+        }
         $is_today   = ( $key === $today_key );
         $row_class  = $is_today ? ' class="idag"' : '';
+        if ( $note !== '' ) {
+            $row_class = $is_today ? ' class="idag ekstra-dato"' : ' class="ekstra-dato"';
+        }
 
         if ( $hours['status'] === 'closed' ) {
             $time_str = '<span class="lukket">Lukket</span>';
@@ -156,7 +185,11 @@ function jxw_render_butik_hours_html( int $post_id ): string {
         }
 
         $html .= '<tr' . $row_class . '>';
-        $html .= '<td class="ugedag">' . esc_html( $label ) . '</td>';
+        $html .= '<td class="ugedag">' . esc_html( $label );
+        if ( $note !== '' ) {
+            $html .= '<span class="ekstra-dato-note">' . esc_html( $note ) . '</span>';
+        }
+        $html .= '</td>';
         $html .= '<td class="openhours">' . $time_str . '</td>';
         $html .= '</tr>';
     }
@@ -223,6 +256,40 @@ function jxw_output_butik_schema_json_ld( int $post_id ): string {
             $entry['name'] = $exc['label'];
         }
         $special_hours[] = $entry;
+    }
+
+    $today = current_time( 'Y-m-d' );
+    if ( function_exists( 'centershop_get_ekstra_datoer' ) && function_exists( 'centershop_weekday_key_for_date' ) ) {
+        foreach ( centershop_get_ekstra_datoer() as $row ) {
+            $date = $row['date'] ?? '';
+            if ( $date === '' || $date < $today ) {
+                continue;
+            }
+            if ( jxw_get_active_exception( $post_id, $date ) ) {
+                continue;
+            }
+            $day_key  = centershop_weekday_key_for_date( $date );
+            $day_data = $data['days'][ $day_key ] ?? null;
+            if ( $day_data && empty( $day_data['inherit'] ) ) {
+                continue;
+            }
+            $entry = [
+                '@type'        => 'OpeningHoursSpecification',
+                'validFrom'    => $date,
+                'validThrough' => $date,
+            ];
+            if ( ! empty( $row['closed'] ) ) {
+                $entry['opens']  = '00:00';
+                $entry['closes'] = '00:00';
+            } else {
+                $entry['opens']  = ( $row['open'] ?? '' ) !== '' ? $row['open'] : '00:00';
+                $entry['closes'] = ( $row['close'] ?? '' ) !== '' ? $row['close'] : '00:00';
+            }
+            if ( ! empty( $row['label'] ) ) {
+                $entry['name'] = $row['label'];
+            }
+            $special_hours[] = $entry;
+        }
     }
 
     $schema = [

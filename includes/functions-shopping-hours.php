@@ -93,6 +93,8 @@ class CenterShop_Shopping_Hours {
             </tr>
           </table>
 
+          <?php $this->render_ekstra_datoer_section(); ?>
+
           <h2 class="hellig-overskrift"><?php esc_html_e('Helligdage', 'centershop_txtdomain'); ?></h2>
           <p class="description"><?php esc_html_e('Åbningstider for de danske helligdage. Datoerne beregnes automatisk for indeværende år.', 'centershop_txtdomain'); ?></p>
           <table class="form-table shoppinghours">
@@ -231,6 +233,11 @@ class CenterShop_Shopping_Hours {
     }
 
     register_setting( 'shoppinghours-group', 'centershop_ekstra_tekst' );
+    register_setting( 'shoppinghours-group', 'centershop_ekstra_datoer', array(
+      'type' => 'array',
+      'sanitize_callback' => array( $this, 'sanitize_ekstra_datoer' ),
+      'default' => array(),
+    ) );
     
     $allehelligdage = $this->shoppinghours_beregn_danske_helligdage();
     foreach ($allehelligdage as $helligdag) {
@@ -255,7 +262,10 @@ class CenterShop_Shopping_Hours {
   public function shoppinghours_load_admin_scripts() {
     wp_enqueue_style( 'centershop_shoppinghours_admin_css', plugin_dir_url( dirname(__FILE__) ) . 'css/shopping-hours-styles.css', array(), filemtime(plugin_dir_path( __FILE__ ) . '../css/shopping-hours-styles.css') );
     wp_enqueue_script( 'centershop_shoppinghours_admin_script', plugin_dir_url( dirname(__FILE__) ) . 'js/shopping-hours-scripts.js', array('jquery'), filemtime(plugin_dir_path( __FILE__ ) . '../js/shopping-hours-scripts.js'), true );
-    wp_localize_script( 'centershop_shoppinghours_admin_script', 'shoppinghours_ajax_data', array( 'url' => admin_url( 'admin-ajax.php' ) ) );
+    wp_localize_script( 'centershop_shoppinghours_admin_script', 'shoppinghours_ajax_data', array(
+      'url' => admin_url( 'admin-ajax.php' ),
+      'weekdays' => array( 'Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag' ),
+    ) );
   }  
 
   /**
@@ -322,11 +332,332 @@ class CenterShop_Shopping_Hours {
     return $helligdage;
   }
 
-  public function clean($string) {
+  /**
+   * Admin fields for single dates that replace the weekday hours.
+   */
+  private function render_ekstra_datoer_section() {
+    $rows = $this->get_ekstra_datoer();
+    ?>
+    <h2 class="hellig-overskrift"><?php esc_html_e('Ekstra datoer', 'centershop_txtdomain'); ?></h2>
+    <p class="description"><?php esc_html_e('Tilføj enkelte datoer med ændrede åbningstider. De overskriver den almindelige ugedag på den valgte dato.', 'centershop_txtdomain'); ?></p>
+    <input type="hidden" name="centershop_ekstra_datoer[_present]" value="1" />
+    <div class="centershop-ekstra-datoer-wrap">
+      <table class="form-table shoppinghours centershop-ekstra-datoer" id="centershop-ekstra-datoer" data-next-index="<?php echo esc_attr( (string) count( $rows ) ); ?>">
+        <thead>
+          <tr>
+            <th scope="col"><?php esc_html_e('Dato', 'centershop_txtdomain'); ?></th>
+            <th scope="col"><?php esc_html_e('Ugedag', 'centershop_txtdomain'); ?></th>
+            <th scope="col"><?php esc_html_e('Åbner', 'centershop_txtdomain'); ?></th>
+            <th scope="col"><?php esc_html_e('Lukker', 'centershop_txtdomain'); ?></th>
+            <th scope="col"><?php esc_html_e('Helt lukket', 'centershop_txtdomain'); ?></th>
+            <th scope="col"><?php esc_html_e('Bemærkning', 'centershop_txtdomain'); ?></th>
+            <th scope="col"><span class="screen-reader-text"><?php esc_html_e('Handling', 'centershop_txtdomain'); ?></span></th>
+          </tr>
+        </thead>
+        <tbody id="centershop-ekstra-datoer-body">
+          <?php foreach ( $rows as $index => $row ) : ?>
+            <?php $this->render_ekstra_dato_row( (string) $index, $row ); ?>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <button type="button" class="button" id="centershop-add-ekstra-dato"><?php esc_html_e('Tilføj dato', 'centershop_txtdomain'); ?></button>
+    </p>
+    <template id="centershop-ekstra-dato-template">
+      <?php $this->render_ekstra_dato_row( '__INDEX__', array() ); ?>
+    </template>
+    <?php
+  }
+
+  /**
+   * One extra-date row. Index may be a numeric key or the JS placeholder.
+   *
+   * @param array{date?: string, label?: string, open?: string, close?: string, closed?: bool} $row
+   */
+  private function render_ekstra_dato_row( string $index, array $row ) {
+    $date = isset( $row['date'] ) ? (string) $row['date'] : '';
+    $label = isset( $row['label'] ) ? (string) $row['label'] : '';
+    $open = isset( $row['open'] ) ? (string) $row['open'] : '';
+    $close = isset( $row['close'] ) ? (string) $row['close'] : '';
+    $closed = ! empty( $row['closed'] );
+    $weekday = $date !== '' ? $this->weekday_label_for_date( $date ) : '';
+    $is_past = $date !== '' && $date < current_time( 'Y-m-d' );
+    $closed_id = 'centershop_ekstra_closed_' . $index;
+    ?>
+    <tr class="centershop-ekstra-dato-row<?php echo $is_past ? ' is-past' : ''; ?>">
+      <td>
+        <input type="date" class="centershop-ekstra-dato" name="centershop_ekstra_datoer[<?php echo esc_attr( $index ); ?>][date]" value="<?php echo esc_attr( $date ); ?>" aria-label="<?php esc_attr_e('Dato', 'centershop_txtdomain'); ?>" />
+      </td>
+      <td><span class="centershop-weekday-hint"><?php echo esc_html( $weekday ); ?></span></td>
+      <td>
+        <input type="time" class="centershop-time-input" name="centershop_ekstra_datoer[<?php echo esc_attr( $index ); ?>][open]" value="<?php echo esc_attr( $open ); ?>" aria-label="<?php esc_attr_e('Åbner', 'centershop_txtdomain'); ?>" <?php disabled( $closed ); ?> />
+      </td>
+      <td>
+        <input type="time" class="centershop-time-input" name="centershop_ekstra_datoer[<?php echo esc_attr( $index ); ?>][close]" value="<?php echo esc_attr( $close ); ?>" aria-label="<?php esc_attr_e('Lukker', 'centershop_txtdomain'); ?>" <?php disabled( $closed ); ?> />
+      </td>
+      <td>
+        <label class="screen-reader-text" for="<?php echo esc_attr( $closed_id ); ?>"><?php esc_html_e('Helt lukket', 'centershop_txtdomain'); ?></label>
+        <input type="checkbox" id="<?php echo esc_attr( $closed_id ); ?>" class="centershop-closed-toggle" name="centershop_ekstra_datoer[<?php echo esc_attr( $index ); ?>][closed]" value="1" <?php checked( $closed ); ?> />
+      </td>
+      <td>
+        <input type="text" class="centershop-ekstra-note" name="centershop_ekstra_datoer[<?php echo esc_attr( $index ); ?>][label]" value="<?php echo esc_attr( $label ); ?>" placeholder="<?php esc_attr_e('F.eks. Julefrokost', 'centershop_txtdomain'); ?>" aria-label="<?php esc_attr_e('Bemærkning', 'centershop_txtdomain'); ?>" />
+      </td>
+      <td>
+        <button type="button" class="button button-small centershop-remove-ekstra-dato"><?php esc_html_e('Fjern', 'centershop_txtdomain'); ?></button>
+      </td>
+    </tr>
+    <?php
+  }
+
+  /**
+   * Stored extra dates, sorted by date.
+   *
+   * @return array<int, array{date: string, label: string, closed: bool, open: string, close: string}>
+   */
+  public function get_ekstra_datoer(): array {
+    $stored = get_option( 'centershop_ekstra_datoer', array() );
+    if ( ! is_array( $stored ) ) {
+      return array();
+    }
+
+    $rows = array();
+    foreach ( $stored as $row ) {
+      if ( ! is_array( $row ) || empty( $row['date'] ) ) {
+        continue;
+      }
+      $rows[] = array(
+        'date' => (string) $row['date'],
+        'label' => isset( $row['label'] ) ? (string) $row['label'] : '',
+        'closed' => ! empty( $row['closed'] ),
+        'open' => isset( $row['open'] ) ? (string) $row['open'] : '',
+        'close' => isset( $row['close'] ) ? (string) $row['close'] : '',
+      );
+    }
+
+    return $rows;
+  }
+
+  /**
+   * Extra date that replaces the weekday, or null.
+   *
+   * @return array{date: string, label: string, closed: bool, open: string, close: string}|null
+   */
+  public function get_ekstra_dato_for( string $ymd ): ?array {
+    foreach ( $this->get_ekstra_datoer() as $row ) {
+      if ( $row['date'] === $ymd ) {
+        return $row;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Hours for a calendar date. An extra date wins over the weekday.
+   *
+   * @return array{date: string, closed: bool, open: string, close: string, label: string, override: bool}
+   */
+  public function resolve_hours_for_date( string $ymd ): array {
+    $override = $this->get_ekstra_dato_for( $ymd );
+    if ( $override ) {
+      return array(
+        'date' => $ymd,
+        'closed' => $override['closed'],
+        'open' => $override['open'],
+        'close' => $override['close'],
+        'label' => $override['label'],
+        'override' => true,
+      );
+    }
+
+    $day = $this->weekday_key_for_date( $ymd );
+    return array(
+      'date' => $ymd,
+      'closed' => (bool) get_option( $day . '_heltlukket', false ),
+      'open' => (string) get_option( $day . '_aaben', '' ),
+      'close' => (string) get_option( $day . '_lukket', '' ),
+      'label' => '',
+      'override' => false,
+    );
+  }
+
+  /**
+   * Monday-to-Sunday dates for the current week in the site timezone.
+   *
+   * @return string[] Y-m-d, index 0 is Monday.
+   */
+  public function current_week_dates(): array {
+    $today = new DateTimeImmutable( 'now', wp_timezone() );
+    $monday = $today->modify( '-' . ( (int) $today->format( 'N' ) - 1 ) . ' days' );
+    $dates = array();
+    for ( $i = 0; $i < 7; $i++ ) {
+      $dates[] = $monday->modify( '+' . $i . ' days' )->format( 'Y-m-d' );
+    }
+    return $dates;
+  }
+
+  /**
+   * Weekday option key for a Y-m-d date.
+   */
+  public function weekday_key_for_date( string $ymd ): string {
+    $keys = array(
+      1 => 'mandag',
+      2 => 'tirsdag',
+      3 => 'onsdag',
+      4 => 'torsdag',
+      5 => 'fredag',
+      6 => 'lordag',
+      7 => 'sondag',
+    );
+    $dt = DateTimeImmutable::createFromFormat( 'Y-m-d', $ymd );
+    if ( ! $dt ) {
+      return 'mandag';
+    }
+    return $keys[ (int) $dt->format( 'N' ) ] ?? 'mandag';
+  }
+
+  /**
+   * Danish weekday name for a Y-m-d date.
+   */
+  public function weekday_label_for_date( string $ymd ): string {
+    $labels = array(
+      'mandag' => __( 'Mandag', 'centershop_txtdomain' ),
+      'tirsdag' => __( 'Tirsdag', 'centershop_txtdomain' ),
+      'onsdag' => __( 'Onsdag', 'centershop_txtdomain' ),
+      'torsdag' => __( 'Torsdag', 'centershop_txtdomain' ),
+      'fredag' => __( 'Fredag', 'centershop_txtdomain' ),
+      'lordag' => __( 'Lørdag', 'centershop_txtdomain' ),
+      'sondag' => __( 'Søndag', 'centershop_txtdomain' ),
+    );
+    $key = $this->weekday_key_for_date( $ymd );
+    return $labels[ $key ] ?? '';
+  }
+
+  /**
+   * Visitor-facing note for an extra date, e.g. "24. dec. · Julefrokost".
+   *
+   * @param array{date?: string, label?: string} $row
+   */
+  public function format_ekstra_dato_note( array $row ): string {
+    $date = isset( $row['date'] ) ? (string) $row['date'] : '';
+    $dt = $date !== '' ? DateTimeImmutable::createFromFormat( 'Y-m-d', $date ) : false;
+    $date_label = $dt ? wp_date( 'j. M', $dt->getTimestamp() ) : '';
+    $label = isset( $row['label'] ) ? trim( (string) $row['label'] ) : '';
+
+    if ( $date_label !== '' && $label !== '' ) {
+      return $date_label . ' · ' . $label;
+    }
+    return $date_label !== '' ? $date_label : $label;
+  }
+
+  /**
+   * Keep valid extra dates. A hidden marker lets an empty list replace stored rows.
+   *
+   * @param mixed $input
+   * @return array<int, array{date: string, label: string, closed: bool, open: string, close: string}>
+   */
+  public function sanitize_ekstra_datoer( $input ): array {
+    if ( ! is_array( $input ) ) {
+      return array();
+    }
+
+    $by_date = array();
+    foreach ( $input as $key => $row ) {
+      if ( $key === '_present' || ! is_array( $row ) ) {
+        continue;
+      }
+
+      $date = sanitize_text_field( $row['date'] ?? '' );
+      $dt = DateTimeImmutable::createFromFormat( 'Y-m-d', $date );
+      if ( ! $dt || $dt->format( 'Y-m-d' ) !== $date ) {
+        continue;
+      }
+
+      $closed = ! empty( $row['closed'] );
+      $by_date[ $date ] = array(
+        'date' => $date,
+        'label' => mb_substr( sanitize_text_field( $row['label'] ?? '' ), 0, 80 ),
+        'closed' => $closed,
+        'open' => $closed ? '' : $this->sanitize_time( (string) ( $row['open'] ?? '' ) ),
+        'close' => $closed ? '' : $this->sanitize_time( (string) ( $row['close'] ?? '' ) ),
+      );
+    }
+
+    ksort( $by_date );
+    return array_values( $by_date );
+  }
+
+  /**
+   * Accept HH:MM from a time input.
+   */
+  private function sanitize_time( string $time ): string {
+    $time = sanitize_text_field( $time );
+    if ( ! preg_match( '/^(\d{2}):(\d{2})/', $time, $matches ) ) {
+      return '';
+    }
+    $hour = (int) $matches[1];
+    $minute = (int) $matches[2];
+    if ( $hour > 23 || $minute > 59 ) {
+      return '';
+    }
+    return sprintf( '%02d:%02d', $hour, $minute );
+  }
+
+  public function clean(string $string) {
      $string = str_replace(' ', '-', $string); // Replaces all spaces with hyphens.
      $string = preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
 
      return preg_replace('/-+/', '-', $string); // Replaces multiple hyphens with single one.
   }
 
+}
+
+/**
+ * Extra date that replaces the weekday, or null.
+ *
+ * @return array{date: string, label: string, closed: bool, open: string, close: string}|null
+ */
+function centershop_get_ekstra_dato( string $ymd ): ?array {
+  $hours = new CenterShop_Shopping_Hours();
+  return $hours->get_ekstra_dato_for( $ymd );
+}
+
+/**
+ * All stored extra dates.
+ *
+ * @return array<int, array{date: string, label: string, closed: bool, open: string, close: string}>
+ */
+function centershop_get_ekstra_datoer(): array {
+  $hours = new CenterShop_Shopping_Hours();
+  return $hours->get_ekstra_datoer();
+}
+
+/**
+ * Weekday option key (mandag … sondag) for a Y-m-d date.
+ */
+function centershop_weekday_key_for_date( string $ymd ): string {
+  $hours = new CenterShop_Shopping_Hours();
+  return $hours->weekday_key_for_date( $ymd );
+}
+
+/**
+ * Current week as weekday key => Y-m-d.
+ *
+ * @return array<string, string>
+ */
+function centershop_current_week_dates_by_key(): array {
+  $hours = new CenterShop_Shopping_Hours();
+  $dates = $hours->current_week_dates();
+  $keys = array( 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lordag', 'sondag' );
+  return array_combine( $keys, $dates );
+}
+
+/**
+ * Visitor-facing note for an extra date.
+ *
+ * @param array{date?: string, label?: string} $row
+ */
+function centershop_format_ekstra_dato_note( array $row ): string {
+  $hours = new CenterShop_Shopping_Hours();
+  return $hours->format_ekstra_dato_note( $row );
 }
