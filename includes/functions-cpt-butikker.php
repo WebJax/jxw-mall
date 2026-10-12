@@ -36,7 +36,7 @@
 		'show_ui'            		=> true,
 		'show_in_menu'       		=> false,
 		'query_var'          		=> true,
-		'rewrite'            		=> array( 'slug' => 'butik' ),
+		'rewrite'            		=> array( 'slug' => 'butiksside' ),
 		'capability_type'    		=> 'post',
 		'has_archive'        		=> true,
 		'hierarchical'       		=> false,

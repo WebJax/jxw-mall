@@ -146,6 +146,12 @@ class CenterShop_Admin_Menu {
             filemtime(plugin_dir_path(dirname(__FILE__)) . 'js/centershop-admin.js'),
             true
         );
+
+        if ($hook === 'toplevel_page_' . self::MENU_SLUG && class_exists('CenterShop_FloorPlan')) {
+            CenterShop_FloorPlan::get_instance()->enqueue_frontend_assets();
+            wp_enqueue_style('centershop-floorplan');
+            wp_enqueue_script('centershop-floorplan');
+        }
         
         wp_localize_script('centershop-admin', 'centershopAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -183,16 +189,138 @@ class CenterShop_Admin_Menu {
                 </div>
                 
             </div>
-            
-            <!-- Seneste aktivitet -->
-            <div class="centershop-recent-activity">
-                <h2><?php _e('Seneste aktivitet', 'centershop_txtdomain'); ?></h2>
-                <?php $this->render_recent_activity(); ?>
+
+            <div class="centershop-dashboard-main">
+                <section class="centershop-card centershop-shop-overview">
+                    <h2><?php _e('Butikker efter kategori', 'centershop_txtdomain'); ?></h2>
+                    <?php $this->render_shops_by_category(); ?>
+                </section>
+
+                <div class="centershop-dashboard-side">
+                    <section class="centershop-card centershop-dashboard-floorplan">
+                        <h2><?php _e('Grundplan', 'centershop_txtdomain'); ?></h2>
+                        <?php
+                        if (shortcode_exists('centershop_floorplan')) {
+                            echo do_shortcode('[centershop_floorplan show_search="yes" height="480px"]');
+                        }
+                        if (current_user_can('manage_options')) {
+                            echo '<p class="centershop-floorplan-edit"><a class="button" href="' . esc_url(admin_url('admin.php?page=centershop-floorplan')) . '">' . esc_html__('Rediger grundplan', 'centershop_txtdomain') . '</a></p>';
+                        }
+                        ?>
+                    </section>
+
+                    <section class="centershop-card centershop-recent-activity">
+                        <h2><?php _e('Seneste aktivitet', 'centershop_txtdomain'); ?></h2>
+                        <?php $this->render_recent_activity(); ?>
+                    </section>
+                </div>
             </div>
         </div>
         <?php
     }
     
+    /**
+     * Logo grid of published shops, grouped by the categories under Butikker.
+     */
+    private function render_shops_by_category() {
+        $shops = get_posts(array(
+            'post_type' => 'butiksside',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ));
+
+        if (empty($shops)) {
+            echo '<p>' . esc_html__('Ingen butikker endnu.', 'centershop_txtdomain') . '</p>';
+            return;
+        }
+
+        $parent = get_term_by('slug', 'butikker', 'category');
+        $parent_id = ($parent && !is_wp_error($parent)) ? (int) $parent->term_id : 27;
+        $categories = get_terms(array(
+            'taxonomy' => 'category',
+            'child_of' => $parent_id,
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ));
+
+        $groups = array();
+        if (!is_wp_error($categories)) {
+            foreach ($categories as $category) {
+                $groups[$category->term_id] = array(
+                    'name' => $category->name,
+                    'shops' => array(),
+                );
+            }
+        }
+
+        $other = array();
+        foreach ($shops as $shop) {
+            $terms = get_the_terms($shop, 'category');
+            $placed = false;
+            if ($terms && !is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    if (isset($groups[$term->term_id])) {
+                        $groups[$term->term_id]['shops'][] = $shop;
+                        $placed = true;
+                    }
+                }
+            }
+            if (!$placed) {
+                $other[] = $shop;
+            }
+        }
+
+        echo '<div class="centershop-shop-groups">';
+        foreach ($groups as $group) {
+            if (empty($group['shops'])) {
+                continue;
+            }
+            $this->render_shop_logo_group($group['name'], $group['shops']);
+        }
+        if (!empty($other)) {
+            $this->render_shop_logo_group(__('Øvrige', 'centershop_txtdomain'), $other);
+        }
+        echo '</div>';
+    }
+
+    /**
+     * One category heading and its shop logos.
+     *
+     * @param string    $name  Category label.
+     * @param WP_Post[] $shops Shops in the category.
+     */
+    private function render_shop_logo_group($name, array $shops) {
+        echo '<div class="centershop-shop-group">';
+        echo '<h3>' . esc_html($name) . ' <span class="centershop-shop-count">' . esc_html((string) count($shops)) . '</span></h3>';
+        echo '<ul class="centershop-logo-grid">';
+        foreach ($shops as $shop) {
+            $title = get_the_title($shop);
+            $link = get_edit_post_link($shop->ID, 'raw');
+            if (!$link) {
+                $link = get_permalink($shop);
+            }
+            $logo_id = (int) get_post_meta($shop->ID, 'allround-cpt_logo_id', true);
+
+            echo '<li>';
+            echo '<a class="centershop-logo-card" href="' . esc_url($link) . '">';
+            if ($logo_id && wp_get_attachment_image_url($logo_id, 'medium')) {
+                echo wp_get_attachment_image($logo_id, 'medium', false, array(
+                    'class' => 'centershop-shop-logo',
+                    'alt' => $title,
+                ));
+            } else {
+                echo '<span class="centershop-logo-fallback">' . esc_html($title) . '</span>';
+            }
+            echo '</a>';
+            echo '</li>';
+        }
+        echo '</ul>';
+        echo '</div>';
+    }
+
     /**
      * Render recent activity
      */
@@ -208,11 +336,15 @@ class CenterShop_Admin_Menu {
         ));
         
         foreach ($recent_shops as $shop) {
+            $link = get_edit_post_link($shop->ID, 'raw');
+            if (!$link) {
+                $link = get_permalink($shop);
+            }
+            $shop_link = '<a href="' . esc_url($link) . '">' . esc_html(get_the_title($shop)) . '</a>';
             $activities[] = array(
                 'time' => strtotime($shop->post_modified),
                 'type' => 'shop',
-                'text' => sprintf(__('Butik "%s" blev opdateret', 'centershop_txtdomain'), $shop->post_title),
-                'link' => get_edit_post_link($shop->ID)
+                'text' => sprintf(__('Butik "%s" blev opdateret', 'centershop_txtdomain'), $shop_link),
             );
         }
         
@@ -229,7 +361,7 @@ class CenterShop_Admin_Menu {
         echo '<ul class="centershop-activity-list">';
         foreach (array_slice($activities, 0, 10) as $activity) {
             printf(
-                '<li><span class="activity-type activity-%s"></span> %s <span class="activity-time">%s</span></li>',
+                '<li><span class="activity-type activity-%s"></span> <span class="activity-text">%s</span> <span class="activity-time">%s</span></li>',
                 esc_attr($activity['type']),
                 wp_kses_post($activity['text']),
                 esc_html( human_time_diff($activity['time']) . ' ' . __('siden', 'centershop_txtdomain') )

@@ -63,27 +63,7 @@ function centershop_setup_post_types()
 
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");
-  register_post_type( 'butiksside', $args = array(
-    'labels' => array(
-        'name' => 'Butikker',
-        'singular_name' => 'Butik',
-        'add_new' => 'Tilføj butik',
-        'add_new_item' => 'Tilføj ny butik',
-        'edit_item' => 'Rediger butik',
-        'new_item' => 'Ny butik',
-        'view_item' => 'Se butik',
-        'search_items' => 'Søg butikker',
-        'not_found' =>  'Ingen butikker fundet',
-        'not_found_in_trash' => 'Ingen butikker fundet i papirkurven', 
-        'parent_item_colon' => '',
-        'menu_name' => 'Butikker'
-    ),
-    'public' => true,
-    'has_archive' => true,
-    'rewrite' => array('slug' => 'butiksside'),
-    'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
-    )
-  );
+  register_post_type( 'butiksside', $args );
   add_action('save_post', 'save_butiks_meta', 999, 2); // save the custom fields
   
   // Initialize shopping hours functionality
