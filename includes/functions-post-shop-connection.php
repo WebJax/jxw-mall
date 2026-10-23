@@ -27,6 +27,9 @@ add_action('add_meta_boxes', 'jxw_add_shop_connection_meta_box');
 
 /**
  * Render the meta box content
+ * 
+ * @param object $post The post object
+ * @return void
  */
 function jxw_render_shop_connection_meta_box($post) {
     // Add nonce for security
@@ -68,6 +71,9 @@ function jxw_render_shop_connection_meta_box($post) {
 
 /**
  * Save the shop connections when post is saved
+ * 
+ * @param int $post_id The post ID
+ * @return void
  */
 function jxw_save_shop_connections($post_id) {
     // Security checks
@@ -135,6 +141,9 @@ function jxw_display_connected_shops($post_id = null) {
 /**
  * Automatically add connected shops to post content
  * (hooked to the_content filter)
+ * 
+ * @param string $content The post content
+ * @return string The modified content
  */
 function jxw_add_shops_to_content($content) {
     // Only on single post pages
@@ -156,6 +165,9 @@ add_filter('the_content', 'jxw_add_shops_to_content', 10);
 /**
  * Shortcode to display connected shops
  * Usage: [connected_shops]
+ * 
+ * @param array $atts The shortcode attributes
+ * @return string The connected shops
  */
 function jxw_connected_shops_shortcode($atts) {
     $atts = shortcode_atts(array(
@@ -168,6 +180,8 @@ add_shortcode('connected_shops', 'jxw_connected_shops_shortcode');
 
 /**
  * Enqueue styles for the shop pills
+ * 
+ * @return void
  */
 function jxw_enqueue_shop_pills_styles() {
     if (is_singular('post')) {
@@ -184,6 +198,9 @@ add_action('wp_enqueue_scripts', 'jxw_enqueue_shop_pills_styles');
 /**
  * Get posts connected to a specific shop
  * Useful for displaying on shop pages
+ * 
+ * @param int $shop_id The shop ID
+ * @return array The posts
  */
 function jxw_get_posts_for_shop($shop_id) {
     global $wpdb;
@@ -221,6 +238,9 @@ function jxw_get_posts_for_shop($shop_id) {
 
 /**
  * Detect if a DB error is likely transient.
+ * 
+ * @param string $error_message The error message
+ * @return bool True if the error is transient, false otherwise
  */
 function jxw_is_transient_db_error($error_message) {
     if (!is_string($error_message) || $error_message === '') {
@@ -232,6 +252,12 @@ function jxw_is_transient_db_error($error_message) {
 
 /**
  * Execute get_col with retries for transient DB errors.
+ * 
+ * @param object $wpdb The WordPress database object
+ * @param string $query The query to execute
+ * @param int $max_attempts The maximum number of attempts
+ * @param int $retry_delay_us The delay between attempts in microseconds
+ * @return array The result
  */
 function jxw_get_col_with_retry($wpdb, $query, $max_attempts = 3, $retry_delay_us = 200000) {
     $last_error = '';
@@ -264,6 +290,9 @@ function jxw_get_col_with_retry($wpdb, $query, $max_attempts = 3, $retry_delay_u
 
 /**
  * Display related posts on shop single page
+ * 
+ * @param int $shop_id The shop ID
+ * @return string The related posts
  */
 function jxw_display_shop_related_posts($shop_id = null) {
     if (!$shop_id) {
@@ -296,6 +325,9 @@ function jxw_display_shop_related_posts($shop_id = null) {
 /**
  * Shortcode to display related posts on shop page
  * Usage: [shop_related_posts]
+ * 
+ * @param array $atts The shortcode attributes
+ * @return string The related posts
  */
 function jxw_shop_related_posts_shortcode($atts) {
     $atts = shortcode_atts(array(

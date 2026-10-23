@@ -11,80 +11,99 @@
  *
  * @link http://codex.wordpress.org/Function_Reference/register_post_type
  */
-	$labels = array(
-		'name'               => _x( 'Butikker', 'Butikker', 'dianalund_txtdomain' ),
-		'singular_name'      => _x( 'Butik', 'Butik', 'dianalund_txtdomain' ),
-		'menu_name'          => _x( 'Butikker', 'admin menu', 'dianalund_txtdomain' ),
-		'name_admin_bar'     => _x( 'Butik', 'add new on admin bar', 'dianalund_txtdomain' ),
-		'add_new'            => _x( 'Tilføj ny', 'butik', 'dianalund_txtdomain' ),
-		'add_new_item'       => __( 'Tilføj ny butik', 'dianalund_txtdomain' ),
-		'new_item'           => __( 'Ny butik', 'dianalund_txtdomain' ),
-		'edit_item'          => __( 'Ret butik', 'dianalund_txtdomain' ),
-		'view_item'          => __( 'Se butik', 'dianalund_txtdomain' ),
-		'all_items'          => __( 'Alle butikker', 'dianalund_txtdomain' ),
-		'search_items'       => __( 'Søg butikker', 'dianalund_txtdomain' ),
-		'parent_item_colon'  => __( 'Forældre butikker:', 'dianalund_txtdomain' ),
-		'not_found'          => __( 'Ingen butikker fundet.', 'dianalund_txtdomain' ),
-		'not_found_in_trash' => __( 'Ingen butikker fundet i skraldespand.', 'dianalund_txtdomain' )
-	);
+$labels = array(
+	'name'               => _x( 'Butikker', 'Butikker', 'dianalund_txtdomain' ),
+	'singular_name'      => _x( 'Butik', 'Butik', 'dianalund_txtdomain' ),
+	'menu_name'          => _x( 'Butikker', 'admin menu', 'dianalund_txtdomain' ),
+	'name_admin_bar'     => _x( 'Butik', 'add new on admin bar', 'dianalund_txtdomain' ),
+	'add_new'            => _x( 'Tilføj ny', 'butik', 'dianalund_txtdomain' ),
+	'add_new_item'       => __( 'Tilføj ny butik', 'dianalund_txtdomain' ),
+	'new_item'           => __( 'Ny butik', 'dianalund_txtdomain' ),
+	'edit_item'          => __( 'Ret butik', 'dianalund_txtdomain' ),
+	'view_item'          => __( 'Se butik', 'dianalund_txtdomain' ),
+	'all_items'          => __( 'Alle butikker', 'dianalund_txtdomain' ),
+	'search_items'       => __( 'Søg butikker', 'dianalund_txtdomain' ),
+	'parent_item_colon'  => __( 'Forældre butikker:', 'dianalund_txtdomain' ),
+	'not_found'          => __( 'Ingen butikker fundet.', 'dianalund_txtdomain' ),
+	'not_found_in_trash' => __( 'Ingen butikker fundet i skraldespand.', 'dianalund_txtdomain' )
+);
 
-	$args = array(
-		'labels'             		=> $labels,
-    'description'        		=> __( 'Opret butikker for betalende kunder.', 'dianalund_txtdomain' ),
-		'public'             		=> true,
-		'publicly_queryable' 		=> true,
-		'show_ui'            		=> true,
-		'show_in_menu'       		=> false,
-		'query_var'          		=> true,
-		'rewrite'            		=> array( 'slug' => 'butiksside' ),
-		'capability_type'    		=> 'post',
-		'has_archive'        		=> true,
-		'hierarchical'       		=> false,
-		'menu_position'      		=> null,
-		'menu_icon'						  => 'dashicons-store',
-		'supports'           		=> array( 'title', 'editor', 'thumbnail' ),
-		'register_meta_box_cb' 	=> 'add_butik_metaboxes',
-		'taxonomies' 						=> array('category'),
-    'show_in_rest'          => true
-	);
+$args = array(
+	'labels'             	=> $labels,
+	'description'        	=> __( 'Opret butikker for betalende kunder.', 'dianalund_txtdomain' ),
+	'public'             	=> true,
+	'publicly_queryable' 	=> true,
+	'show_ui'            	=> true,
+	'show_in_menu'       	=> false,
+	'query_var'          	=> true,
+	'rewrite'            	=> array( 'slug' => 'butiksside' ),
+	'capability_type'    	=> 'post',
+	'has_archive'        	=> true,
+	'hierarchical'       	=> false,
+	'menu_position'      	=> null,
+	'menu_icon'				=> 'dashicons-store',
+	'supports'           	=> array( 'title', 'editor', 'thumbnail' ),
+	'register_meta_box_cb' 	=> 'add_butik_metaboxes',
+	'taxonomies' 			=> array('category'),
+	'show_in_rest'			=> true
+);
 
+/**
+ * 
+ * Add Custom Columns to the admin list of butikker
+ * 
+ */ 
+add_action("manage_butiksside_posts_custom_column",  "butik_custom_columns");
+add_filter("manage_butiksside_posts_columns", "butik_edit_columns");
+add_filter("manage_edit-butiksside_sortable_columns", "my_sortable_butiksside_column");
 
- function add_butik_metaboxes(){
-		 add_meta_box( 'butik_open_info', 'Åbningstider', 'jxw_opening_hours_v2_metabox_html', 'butiksside', 'normal', 'high' );
-		 add_meta_box("butik_kontakt_info", "Kontakt information", "butik_kontakt_meta_options", "butiksside", "side", "high" );
-		 add_meta_box("butik_logo_pic", "Logo", "butik_logo_meta_options", "butiksside", "side", "low" );	 	
- }  
+/**
+function add_butik_metaboxes(){
+	add_meta_box("butik_open_info", "Åbningstider", "jxw_opening_hours_v2_metabox_html", "butiksside", "normal", "high" );
+	add_meta_box("butik_kontakt_info", "Kontakt information", "butik_kontakt_meta_options", "butiksside", "side", "high" );
+	add_meta_box("butik_logo_pic", "Logo", "butik_logo_meta_options", "butiksside", "side", "low" );	 	
+}  
 
+/**
+ * 
+ * Add Kontakt Metabox to the butikker
+ * 
+ */ 
 function butik_kontakt_meta_options(){
-		global $post;
-		wp_nonce_field( plugin_basename(__FILE__), 'kontaktbutiksmeta_noncename' );
+	global $post;
+	wp_nonce_field( plugin_basename(__FILE__), 'kontaktbutiksmeta_noncename' );
 
-		// Get the location data if its already been entered
-		$butik_payed_name = get_post_meta($post->ID, 'butik_payed_name', true);
-		$butik_payed_adress = get_post_meta($post->ID, 'butik_payed_adress', true);
-		$butik_payed_postal = get_post_meta($post->ID, 'butik_payed_postal', true);
-		$butik_payed_city = get_post_meta($post->ID, 'butik_payed_city', true);
-		$butik_payed_phone = get_post_meta($post->ID, 'butik_payed_phone', true);
-		$butik_payed_mail = get_post_meta($post->ID, 'butik_payed_mail', true);
-		$butik_payed_web = get_post_meta($post->ID, 'butik_payed_web', true);
-		$butik_payed_fb = get_post_meta($post->ID, 'butik_payed_fb', true);
-		$butik_payed_insta = get_post_meta($post->ID, 'butik_payed_insta', true);
-	
-		?>
-		<table>
-			<tr><td><label for="butik_payed_name">Butiksnavn:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_name ); ?>" name="butik_payed_name" id="butik_payed_name"/></td></tr>
-			<tr><td><label for="butik_payed_adress">Adresse:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_adress ); ?>" name="butik_payed_adress" id="butik_payed_adress"/></td></tr>
-			<tr><td><label for="butik_payed_postal">Postnr:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_postal ); ?>" name="butik_payed_postal" id="butik_payed_postal"/></td></tr>
-			<tr><td><label for="butik_payed_city">By:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_city ); ?>" name="butik_payed_city" id="butik_payed_city"/></td></tr>
-			<tr><td><label for="butik_payed_phone">Telefon:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_phone ); ?>" name="butik_payed_phone" id="butik_payed_phone"/></td></tr>
-			<tr><td><label for="butik_payed_mail">Email:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_mail ); ?>" name="butik_payed_mail" id="butik_payed_mail"/></td></tr>
-			<tr><td><label for="butik_payed_web">Hjemmeside:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_web ); ?>" name="butik_payed_web" id="butik_payed_web"/></td></tr>
-			<tr><td><label for="butik_payed_fb">Facebook:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_fb ); ?>" name="butik_payed_fb" id="butik_payed_fb"/></td></tr>
-			<tr><td><label for="butik_payed_insta">Instagram:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_insta ); ?>" name="butik_payed_insta" id="butik_payed_insta"/></td></tr>
-		</table>
+	// Get the location data if its already been entered
+	$butik_payed_name = get_post_meta($post->ID, 'butik_payed_name', true);
+	$butik_payed_adress = get_post_meta($post->ID, 'butik_payed_adress', true);
+	$butik_payed_postal = get_post_meta($post->ID, 'butik_payed_postal', true);
+	$butik_payed_city = get_post_meta($post->ID, 'butik_payed_city', true);
+	$butik_payed_phone = get_post_meta($post->ID, 'butik_payed_phone', true);
+	$butik_payed_mail = get_post_meta($post->ID, 'butik_payed_mail', true);
+	$butik_payed_web = get_post_meta($post->ID, 'butik_payed_web', true);
+	$butik_payed_fb = get_post_meta($post->ID, 'butik_payed_fb', true);
+	$butik_payed_insta = get_post_meta($post->ID, 'butik_payed_insta', true);
+
+	?>
+	<table>
+		<tr><td><label for="butik_payed_name">Butiksnavn:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_name ); ?>" name="butik_payed_name" id="butik_payed_name"/></td></tr>
+		<tr><td><label for="butik_payed_adress">Adresse:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_adress ); ?>" name="butik_payed_adress" id="butik_payed_adress"/></td></tr>
+		<tr><td><label for="butik_payed_postal">Postnr:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_postal ); ?>" name="butik_payed_postal" id="butik_payed_postal"/></td></tr>
+		<tr><td><label for="butik_payed_city">By:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_city ); ?>" name="butik_payed_city" id="butik_payed_city"/></td></tr>
+		<tr><td><label for="butik_payed_phone">Telefon:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_phone ); ?>" name="butik_payed_phone" id="butik_payed_phone"/></td></tr>
+		<tr><td><label for="butik_payed_mail">Email:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_mail ); ?>" name="butik_payed_mail" id="butik_payed_mail"/></td></tr>
+		<tr><td><label for="butik_payed_web">Hjemmeside:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_web ); ?>" name="butik_payed_web" id="butik_payed_web"/></td></tr>
+		<tr><td><label for="butik_payed_fb">Facebook:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_fb ); ?>" name="butik_payed_fb" id="butik_payed_fb"/></td></tr>
+		<tr><td><label for="butik_payed_insta">Instagram:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_insta ); ?>" name="butik_payed_insta" id="butik_payed_insta"/></td></tr>
+	</table>
 <?php
  }  
 
+/**
+ * 
+ * Add Logo Metabox to the butikker
+ * 
+ */ 
 function butik_logo_meta_options() {
 	global $post;
 	wp_nonce_field( plugin_basename(__FILE__), 'logobutiksmeta_noncename' );
@@ -101,7 +120,14 @@ function butik_logo_meta_options() {
 	<?php
 }
 
- // Save the Metabox Data
+/**
+ * 
+ * Save the Metabox Data
+ * 
+ * @param int $post_id The post ID
+ * @param object $post The post object
+ * @return int The post ID
+ */ 
 
 function save_butiks_meta($post_id, $post) {
 	
@@ -150,47 +176,74 @@ function save_butiks_meta($post_id, $post) {
 
 }
 
-/* Setup listorder */
-add_action("manage_butiksside_posts_custom_column",  "butik_custom_columns");
-add_filter("manage_butiksside_posts_columns", "butik_edit_columns");
-add_filter("manage_edit-butiksside_sortable_columns", "my_sortable_butiksside_column");
-
-function butik_edit_columns($columns){
-  $columns = array(
-    "cb" => "<input type='checkbox' />",
-    "title" => "Butiks Titel",
-    "description" => "Beskrivelse",
-		"wordcount" => "Antal ord",
-    "butikskategori" => "Kategori",
-  );
+/**
+ * 
+ * Add Custom Columns to the admin list of butikker
+ * 
+ * @param array $columns The columns to display
+ * @return array The modified columns
+ */ 
+function butik_edit_columns( $columns ) {
+	$columns = array(
+		"cb" 				=> "<input type='checkbox' />",
+		"butik_logo" 		=> "Logo",
+		"title" 			=> "Butiks Titel",
+		"description" 		=> "Beskrivelse",
+		"wordcount" 		=> "Antal ord",
+		"butikskategori" 	=> "Kategori",
+	);
  
-  return $columns;
+  	return $columns;
 }
 
-function butik_custom_columns($column){
-  global $post;
+/**
+ * 
+ * Add Custom Columns to the admin list of butikker
+ * 
+ * @param string $column The column to display
+ * @return void
+ */ 
+function butik_custom_columns( $column ) {
+  	global $post;
  
-  switch ($column) {
-    case "description":
-      the_excerpt();
-      break;
+  	switch ($column) {
+		case "butik_logo":
+			echo get_the_post_thumbnail($post->ID, 'thumbnail');
+			break;
+		case "description":
+			the_excerpt();
+			break;
 		case "wordcount":
 			echo butik_prefix_wcount();
 			break;
-    case "butikskategori":
-      echo get_the_term_list($post->ID, 'category', '', ', ','');
-      break;
-  }
+		case "butikskategori":
+			echo get_the_term_list($post->ID, 'category', '', ', ','');
+			break;
+	}
 }
 
+/**
+ * 
+ * Add Custom Columns to the admin list of butikker
+ * 
+ * @return int The word count
+ */ 
 function butik_prefix_wcount() {
     ob_start();
     the_content();
     $content = ob_get_clean();
-		$wc_size = (2 < sizeof(explode(" ", $content))) ? sizeof(explode(" ", $content)) : "Ingen";
+	$words = explode(" ", $content);
+	$wc_size = (2 < count($words)) ? count($words) : "Ingen";
     return $wc_size;
 }
 
+/**
+ * 
+ * Add Custom Columns to the admin list of butikker
+ * 
+ * @param array $columns The columns to display
+ * @return array The modified columns
+ */ 
 function my_sortable_butiksside_column( $columns ) {
     $columns['butikskategori'] = 'butikskategori';
  
@@ -202,6 +255,14 @@ function my_sortable_butiksside_column( $columns ) {
 
 
 //add_action('save_post', 'butikker_quick_edit_data');
+
+/**
+ * 
+ * Save the Quick Edit Data
+ * 
+ * @param int $post_id The post ID
+ * @return int The post ID
+ */ 
  
 function butikker_quick_edit_data($post_id) {
     // are we at the correct page
@@ -224,8 +285,11 @@ function butikker_quick_edit_data($post_id) {
         if ( !current_user_can( 'edit_post', $post_id ) )
         return $post_id;
     }
+
     // OK, we're authenticated: we need to find and save the data
     $post = get_post($post_id);
+	$widget_set_id = "";
+
     if (isset($_POST['betalt_set']) && ($post->post_type != 'revision')) {
         $widget_set_id = esc_attr($_POST['betalt_set']);
         if ($widget_set_id)

@@ -2,15 +2,33 @@
 /**
  * Shortcodes for Shopping Hours functionality
  * Integrated from shoppinghours plugin into centershop
+ * 
+ * @param array $atts The shortcode attributes
+ * @return string The shopping hours
  */
 
 class CenterShop_Shopping_Hours_Shortcodes 
 {
+    /**
+     * The day of the week
+     * @var string
+     */
     private $day_of_week;
+    /**
+     * Whether it is a holiday
+     * @var bool
+     */
     private $is_holliday;
 
-    // Use consistent ASCII-safe day names
+    /**
+     * The days of the week in ASCII-safe format
+     * @var array
+     */
     private $week_days = ['mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lordag', 'sondag'];
+    /**
+     * The days of the week in display format
+     * @var array
+     */
     private $week_days_display = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'];
 
     function __construct() {
@@ -58,13 +76,13 @@ class CenterShop_Shopping_Hours_Shortcodes
             if ($override) {
                 $returning .= $this->render_hour_cells(!empty($override['closed']), $override['open'], $override['close']);
             } elseif ($this->is_holliday) {
-                if (!$this->is_holliday[3]) {
-                    $openhollyday = get_option($this->is_holliday[1], '');
-                    $closehollyday = get_option($this->is_holliday[2], '');
+                if (!is_array($this->is_holliday) || !$this->is_holliday[3]) {
+                    $openhollyday = get_option($this->is_holliday[1] ?? '', '');
+                    $closehollyday = get_option($this->is_holliday[2] ?? '', '');
                     $returning .= '<td class="openhours holliday">' . esc_html($openhollyday) . '</td>';
                     $returning .= '<td class="closinghours holliday">' . esc_html($closehollyday) . '</td>';
                 } else {
-                    $returning .= '<td colspan="2" class="closed-holliday">Der er lukket ' . esc_html($this->is_holliday[0] ?? '') . '</td>';          
+                    $returning .= '<td colspan="2" class="closed-holliday">Der er lukket ' . esc_html($this->is_holliday[0] ?? '') . '</td>';
                 }
             } else {
                 if (get_option($week_day.'_heltlukket')) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * EKSEMPEL: Integration af butik-pills i DianalundCentret tema
+ * EKSEMPEL: Integration af butik-pills i jxwmallCentret tema
  * 
  * Denne fil viser hvordan du kan integrere butik-pills i dit tema.
  * Kopier den relevante kode til dit tema's functions.php eller template filer.
@@ -70,7 +70,7 @@ if (function_exists('jxw_display_connected_shops')) {
 // ============================================
 // Tilføj til dit tema's functions.php
 
-function dianalund_shop_connection_widget() {
+function jxwmall_shop_connection_widget() {
     if (!is_singular('post')) {
         return;
     }
@@ -117,7 +117,7 @@ function dianalund_shop_connection_widget() {
 }
 
 // Tilføj widget til sidebar på single posts
-// add_action('dynamic_sidebar_before', 'dianalund_shop_connection_widget');
+// add_action('dynamic_sidebar_before', 'jxwmall_shop_connection_widget');
 
 
 // ============================================
@@ -141,7 +141,7 @@ function dianalund_shop_connection_widget() {
 // ============================================
 // Tilføj til dit tema's functions.php
 
-function dianalund_add_shop_filter_to_archive() {
+function jxwmall_add_shop_filter_to_archive() {
     if (!is_home() && !is_archive()) {
         return;
     }
@@ -174,10 +174,16 @@ function dianalund_add_shop_filter_to_archive() {
     echo '</form>';
     echo '</div>';
 }
-// add_action('archive_title_after', 'dianalund_add_shop_filter_to_archive');
+// add_action('archive_title_after', 'jxwmall_add_shop_filter_to_archive');
 
-// Modificer query for at filtrere
-function dianalund_filter_posts_by_shop($query) {
+/**
+ * 
+ * Filter posts by shop
+ * 
+ * @param object $query The query object
+ * @return void
+ */ 
+function jxwmall_filter_posts_by_shop($query) {
     if (!is_admin() && $query->is_main_query() && (is_home() || is_archive())) {
         if (isset($_GET['shop_filter']) && !empty($_GET['shop_filter'])) {
             $shop_id = intval($_GET['shop_filter']);
@@ -194,7 +200,7 @@ function dianalund_filter_posts_by_shop($query) {
         }
     }
 }
-// add_filter('pre_get_posts', 'dianalund_filter_posts_by_shop');
+// add_filter('pre_get_posts', 'jxwmall_filter_posts_by_shop');
 
 
 // ============================================
@@ -202,7 +208,7 @@ function dianalund_filter_posts_by_shop($query) {
 // ============================================
 // Tilføj til en custom template eller page builder
 
-function dianalund_posts_grid_with_shops() {
+function jxwmall_posts_grid_with_shops() {
     $args = array(
         'post_type' => 'post',
         'posts_per_page' => 6,
@@ -270,7 +276,7 @@ function dianalund_posts_grid_with_shops() {
 }
 
 // Brug shortcode: [posts_grid_with_shops]
-// add_shortcode('posts_grid_with_shops', 'dianalund_posts_grid_with_shops');
+// add_shortcode('posts_grid_with_shops', 'jxwmall_posts_grid_with_shops');
 
 
 // ============================================
