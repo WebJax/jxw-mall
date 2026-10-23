@@ -59,7 +59,7 @@ add_action('plugins_loaded', 'centershop_load_modules');
 
 function centershop_setup_post_types()
 {
-    // register the three custom post type
+    // register butiksside post type
 
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");

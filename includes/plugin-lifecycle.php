@@ -1,9 +1,22 @@
 <?php
 
+/**
+ * Plugin lifecycle
+ * 
+ * @package Centershop
+ * @subpackage Plugin Lifecycle
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Run the database migrations
+ * 
+ * @return void
+ */
 function centershop_run_db_migrations() {
 	if ( function_exists( 'do_action' ) ) {
 		do_action( 'centershop_run_db_migrations' );
@@ -14,6 +27,11 @@ function centershop_run_db_migrations() {
 	}
 }
 
+/**
+ * Get the cron hooks to clear
+ * 
+ * @return array The cron hooks
+ */
 function centershop_get_cron_hooks_to_clear() {
 	if ( ! function_exists( 'apply_filters' ) ) {
 		return array();
@@ -22,6 +40,12 @@ function centershop_get_cron_hooks_to_clear() {
 	return (array) apply_filters( 'centershop_cron_hooks', array() );
 }
 
+/**
+ * Plugin activation
+ * 
+ * @param array $deps The dependencies
+ * @return void
+ */
 function centershop_plugin_activate( array $deps = array() ) {
 	$setup_post_types   = $deps['setup_post_types'] ?? 'centershop_setup_post_types';
 	$run_db_migrations  = $deps['run_db_migrations'] ?? 'centershop_run_db_migrations';
@@ -40,6 +64,12 @@ function centershop_plugin_activate( array $deps = array() ) {
 	}
 }
 
+/**
+ * Plugin deactivation
+ * 
+ * @param array $deps The dependencies
+ * @return void
+ */
 function centershop_plugin_deactivate( array $deps = array() ) {
 	$get_cron_hooks     = $deps['get_cron_hooks'] ?? 'centershop_get_cron_hooks_to_clear';
 	$clear_cron_hook    = $deps['clear_cron_hook'] ?? 'wp_clear_scheduled_hook';
@@ -58,14 +88,30 @@ function centershop_plugin_deactivate( array $deps = array() ) {
 	}
 }
 
+/**
+ * On activation
+ * 
+ * @return void
+ */
 function centershop_on_activation() {
 	centershop_plugin_activate();
 }
 
+/**
+ * On deactivation
+ * 
+ * @return void
+ */
 function centershop_on_deactivation() {
 	centershop_plugin_deactivate();
 }
 
+/**
+ * Register the lifecycle hooks
+ * 
+ * @param string $plugin_file The plugin file
+ * @return void
+ */
 function centershop_register_lifecycle_hooks( $plugin_file ) {
 	if ( function_exists( 'register_activation_hook' ) ) {
 		register_activation_hook( $plugin_file, 'centershop_on_activation' );
