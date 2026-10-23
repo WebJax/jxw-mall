@@ -64,6 +64,12 @@ function centershop_setup_post_types()
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");
   register_post_type( 'butiksside', $args );
+
+  // Shop URLs are stored in the rewrite option. Refresh them once after the
+  // registration change, otherwise /butiksside/butiknavn/ stays a 404.
+  if ( get_option( 'centershop_butiksside_rewrite' ) !== 'butiksside' ) {
+    add_action( 'init', 'centershop_flush_butiksside_rewrites', 99 );
+  }
   add_action('save_post', 'save_butiks_meta', 999, 2); // save the custom fields
   
   // Initialize shopping hours functionality
@@ -120,6 +126,14 @@ function centershop_setup_post_types()
 	
 }
 add_action( 'init', 'centershop_setup_post_types' );
+
+/**
+ * Rewrite shop permalinks once, after butiksside is registered.
+ */
+function centershop_flush_butiksside_rewrites() {
+  flush_rewrite_rules( false );
+  update_option( 'centershop_butiksside_rewrite', 'butiksside', false );
+}
 
 // Enqueue shared butik styles on frontend
 function centershop_enqueue_styles() {

@@ -1,225 +1,144 @@
-/* CenterShop Floorplan Frontend Styles */
+/* CenterShop Grundplan – frontend */
 
 .centershop-floorplan-wrapper {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	position: relative;
+	max-width: 100%;
 }
 
-/* Search */
+/* Søgning */
 .floorplan-search {
-    margin-bottom: 20px;
-    position: relative;
+	position: relative;
+	margin-bottom: 1rem;
+	max-width: 420px;
 }
 
 .floorplan-search-input {
-    width: 100%;
-    padding: 12px 20px;
-    font-size: 16px;
-    border: 2px solid #ddd;
-    border-radius: 25px;
-    outline: none;
-    transition: border-color 0.3s;
-}
-
-.floorplan-search-input:focus {
-    border-color: #3498db;
+	width: 100%;
+	padding: 0.6em 0.8em;
+	box-sizing: border-box;
 }
 
 .floorplan-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    display: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    z-index: 100;
+	display: none;
+	position: absolute;
+	z-index: 20;
+	left: 0;
+	right: 0;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+	max-height: 320px;
+	overflow-y: auto;
 }
 
-.floorplan-search-results.active {
-    display: block;
+.floorplan-search-results.is-open {
+	display: block;
 }
 
-.search-result-item {
-    padding: 12px 20px;
-    cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background 0.2s;
+.floorplan-search-item {
+	display: block;
+	width: 100%;
+	padding: 0.6em 0.8em;
+	text-align: left;
+	background: none;
+	border: 0;
+	border-bottom: 1px solid #f0f0f1;
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
 }
 
-.search-result-item:last-child {
-    border-bottom: none;
+.floorplan-search-item:hover,
+.floorplan-search-item:focus {
+	background: #f0f6fc;
+	outline: none;
 }
 
-.search-result-item:hover {
-    background: #f9f9f9;
+.floorplan-search-item small {
+	opacity: 0.6;
 }
 
-.no-results {
-    padding: 20px;
-    text-align: center;
-    color: #999;
+.floorplan-search-empty {
+	padding: 0.6em 0.8em;
+	opacity: 0.7;
 }
 
-/* Floorplan Display */
+/* Kort */
 .floorplan-display {
-    position: relative;
-    overflow: auto;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #f9f9f9;
+	position: relative;
+	line-height: 0;
 }
 
 .floorplan-svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    user-select: none;
-}
-
-.floorplan-overlay-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+	display: block;
+	width: 100%;
+	height: auto;
 }
 
 .floorplan-area-front {
-    pointer-events: auto;
-    cursor: pointer;
-    transition: all 0.3s;
-    opacity: 0.6;
+	--area-color: #3498db;
+	fill: transparent;
+	stroke: none;
+	vector-effect: non-scaling-stroke;
 }
 
-.floorplan-area-front:hover {
-    opacity: 0.9;
-    filter: brightness(1.1);
+.floorplan-area-front.no-shop {
+	pointer-events: none;
+}
+
+.floorplan-area-front.has-shop {
+	fill: var(--area-color);
+	fill-opacity: 0.2;
+	cursor: pointer;
+	transition: fill-opacity 0.15s ease;
+}
+
+.floorplan-area-front.has-shop:hover,
+.floorplan-area-front.has-shop:focus {
+	fill-opacity: 0.45;
+	outline: none;
+}
+
+.floorplan-area-front.has-shop:focus-visible {
+	stroke: #1d2327;
+	stroke-width: 2px;
 }
 
 .floorplan-area-front.selected {
-    opacity: 1;
-    stroke-width: 4;
-    stroke: #e74c3c;
-    filter: brightness(1.2);
-    animation: pulse 2s infinite;
+	fill-opacity: 0.65;
+	stroke: var(--area-color);
+	stroke-width: 3px;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
+.floorplan-tooltip {
+	position: absolute;
+	z-index: 10;
+	pointer-events: none;
+	padding: 0.25em 0.6em;
+	background: #1d2327;
+	color: #fff;
+	border-radius: 3px;
+	font-size: 0.875rem;
+	line-height: 1.4;
+	white-space: nowrap;
 }
 
-/* Info Box */
+/* Infopanel */
 .floorplan-info {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f0f8ff;
-    border: 2px solid #3498db;
-    border-radius: 8px;
-    text-align: center;
+	margin-top: 1rem;
+	padding: 1rem;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	background: #f6f7f7;
 }
 
 .floorplan-info .shop-name {
-    margin: 0 0 15px 0;
-    font-size: 24px;
-    color: #2c3e50;
+	margin: 0 0 0.5rem;
 }
 
-.floorplan-info .shop-link {
-    display: inline-block;
-    padding: 10px 30px;
-    background: #3498db;
-    color: white;
-    text-decoration: none;
-    border-radius: 25px;
-    transition: background 0.3s;
-}
-
-.floorplan-info .shop-link:hover {
-    background: #2980b9;
-    color: white;
-}
-
-/* Tooltip */
-.floorplan-tooltip {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 1000;
-    display: none;
-    white-space: nowrap;
-}
-
-.floorplan-tooltip.active {
-    display: block;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .centershop-floorplan-wrapper {
-        padding: 15px;
-    }
-    
-    .floorplan-search-input {
-        font-size: 14px;
-    }
-    
-    .floorplan-info .shop-name {
-        font-size: 20px;
-    }
-}
-
-/* Loading state */
-.floorplan-loading {
-    text-align: center;
-    padding: 40px;
-    color: #999;
-}
-
-.floorplan-loading:before {
-    content: '';
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 10px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Empty state */
-.floorplan-empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #999;
-}
-
-.floorplan-empty-state h3 {
-    margin: 0 0 10px 0;
-    color: #666;
+@media (prefers-reduced-motion: reduce) {
+	.floorplan-area-front.has-shop {
+		transition: none;
+	}
 }
