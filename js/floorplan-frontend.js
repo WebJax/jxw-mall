@@ -1,13 +1,27 @@
 /**
  * CenterShop Grundplan – frontend
  *
- * Interaktivt kort: hover/klik/tastatur på lokaler, infopanel og butikssøgning.
+ * Interaktivt kort: hover/klik/tastatur på lokaler, butikspopup og butikssøgning.
  * Ingen afhængigheder.
  */
 ( function () {
 	'use strict';
 
 	var cfg = window.centershopFloorplanFrontend || { ajaxUrl: '', strings: {} };
+
+	/**
+	 * @param {HTMLDialogElement} dialog
+	 * @param {Object} shop
+	 */
+	function fillPopup( dialog, shop ) {
+		var body = dialog.querySelector( '.floorplan-popup__body' );
+		body.innerHTML = shop.html || '';
+		var heading = body.querySelector( '.butikerhvervnavn' );
+		var labelId = dialog.getAttribute( 'aria-labelledby' );
+		if ( heading && labelId ) {
+			heading.id = labelId;
+		}
+	}
 
 	function init( wrap ) {
 		var svg = wrap.querySelector( '.floorplan-svg' );
@@ -16,42 +30,82 @@
 		}
 		var display = wrap.querySelector( '.floorplan-display' );
 		var tooltip = wrap.querySelector( '.floorplan-tooltip' );
-		var info = wrap.querySelector( '.floorplan-info' );
-		var infoName = wrap.querySelector( '.floorplan-info .shop-name' );
-		var infoLink = wrap.querySelector( '.floorplan-info .shop-link' );
+		var dialog = wrap.querySelector( '.floorplan-popup' );
 		var input = wrap.querySelector( '.floorplan-search-input' );
 		var results = wrap.querySelector( '.floorplan-search-results' );
 		var areas = Array.prototype.slice.call( svg.querySelectorAll( '.floorplan-area-front.has-shop' ) );
+		var shops = {};
+		var dataEl = wrap.querySelector( '.floorplan-shop-data' );
+		var lastTrigger = null;
 
-		/* ---------- Markering ---------- */
+		if ( dataEl && dataEl.textContent ) {
+			try {
+				shops = JSON.parse( dataEl.textContent );
+			} catch ( err ) {
+				shops = {};
+			}
+		}
 
-		function clearSelection() {
+		/* ---------- Markering og popup ---------- */
+
+		function clearHighlight() {
 			svg.querySelectorAll( '.floorplan-area-front.selected' ).forEach( function ( el ) {
 				el.classList.remove( 'selected' );
 			} );
-			info.hidden = true;
 		}
 
-		function selectShop( shopId ) {
-			clearSelection();
+		function highlightShop( shopId ) {
+			clearHighlight();
 			var matches = areas.filter( function ( el ) {
 				return el.getAttribute( 'data-shop-id' ) === String( shopId );
 			} );
-			if ( ! matches.length ) {
-				return false;
-			}
 			matches.forEach( function ( el ) {
 				el.classList.add( 'selected' );
 			} );
-			infoName.textContent = matches[ 0 ].getAttribute( 'data-shop-name' );
-			infoLink.setAttribute( 'href', matches[ 0 ].getAttribute( 'data-shop-url' ) );
-			info.hidden = false;
+			return matches;
+		}
+
+		function openShop( shopId ) {
+			var matches = highlightShop( shopId );
+			if ( ! matches.length ) {
+				return false;
+			}
+			var shop = shops[ String( shopId ) ];
+			if ( dialog && shop && 'function' === typeof dialog.showModal ) {
+				fillPopup( dialog, shop );
+				lastTrigger = matches[ 0 ];
+				if ( ! dialog.open ) {
+					dialog.showModal();
+				}
+			}
 			return true;
+		}
+
+		if ( dialog ) {
+			var closeBtn = dialog.querySelector( '.floorplan-popup__close' );
+			if ( closeBtn ) {
+				closeBtn.addEventListener( 'click', function () {
+					dialog.close();
+				} );
+			}
+
+			dialog.addEventListener( 'click', function ( evt ) {
+				if ( evt.target === dialog ) {
+					dialog.close();
+				}
+			} );
+
+			dialog.addEventListener( 'close', function () {
+				if ( lastTrigger && 'function' === typeof lastTrigger.focus ) {
+					lastTrigger.focus();
+				}
+				lastTrigger = null;
+			} );
 		}
 
 		areas.forEach( function ( el ) {
 			function activate() {
-				selectShop( el.getAttribute( 'data-shop-id' ) );
+				openShop( el.getAttribute( 'data-shop-id' ) );
 			}
 
 			el.addEventListener( 'click', function ( evt ) {
@@ -94,11 +148,11 @@
 		} );
 
 		// Klik på baggrunden fjerner markeringen.
-		svg.addEventListener( 'click', clearSelection );
+		svg.addEventListener( 'click', clearHighlight );
 
 		var preselected = wrap.getAttribute( 'data-selected-shop' );
 		if ( preselected ) {
-			selectShop( preselected );
+			highlightShop( preselected );
 		}
 
 		/* ---------- Søgning ---------- */
@@ -137,7 +191,7 @@
 					btn.appendChild( note );
 				}
 				btn.addEventListener( 'click', function () {
-					if ( shop.on_map && selectShop( shop.id ) ) {
+					if ( shop.on_map && openShop( shop.id ) ) {
 						input.value = shop.title;
 						closeResults();
 						svg.scrollIntoView( { behavior: 'smooth', block: 'nearest' } );

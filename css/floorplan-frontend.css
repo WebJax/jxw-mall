@@ -124,17 +124,94 @@
 	white-space: nowrap;
 }
 
-/* Infopanel */
-.floorplan-info {
-	margin-top: 1rem;
-	padding: 1rem;
-	border: 1px solid #ccd0d4;
-	border-radius: 4px;
-	background: #f6f7f7;
+/* Popup – logo som header, info og åbningstider ved siden af hinanden */
+.floorplan-popup {
+	width: min(32rem, calc(100vw - 2rem));
+	max-height: min(92vh, 52rem);
+	padding: 0;
+	border: 0;
+	background: #fff;
+	color: inherit;
+	box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+	overflow: hidden;
 }
 
-.floorplan-info .shop-name {
-	margin: 0 0 0.5rem;
+.floorplan-popup::backdrop {
+	background: rgba(29, 35, 39, 0.55);
+}
+
+.floorplan-popup__close {
+	position: absolute;
+	top: 0.6rem;
+	right: 0.6rem;
+	z-index: 1;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	min-width: 2.75rem;
+	padding: 0;
+	border: 1px solid #d0d0d0;
+	border-radius: 50%;
+	background: #fff;
+	color: #1d2327;
+	font-size: 2rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.floorplan-popup__close:hover,
+.floorplan-popup__close:focus-visible {
+	background: #f7f7f7;
+	border-color: #bdbdbd;
+	outline: 2px solid #1d2327;
+	outline-offset: -4px;
+}
+
+.floorplan-popup__body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 0.75rem 1rem;
+	align-items: start;
+	padding: 0 0.75rem 0.75rem;
+}
+
+.floorplan-popup .wp-header-image {
+	display: block;
+	grid-column: 1 / -1;
+	width: calc(100% + 1.5rem);
+	max-width: none;
+	height: 240px;
+	margin: 0 -0.75rem;
+	object-fit: cover;
+	object-position: center;
+}
+
+.floorplan-popup .butikinfo {
+	grid-column: 1;
+	grid-row: 2;
+	margin: 0;
+}
+
+.floorplan-popup .aabningstider-box {
+	grid-column: 2;
+	grid-row: 2;
+	height: auto;
+}
+
+@media (max-width: 640px) {
+	.floorplan-popup__body {
+		grid-template-columns: 1fr;
+	}
+
+	.floorplan-popup .butikinfo,
+	.floorplan-popup .aabningstider-box {
+		grid-column: 1;
+		grid-row: auto;
+		height: auto;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

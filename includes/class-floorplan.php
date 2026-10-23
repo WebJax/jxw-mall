@@ -162,10 +162,19 @@ class CenterShop_FloorPlan {
 	 * Enqueue frontend assets
 	 */
 	public function enqueue_frontend_assets() {
+		if ( ! wp_style_is( 'centershop-butik-styles', 'registered' ) ) {
+			wp_register_style(
+				'centershop-butik-styles',
+				CENTERSHOP_PLUGIN_URL . 'css/centershop-butik-styles.css',
+				array(),
+				CENTERSHOP_VERSION
+			);
+		}
+
 		wp_register_style(
 			'centershop-floorplan',
 			CENTERSHOP_PLUGIN_URL . 'css/floorplan-frontend.css',
-			array(),
+			array( 'centershop-butik-styles' ),
 			CENTERSHOP_VERSION
 		);
 
@@ -669,6 +678,64 @@ class CenterShop_FloorPlan {
 	}
 
 	/**
+	 * Samme markup som butiksvisningen: logo, kontaktboks og åbningstider.
+	 *
+	 * @param int $shop_id Shop post ID.
+	 * @return string
+	 */
+	private function render_shop_view_html( $shop_id ) {
+		$shop = get_post( absint( $shop_id ) );
+		if ( ! $shop instanceof WP_Post ) {
+			return '';
+		}
+
+		$previous         = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
+		$GLOBALS['post']  = $shop;
+		$post             = $shop;
+		setup_postdata( $shop );
+
+		ob_start();
+		the_post_thumbnail(
+			'header-image',
+			array(
+				'class' => 'wp-header-image',
+				'alt'   => get_the_title(),
+			)
+		);
+		include dirname( __DIR__ ) . '/templates/vis-butikinfo.php';
+		include dirname( __DIR__ ) . '/templates/vis-aabningstider.php';
+		$html = ob_get_clean();
+
+		if ( $previous instanceof WP_Post ) {
+			$GLOBALS['post'] = $previous;
+			setup_postdata( $previous );
+		} else {
+			wp_reset_postdata();
+		}
+
+		return is_string( $html ) ? $html : '';
+	}
+
+	/**
+	 * Butiksdata til popup. Samme visning som butikssiden.
+	 *
+	 * @param int $shop_id Shop post ID.
+	 * @return array
+	 */
+	private function get_shop_card( $shop_id ) {
+		$shop_id = absint( $shop_id );
+		$name    = get_post_meta( $shop_id, 'butik_payed_name', true );
+		if ( ! is_string( $name ) || '' === $name ) {
+			$name = get_the_title( $shop_id );
+		}
+
+		return array(
+			'name' => $name,
+			'html' => $this->render_shop_view_html( $shop_id ),
+		);
+	}
+
+	/**
 	 * Floorplan shortcode
 	 *
 	 * @param array $atts Shortcode attributes.
@@ -698,6 +765,24 @@ class CenterShop_FloorPlan {
 
 		$selected_shop = absint( $atts['shop_id'] );
 		$height        = preg_match( '/^\d+(\.\d+)?(px|vh|rem|em|%)$/', $atts['height'] ) ? $atts['height'] : '600px';
+		$popup_id      = wp_unique_id( 'floorplan-popup-' );
+		$popup_title   = wp_unique_id( 'floorplan-popup-title-' );
+
+		$shop_cards = array();
+		foreach ( $areas as $area ) {
+			$shop_id = ! empty( $area['shop_id'] ) ? absint( $area['shop_id'] ) : 0;
+			if ( $shop_id && 'publish' === get_post_status( $shop_id ) && ! isset( $shop_cards[ $shop_id ] ) ) {
+				$shop_cards[ $shop_id ] = $this->get_shop_card( $shop_id );
+			}
+		}
+
+		$shop_json = wp_json_encode(
+			$shop_cards,
+			JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+		);
+		if ( ! is_string( $shop_json ) ) {
+			$shop_json = '{}';
+		}
 
 		ob_start();
 		?>
@@ -731,8 +816,8 @@ class CenterShop_FloorPlan {
 					<?php
 					foreach ( $areas as $area ) {
 						$shop_id   = ! empty( $area['shop_id'] ) ? absint( $area['shop_id'] ) : 0;
-						$has_shop  = ( $shop_id && 'publish' === get_post_status( $shop_id ) );
-						$shop_name = $has_shop ? get_the_title( $shop_id ) : '';
+						$has_shop  = isset( $shop_cards[ $shop_id ] );
+						$shop_name = $has_shop ? $shop_cards[ $shop_id ]['name'] : '';
 						$color     = ! empty( $area['color'] ) ? $this->sanitize_color( $area['color'] ) : '';
 						$classes   = 'floorplan-area-front ' . ( $has_shop ? 'has-shop' : 'no-shop' );
 						if ( $has_shop && $selected_shop === $shop_id ) {
@@ -749,9 +834,10 @@ class CenterShop_FloorPlan {
 							<?php if ( $has_shop ) : ?>
 								data-shop-id="<?php echo esc_attr( $shop_id ); ?>"
 								data-shop-name="<?php echo esc_attr( $shop_name ); ?>"
-								data-shop-url="<?php echo esc_url( get_permalink( $shop_id ) ); ?>"
 								tabindex="0"
-								role="link"
+								role="button"
+								aria-haspopup="dialog"
+								aria-controls="<?php echo esc_attr( $popup_id ); ?>"
 								aria-label="<?php echo esc_attr( $shop_name ); ?>"
 							<?php else : ?>
 								aria-hidden="true"
@@ -764,10 +850,13 @@ class CenterShop_FloorPlan {
 				<div class="floorplan-tooltip" hidden></div>
 			</div>
 
-			<div class="floorplan-info" aria-live="polite" hidden>
-				<h3 class="shop-name"></h3>
-				<a href="#" class="shop-link button"><?php esc_html_e( 'Besøg butik', 'centershop_txtdomain' ); ?></a>
-			</div>
+			<dialog class="floorplan-popup" id="<?php echo esc_attr( $popup_id ); ?>" aria-labelledby="<?php echo esc_attr( $popup_title ); ?>">
+				<button type="button" class="floorplan-popup__close" aria-label="<?php esc_attr_e( 'Luk', 'centershop_txtdomain' ); ?>">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<div class="floorplan-popup__body"></div>
+			</dialog>
+			<script type="application/json" class="floorplan-shop-data"><?php echo $shop_json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON_HEX_* via wp_json_encode. ?></script>
 		</div>
 		<?php
 		return ob_get_clean();
