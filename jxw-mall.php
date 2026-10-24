@@ -3,7 +3,7 @@
 Plugin Name: Centershop
 Plugin URI:  http://www.jaxweb.dk
 Description: Butiksoversigt i Dianalund Centret med kort og åbningstider
-Version:     1.5.0
+Version:     1.6.0
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
 License:     GPL2
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('CENTERSHOP_VERSION', '1.5.0');
+define('CENTERSHOP_VERSION', '1.6.0');
 define('CENTERSHOP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once CENTERSHOP_PLUGIN_DIR . 'includes/plugin-lifecycle.php';

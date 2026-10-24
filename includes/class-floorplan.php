@@ -25,15 +25,17 @@ class CenterShop_FloorPlan {
 	/**
 	 * Option names
 	 */
-	const OPTION_NAME = 'centershop_floorplan_data';
-	const OPTION_SVG  = 'centershop_floorplan_svg';
-	const OPTION_SIZE = 'centershop_floorplan_size';
+	const OPTION_NAME    = 'centershop_floorplan_data';
+	const OPTION_SVG     = 'centershop_floorplan_svg';
+	const OPTION_SIZE    = 'centershop_floorplan_size';
+	const OPTION_MARKERS = 'centershop_floorplan_markers';
 
 	/**
-	 * Maksimalt antal områder og punkter pr. område (beskytter mod misbrug).
+	 * Maksimalt antal områder, punkter og symboler (beskytter mod misbrug).
 	 */
-	const MAX_AREAS  = 500;
-	const MAX_POINTS = 200;
+	const MAX_AREAS   = 500;
+	const MAX_POINTS  = 200;
+	const MAX_MARKERS = 200;
 
 	/**
 	 * Get instance
@@ -132,27 +134,42 @@ class CenterShop_FloorPlan {
 					'height' => $size['height'],
 				),
 				'areas'   => $this->get_areas(),
+				'markers' => $this->get_markers(),
+				'icons'   => $this->get_marker_icons_for_js(),
 				'shops'   => $shops,
 				'strings' => array(
-					'selectShop'      => __( 'Vælg butik', 'centershop_txtdomain' ),
-					'noShop'          => __( 'Ingen butik', 'centershop_txtdomain' ),
-					'deleteArea'      => __( 'Slet område', 'centershop_txtdomain' ),
-					'confirmDelete'   => __( 'Er du sikker på at du vil slette dette område?', 'centershop_txtdomain' ),
-					'saved'           => __( 'Grundplan gemt!', 'centershop_txtdomain' ),
-					'unsaved'         => __( 'Der er ændringer, som ikke er gemt.', 'centershop_txtdomain' ),
-					'error'           => __( 'Der opstod en fejl', 'centershop_txtdomain' ),
-					'chooseImage'     => __( 'Vælg grundplan', 'centershop_txtdomain' ),
-					'useImage'        => __( 'Brug dette billede', 'centershop_txtdomain' ),
-					'noAreas'         => __( 'Ingen områder defineret endnu.', 'centershop_txtdomain' ),
-					'areaLabel'       => __( 'Områdenavn', 'centershop_txtdomain' ),
-					'areaShop'        => __( 'Tilknyt butik', 'centershop_txtdomain' ),
-					'areaColor'       => __( 'Farve', 'centershop_txtdomain' ),
-					'newArea'         => __( 'Lokale', 'centershop_txtdomain' ),
-					'selectHint'      => __( 'Klik på et område i grundplanen for at redigere det. Træk i hjørnerne for at justere. Dobbeltklik på en kant for at tilføje et hjørne, og på et hjørne for at fjerne det.', 'centershop_txtdomain' ),
-					'drawHint'        => __( 'Klik for at sætte hjørner. Klik på det første punkt (eller tryk Enter) for at afslutte. Backspace fjerner sidste punkt, Esc annullerer.', 'centershop_txtdomain' ),
-					'importConfirm'   => __( 'Der findes allerede områder. OK = erstat dem, Annuller = tilføj de importerede.', 'centershop_txtdomain' ),
-					'importDone'      => __( 'områder importeret. Husk at gemme.', 'centershop_txtdomain' ),
-					'importInvalid'   => __( 'Filen har ikke det forventede format.', 'centershop_txtdomain' ),
+					'selectShop'          => __( 'Vælg butik', 'centershop_txtdomain' ),
+					'noShop'              => __( 'Ingen butik', 'centershop_txtdomain' ),
+					'deleteArea'          => __( 'Slet område', 'centershop_txtdomain' ),
+					'confirmDelete'       => __( 'Er du sikker på at du vil slette dette område?', 'centershop_txtdomain' ),
+					'saved'               => __( 'Grundplan gemt!', 'centershop_txtdomain' ),
+					'unsaved'             => __( 'Der er ændringer, som ikke er gemt.', 'centershop_txtdomain' ),
+					'error'               => __( 'Der opstod en fejl', 'centershop_txtdomain' ),
+					'chooseImage'         => __( 'Vælg grundplan', 'centershop_txtdomain' ),
+					'useImage'            => __( 'Brug dette billede', 'centershop_txtdomain' ),
+					'noAreas'             => __( 'Ingen områder defineret endnu.', 'centershop_txtdomain' ),
+					'areaLabel'           => __( 'Områdenavn', 'centershop_txtdomain' ),
+					'areaShop'            => __( 'Tilknyt butik', 'centershop_txtdomain' ),
+					'areaColor'           => __( 'Farve', 'centershop_txtdomain' ),
+					'newArea'             => __( 'Lokale', 'centershop_txtdomain' ),
+					'selectHint'          => __( 'Klik på et område i grundplanen for at redigere det. Træk i hjørnerne for at justere. Dobbeltklik på en kant for at tilføje et hjørne, og på et hjørne for at fjerne det. Klik på et symbol for at redigere det.', 'centershop_txtdomain' ),
+					'drawHint'            => __( 'Klik for at sætte hjørner. Klik på det første punkt (eller tryk Enter) for at afslutte. Backspace fjerner sidste punkt, Esc annullerer.', 'centershop_txtdomain' ),
+					'importConfirm'       => __( 'Der findes allerede områder. OK = erstat dem, Annuller = tilføj de importerede.', 'centershop_txtdomain' ),
+					'importDone'          => __( 'områder importeret. Husk at gemme.', 'centershop_txtdomain' ),
+					'importInvalid'       => __( 'Filen har ikke det forventede format.', 'centershop_txtdomain' ),
+					'noMarkers'           => __( 'Ingen symboler endnu.', 'centershop_txtdomain' ),
+					'placeHint'           => __( 'Klik på grundplanen der, hvor symbolet skal stå. Esc annullerer.', 'centershop_txtdomain' ),
+					'facility'            => __( 'Facilitet', 'centershop_txtdomain' ),
+					'entrance'            => __( 'Indgang', 'centershop_txtdomain' ),
+					'kindLabel'           => __( 'Type', 'centershop_txtdomain' ),
+					'markerLabel'         => __( 'Overskrift', 'centershop_txtdomain' ),
+					'markerIcon'          => __( 'Ikon', 'centershop_txtdomain' ),
+					'markerNumber'        => __( 'Indgangsnummer', 'centershop_txtdomain' ),
+					'markerNumberHelp'    => __( 'Vises på kortet. Med ikonet Nummer er tallet selve symbolet.', 'centershop_txtdomain' ),
+					'markerDescription'   => __( 'Beskrivelse', 'centershop_txtdomain' ),
+					'deleteMarker'        => __( 'Slet symbol', 'centershop_txtdomain' ),
+					'confirmDeleteMarker' => __( 'Er du sikker på at du vil slette dette symbol?', 'centershop_txtdomain' ),
+					'dragMarker'          => __( 'Træk symbolet på grundplanen for at flytte det.', 'centershop_txtdomain' ),
 				),
 			)
 		);
@@ -268,7 +285,26 @@ class CenterShop_FloorPlan {
 					</div>
 
 					<div class="postbox">
-						<h2 class="hndle"><?php esc_html_e( 'Område detaljer', 'centershop_txtdomain' ); ?></h2>
+						<h2 class="hndle"><?php esc_html_e( 'Faciliteter og indgange', 'centershop_txtdomain' ); ?></h2>
+						<div class="inside">
+							<div id="markers-list"></div>
+							<p>
+								<button type="button" class="button" id="add-marker-btn" <?php disabled( ! $ready ); ?>>
+									<span class="dashicons dashicons-location"></span>
+									<?php esc_html_e( 'Placér symbol', 'centershop_txtdomain' ); ?>
+								</button>
+								<button type="button" class="button" id="cancel-marker-btn" hidden>
+									<?php esc_html_e( 'Annullér', 'centershop_txtdomain' ); ?>
+								</button>
+							</p>
+							<p class="description">
+								<?php esc_html_e( 'Toiletter, information, indgangsnumre og andre symboler på kortet.', 'centershop_txtdomain' ); ?>
+							</p>
+						</div>
+					</div>
+
+					<div class="postbox">
+						<h2 class="hndle"><?php esc_html_e( 'Detaljer', 'centershop_txtdomain' ); ?></h2>
 						<div class="inside">
 							<div id="area-editor"></div>
 						</div>
@@ -290,6 +326,7 @@ class CenterShop_FloorPlan {
 									<g id="fp-draft"></g>
 									<g id="fp-handles"></g>
 								</svg>
+								<div id="fp-marker-layer" class="floorplan-marker-layer"></div>
 							</div>
 							<p class="description" id="floorplan-hint"></p>
 						<?php else : ?>
@@ -333,6 +370,18 @@ class CenterShop_FloorPlan {
 	private function get_areas() {
 		$areas = get_option( self::OPTION_NAME, array() );
 		return is_array( $areas ) ? array_values( $areas ) : array();
+	}
+
+	/**
+	 * Gemte symboler (faciliteter og indgange).
+	 *
+	 * Ligger i en egen option, så den eksisterende områdeliste ikke skifter form.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function get_markers() {
+		$markers = get_option( self::OPTION_MARKERS, array() );
+		return is_array( $markers ) ? array_values( $markers ) : array();
 	}
 
 	/**
@@ -474,6 +523,272 @@ class CenterShop_FloorPlan {
 	}
 
 	/**
+	 * Tilladte ikoner til faciliteter og indgange.
+	 *
+	 * `body` er fast SVG-markup uden brugerdata.
+	 *
+	 * @return array<string, array{label:string, body:string}>
+	 */
+	private function marker_icons() {
+		return array(
+			'number'    => array(
+				'label' => __( 'Nummer', 'centershop_txtdomain' ),
+				'body'  => '<text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">1</text>',
+			),
+			'door'      => array(
+				'label' => __( 'Dør', 'centershop_txtdomain' ),
+				'body'  => '<path d="M6 20V4h9v16"/><path d="M15 4.2c3 2.2 3 13.4 0 15.6"/><circle cx="8.6" cy="12" r="0.8" fill="currentColor" stroke="none"/>',
+			),
+			'toilet'    => array(
+				'label' => __( 'Toilet', 'centershop_txtdomain' ),
+				'body'  => '<text x="12" y="16.5" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">WC</text>',
+			),
+			'info'      => array(
+				'label' => __( 'Information', 'centershop_txtdomain' ),
+				'body'  => '<circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"/><path d="M12 11v7"/>',
+			),
+			'elevator'  => array(
+				'label' => __( 'Elevator', 'centershop_txtdomain' ),
+				'body'  => '<path d="M7 10l5-4 5 4"/><path d="M7 14l5 4 5-4"/>',
+			),
+			'stairs'    => array(
+				'label' => __( 'Trapper', 'centershop_txtdomain' ),
+				'body'  => '<path d="M4 20h5v-5h5v-5h6"/>',
+			),
+			'accessible' => array(
+				'label' => __( 'Handicap', 'centershop_txtdomain' ),
+				'body'  => '<circle cx="9" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="16.5" r="3.2"/><path d="M9.2 8.2L7.5 12H5.5"/><path d="M9.2 8.2l4 1.2 1.6 3.6"/><path d="M12.8 9.5l2.4-1.5"/>',
+			),
+			'baby'      => array(
+				'label' => __( 'Pusle', 'centershop_txtdomain' ),
+				'body'  => '<circle cx="12" cy="6" r="2" fill="currentColor" stroke="none"/><path d="M8 11.5h8"/><path d="M9 11.5l-1 7h8l-1-7"/>',
+			),
+			'parking'   => array(
+				'label' => __( 'Parkering', 'centershop_txtdomain' ),
+				'body'  => '<text x="12" y="17" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">P</text>',
+			),
+			'atm'       => array(
+				'label' => __( 'Hæveautomat', 'centershop_txtdomain' ),
+				'body'  => '<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10.5h17"/><path d="M7 14.5h4"/>',
+			),
+			'firstaid'  => array(
+				'label' => __( 'Førstehjælp', 'centershop_txtdomain' ),
+				'body'  => '<path d="M12 5v14M5 12h14"/>',
+			),
+			'wifi'      => array(
+				'label' => __( 'Wifi', 'centershop_txtdomain' ),
+				'body'  => '<path d="M4.5 9.5a11 11 0 0 1 15 0"/><path d="M7.5 13a7 7 0 0 1 9 0"/><path d="M10.5 16.2a3 3 0 0 1 3 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>',
+			),
+			'lockers'   => array(
+				'label' => __( 'Garderobe', 'centershop_txtdomain' ),
+				'body'  => '<rect x="3.5" y="3.5" width="7" height="17" rx="1"/><rect x="13.5" y="3.5" width="7" height="17" rx="1"/><circle cx="8.8" cy="12" r="0.7" fill="currentColor" stroke="none"/><circle cx="16.2" cy="12" r="0.7" fill="currentColor" stroke="none"/>',
+			),
+		);
+	}
+
+	/**
+	 * Ikoner til admin-editoren.
+	 *
+	 * @return array<int, array{id:string, label:string, svg:string}>
+	 */
+	private function get_marker_icons_for_js() {
+		$out = array();
+		foreach ( $this->marker_icons() as $id => $icon ) {
+			$out[] = array(
+				'id'    => $id,
+				'label' => $icon['label'],
+				'svg'   => $this->wrap_marker_svg( $icon['body'] ),
+			);
+		}
+		return $out;
+	}
+
+	/**
+	 * Pak ikon-stier ind i et fast SVG-element.
+	 *
+	 * @param string $body Indre markup fra marker_icons().
+	 * @return string
+	 */
+	private function wrap_marker_svg( $body ) {
+		return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $body . '</svg>';
+	}
+
+	/**
+	 * SVG for et kendt ikon. Ukendt id falder tilbage til information.
+	 *
+	 * @param string $icon Icon id.
+	 * @return string
+	 */
+	private function marker_svg( $icon ) {
+		$icons = $this->marker_icons();
+		if ( ! isset( $icons[ $icon ] ) ) {
+			$icon = 'info';
+		}
+		return $this->wrap_marker_svg( $icons[ $icon ]['body'] );
+	}
+
+	/**
+	 * Normaliseret koordinat 0-1, eller null hvis ugyldig.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return float|null
+	 */
+	private function sanitize_unit( $value ) {
+		if ( is_string( $value ) ) {
+			$value = trim( $value );
+			if ( ! preg_match( '/^\d*\.?\d+$/', $value ) ) {
+				return null;
+			}
+		} elseif ( ! is_int( $value ) && ! is_float( $value ) ) {
+			return null;
+		}
+
+		$number = (float) $value;
+		if ( $number < 0 || $number > 1 ) {
+			return null;
+		}
+
+		return $number;
+	}
+
+	/**
+	 * Afkort en streng uden at flække multibyte-tegn.
+	 *
+	 * @param string $value Text.
+	 * @param int    $limit Max characters.
+	 * @return string
+	 */
+	private function limit_text( $value, $limit ) {
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $value, 0, $limit );
+		}
+		return substr( $value, 0, $limit );
+	}
+
+	/**
+	 * Rens symboler til faciliteter og indgange.
+	 *
+	 * @param mixed $markers Raw markers.
+	 * @return array<int, array<string, string>>
+	 */
+	private function sanitize_markers( $markers ) {
+		if ( ! is_array( $markers ) ) {
+			return array();
+		}
+
+		$allowed = array_keys( $this->marker_icons() );
+		$clean   = array();
+
+		foreach ( array_slice( $markers, 0, self::MAX_MARKERS ) as $marker ) {
+			if ( ! is_array( $marker ) || ! isset( $marker['x'], $marker['y'] ) ) {
+				continue;
+			}
+
+			$x = $this->sanitize_unit( $marker['x'] );
+			$y = $this->sanitize_unit( $marker['y'] );
+			if ( null === $x || null === $y ) {
+				continue;
+			}
+
+			$kind = ( isset( $marker['kind'] ) && 'entrance' === $marker['kind'] ) ? 'entrance' : 'facility';
+			$icon = isset( $marker['icon'] ) ? sanitize_key( $marker['icon'] ) : '';
+			if ( ! in_array( $icon, $allowed, true ) ) {
+				$icon = 'entrance' === $kind ? 'number' : 'info';
+			}
+
+			$number = isset( $marker['number'] ) ? sanitize_text_field( $marker['number'] ) : '';
+			$number = $this->limit_text( $number, 6 );
+
+			$label = isset( $marker['label'] ) ? sanitize_text_field( $marker['label'] ) : '';
+			$label = $this->limit_text( $label, 80 );
+
+			$description = isset( $marker['description'] ) ? sanitize_textarea_field( $marker['description'] ) : '';
+			$description = $this->limit_text( $description, 2000 );
+
+			$clean[] = array(
+				'kind'        => $kind,
+				'label'       => $label,
+				'description' => $description,
+				'icon'        => $icon,
+				'number'      => 'entrance' === $kind ? $number : '',
+				'x'           => number_format( $x, 5, '.', '' ),
+				'y'           => number_format( $y, 5, '.', '' ),
+			);
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Overskrift der vises ved hover og i modalen.
+	 *
+	 * @param array<string, string> $marker Marker.
+	 * @return string
+	 */
+	private function marker_public_label( $marker ) {
+		$label = isset( $marker['label'] ) ? trim( (string) $marker['label'] ) : '';
+		if ( '' !== $label ) {
+			return $label;
+		}
+
+		if ( isset( $marker['kind'] ) && 'entrance' === $marker['kind'] ) {
+			$number = isset( $marker['number'] ) ? (string) $marker['number'] : '';
+			if ( '' !== $number ) {
+				return sprintf(
+					/* translators: %s: entrance number */
+					__( 'Indgang %s', 'centershop_txtdomain' ),
+					$number
+				);
+			}
+			return __( 'Indgang', 'centershop_txtdomain' );
+		}
+
+		return __( 'Facilitet', 'centershop_txtdomain' );
+	}
+
+	/**
+	 * Indhold af et kort-symbol (ikon, nummer eller badge).
+	 *
+	 * @param array<string, string> $marker Marker.
+	 * @return string
+	 */
+	private function marker_glyph_html( $marker ) {
+		$kind   = isset( $marker['kind'] ) ? (string) $marker['kind'] : 'facility';
+		$icon   = isset( $marker['icon'] ) ? (string) $marker['icon'] : 'info';
+		$number = isset( $marker['number'] ) ? (string) $marker['number'] : '';
+
+		if ( 'number' === $icon ) {
+			if ( '' === $number ) {
+				$number = 'entrance' === $kind ? '–' : '1';
+			}
+			return '<span class="floorplan-marker__num">' . esc_html( $number ) . '</span>';
+		}
+
+		$html = '<span class="floorplan-marker__glyph">' . $this->marker_svg( $icon ) . '</span>';
+		if ( 'entrance' === $kind && '' !== $number ) {
+			$html .= '<span class="floorplan-marker__badge">' . esc_html( $number ) . '</span>';
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Modal-indhold for et symbol. Genbruger den eksisterende popup.
+	 *
+	 * @param array<string, string> $marker Marker.
+	 * @param string                $label  Public label.
+	 * @return string
+	 */
+	private function marker_popup_html( $marker, $label ) {
+		$html = '<h2 class="floorplan-popup__title">' . esc_html( $label ) . '</h2>';
+		$description = isset( $marker['description'] ) ? trim( (string) $marker['description'] ) : '';
+		if ( '' !== $description ) {
+			$html .= '<div class="floorplan-popup__text">' . nl2br( esc_html( $description ), false ) . '</div>';
+		}
+		return $html;
+	}
+
+	/**
 	 * Omregn normaliserede punkter til billedets pixels (til SVG viewBox).
 	 *
 	 * @param string $points Normalized points.
@@ -548,10 +863,31 @@ class CenterShop_FloorPlan {
 			wp_send_json_error( 'Invalid data' );
 		}
 
+		$markers = null;
+		if ( isset( $_POST['markers'] ) ) {
+			$raw_markers = wp_unslash( $_POST['markers'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Saneres i sanitize_markers().
+			$markers     = json_decode( $raw_markers, true );
+			if ( ! is_array( $markers ) ) {
+				wp_send_json_error( 'Invalid data' );
+			}
+		}
+
 		$areas = $this->sanitize_areas( $areas );
 		update_option( self::OPTION_NAME, $areas );
 
-		wp_send_json_success( array( 'areas' => $areas ) );
+		if ( is_array( $markers ) ) {
+			$markers = $this->sanitize_markers( $markers );
+			update_option( self::OPTION_MARKERS, $markers );
+		} else {
+			$markers = $this->get_markers();
+		}
+
+		wp_send_json_success(
+			array(
+				'areas'   => $areas,
+				'markers' => $markers,
+			)
+		);
 	}
 
 	/**
@@ -566,9 +902,10 @@ class CenterShop_FloorPlan {
 
 		wp_send_json_success(
 			array(
-				'svg'   => get_option( self::OPTION_SVG, '' ),
-				'size'  => $this->get_size(),
-				'areas' => $this->get_areas(),
+				'svg'     => get_option( self::OPTION_SVG, '' ),
+				'size'    => $this->get_size(),
+				'areas'   => $this->get_areas(),
+				'markers' => $this->get_markers(),
 			)
 		);
 	}
@@ -758,6 +1095,7 @@ class CenterShop_FloorPlan {
 		$svg_url = get_option( self::OPTION_SVG, '' );
 		$size    = $this->get_size();
 		$areas   = $this->get_areas();
+		$markers = $this->get_markers();
 
 		if ( empty( $svg_url ) || $size['width'] < 1 || $size['height'] < 1 ) {
 			return '<p>' . esc_html__( 'Grundplan er ikke uploadet endnu.', 'centershop_txtdomain' ) . '</p>';
@@ -782,6 +1120,23 @@ class CenterShop_FloorPlan {
 		);
 		if ( ! is_string( $shop_json ) ) {
 			$shop_json = '{}';
+		}
+
+		$marker_cards = array();
+		foreach ( $markers as $marker ) {
+			$public_label   = $this->marker_public_label( $marker );
+			$marker_cards[] = array(
+				'label' => $public_label,
+				'html'  => $this->marker_popup_html( $marker, $public_label ),
+			);
+		}
+
+		$marker_json = wp_json_encode(
+			$marker_cards,
+			JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+		);
+		if ( ! is_string( $marker_json ) ) {
+			$marker_json = '[]';
 		}
 
 		ob_start();
@@ -847,6 +1202,43 @@ class CenterShop_FloorPlan {
 					}
 					?>
 				</svg>
+				<?php if ( $markers ) : ?>
+					<div class="floorplan-marker-layer">
+						<?php
+						foreach ( $markers as $index => $marker ) {
+							$public_label = $this->marker_public_label( $marker );
+							$icon         = isset( $marker['icon'] ) ? (string) $marker['icon'] : '';
+							$kind         = isset( $marker['kind'] ) ? (string) $marker['kind'] : 'facility';
+							$classes      = 'floorplan-marker';
+							if ( 'entrance' === $kind ) {
+								$classes .= ' is-entrance';
+							}
+							if ( 'number' === $icon ) {
+								$classes .= ' is-number';
+							}
+							$x = isset( $marker['x'] ) ? (float) $marker['x'] : 0;
+							$y = isset( $marker['y'] ) ? (float) $marker['y'] : 0;
+							$style = sprintf(
+								'left:%s%%;top:%s%%',
+								number_format( $x * 100, 3, '.', '' ),
+								number_format( $y * 100, 3, '.', '' )
+							);
+							?>
+							<button type="button"
+								class="<?php echo esc_attr( $classes ); ?>"
+								style="<?php echo esc_attr( $style ); ?>"
+								data-marker-index="<?php echo esc_attr( (string) $index ); ?>"
+								data-label="<?php echo esc_attr( $public_label ); ?>"
+								aria-label="<?php echo esc_attr( $public_label ); ?>"
+								aria-haspopup="dialog"
+								aria-controls="<?php echo esc_attr( $popup_id ); ?>">
+								<?php echo $this->marker_glyph_html( $marker ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Tal escapes, SVG er fast markup fra marker_icons(). ?>
+							</button>
+							<?php
+						}
+						?>
+					</div>
+				<?php endif; ?>
 				<div class="floorplan-tooltip" hidden></div>
 			</div>
 
@@ -857,6 +1249,9 @@ class CenterShop_FloorPlan {
 				<div class="floorplan-popup__body"></div>
 			</dialog>
 			<script type="application/json" class="floorplan-shop-data"><?php echo $shop_json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON_HEX_* via wp_json_encode. ?></script>
+			<?php if ( $markers ) : ?>
+				<script type="application/json" class="floorplan-marker-data"><?php echo $marker_json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON_HEX_* via wp_json_encode. ?></script>
+			<?php endif; ?>
 		</div>
 		<?php
 		return ob_get_clean();

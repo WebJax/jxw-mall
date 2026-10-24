@@ -1,7 +1,7 @@
 /**
  * CenterShop Grundplan – frontend
  *
- * Interaktivt kort: hover/klik/tastatur på lokaler, butikspopup og butikssøgning.
+ * Interaktivt kort: hover/klik/tastatur på lokaler og symboler, popup og butikssøgning.
  * Ingen afhængigheder.
  */
 ( function () {
@@ -11,12 +11,12 @@
 
 	/**
 	 * @param {HTMLDialogElement} dialog
-	 * @param {Object} shop
+	 * @param {{html?: string}} item
 	 */
-	function fillPopup( dialog, shop ) {
+	function fillPopup( dialog, item ) {
 		var body = dialog.querySelector( '.floorplan-popup__body' );
-		body.innerHTML = shop.html || '';
-		var heading = body.querySelector( '.butikerhvervnavn' );
+		body.innerHTML = item.html || '';
+		var heading = body.querySelector( '.butikerhvervnavn, .floorplan-popup__title' );
 		var labelId = dialog.getAttribute( 'aria-labelledby' );
 		if ( heading && labelId ) {
 			heading.id = labelId;
@@ -34,8 +34,11 @@
 		var input = wrap.querySelector( '.floorplan-search-input' );
 		var results = wrap.querySelector( '.floorplan-search-results' );
 		var areas = Array.prototype.slice.call( svg.querySelectorAll( '.floorplan-area-front.has-shop' ) );
+		var markerButtons = Array.prototype.slice.call( wrap.querySelectorAll( '.floorplan-marker' ) );
 		var shops = {};
+		var markerCards = [];
 		var dataEl = wrap.querySelector( '.floorplan-shop-data' );
+		var markerDataEl = wrap.querySelector( '.floorplan-marker-data' );
 		var lastTrigger = null;
 
 		if ( dataEl && dataEl.textContent ) {
@@ -44,6 +47,67 @@
 			} catch ( err ) {
 				shops = {};
 			}
+		}
+
+		if ( markerDataEl && markerDataEl.textContent ) {
+			try {
+				markerCards = JSON.parse( markerDataEl.textContent );
+			} catch ( err ) {
+				markerCards = [];
+			}
+		}
+
+		/**
+		 * @param {string} text
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {boolean} anchored
+		 */
+		function showTooltip( text, x, y, anchored ) {
+			if ( ! tooltip ) {
+				return;
+			}
+			tooltip.textContent = text;
+			tooltip.style.left = x + 'px';
+			tooltip.style.top = y + 'px';
+			tooltip.classList.toggle( 'is-anchored', anchored );
+			if ( ! anchored ) {
+				tooltip.classList.remove( 'is-below' );
+			}
+			tooltip.hidden = false;
+		}
+
+		function hideTooltip() {
+			if ( ! tooltip ) {
+				return;
+			}
+			tooltip.hidden = true;
+			tooltip.classList.remove( 'is-anchored' );
+			tooltip.classList.remove( 'is-below' );
+		}
+
+		/**
+		 * Overskriften står centreret over symbolet, så den knytter sig til netop det punkt.
+		 *
+		 * @param {HTMLElement} el
+		 * @param {string} text
+		 */
+		function showAnchoredTooltip( el, text ) {
+			if ( ! display || ! tooltip ) {
+				return;
+			}
+			var box = display.getBoundingClientRect();
+			var mark = el.getBoundingClientRect();
+			var x = mark.left - box.left + ( mark.width / 2 );
+			var above = mark.top - box.top - 6;
+			var placeBelow = above < 32;
+			showTooltip(
+				text,
+				x,
+				placeBelow ? ( mark.bottom - box.top + 6 ) : above,
+				true
+			);
+			tooltip.classList.toggle( 'is-below', placeBelow );
 		}
 
 		/* ---------- Markering og popup ---------- */
@@ -65,18 +129,32 @@
 			return matches;
 		}
 
+		/**
+		 * @param {string} html
+		 * @param {HTMLElement} trigger
+		 * @param {boolean} note
+		 */
+		function openPopup( html, trigger, note ) {
+			if ( ! dialog || ! html || 'function' !== typeof dialog.showModal ) {
+				return false;
+			}
+			dialog.classList.toggle( 'floorplan-popup--note', note );
+			fillPopup( dialog, { html: html } );
+			lastTrigger = trigger;
+			if ( ! dialog.open ) {
+				dialog.showModal();
+			}
+			return true;
+		}
+
 		function openShop( shopId ) {
 			var matches = highlightShop( shopId );
 			if ( ! matches.length ) {
 				return false;
 			}
 			var shop = shops[ String( shopId ) ];
-			if ( dialog && shop && 'function' === typeof dialog.showModal ) {
-				fillPopup( dialog, shop );
-				lastTrigger = matches[ 0 ];
-				if ( ! dialog.open ) {
-					dialog.showModal();
-				}
+			if ( shop ) {
+				openPopup( shop.html, matches[ 0 ], false );
 			}
 			return true;
 		}
@@ -96,6 +174,7 @@
 			} );
 
 			dialog.addEventListener( 'close', function () {
+				dialog.classList.remove( 'floorplan-popup--note' );
 				if ( lastTrigger && 'function' === typeof lastTrigger.focus ) {
 					lastTrigger.focus();
 				}
@@ -121,30 +200,60 @@
 			} );
 
 			el.addEventListener( 'mouseenter', function () {
-				tooltip.textContent = el.getAttribute( 'data-shop-name' );
-				tooltip.hidden = false;
+				showTooltip( el.getAttribute( 'data-shop-name' ) || '', 8, 8, false );
 			} );
 
 			el.addEventListener( 'mousemove', function ( evt ) {
+				if ( ! display ) {
+					return;
+				}
 				var box = display.getBoundingClientRect();
-				tooltip.style.left = ( evt.clientX - box.left + 12 ) + 'px';
-				tooltip.style.top = ( evt.clientY - box.top + 12 ) + 'px';
+				showTooltip(
+					el.getAttribute( 'data-shop-name' ) || '',
+					evt.clientX - box.left + 12,
+					evt.clientY - box.top + 12,
+					false
+				);
 			} );
 
-			el.addEventListener( 'mouseleave', function () {
-				tooltip.hidden = true;
-			} );
+			el.addEventListener( 'mouseleave', hideTooltip );
 
 			el.addEventListener( 'focus', function () {
-				tooltip.textContent = el.getAttribute( 'data-shop-name' );
-				tooltip.style.left = '8px';
-				tooltip.style.top = '8px';
-				tooltip.hidden = false;
+				showTooltip( el.getAttribute( 'data-shop-name' ) || '', 8, 8, false );
 			} );
 
-			el.addEventListener( 'blur', function () {
-				tooltip.hidden = true;
+			el.addEventListener( 'blur', hideTooltip );
+		} );
+
+		markerButtons.forEach( function ( el ) {
+			var index = parseInt( el.getAttribute( 'data-marker-index' ), 10 );
+			var card = markerCards[ index ];
+			var label = ( card && card.label ) || el.getAttribute( 'data-label' ) || '';
+
+			function activate() {
+				clearHighlight();
+				hideTooltip();
+				if ( card && card.html ) {
+					openPopup( card.html, el, true );
+				}
+			}
+
+			el.addEventListener( 'click', function ( evt ) {
+				evt.stopPropagation();
+				activate();
 			} );
+
+			el.addEventListener( 'mouseenter', function () {
+				showAnchoredTooltip( el, label );
+			} );
+
+			el.addEventListener( 'mouseleave', hideTooltip );
+
+			el.addEventListener( 'focus', function () {
+				showAnchoredTooltip( el, label );
+			} );
+
+			el.addEventListener( 'blur', hideTooltip );
 		} );
 
 		// Klik på baggrunden fjerner markeringen.
