@@ -43,25 +43,92 @@
 			points: parsePoints( a.points )
 		};
 	} );
-	var markers = ( cfg.markers || [] ).map( function ( m ) {
-		return {
-			kind: 'entrance' === m.kind ? 'entrance' : 'facility',
-			label: m.label || '',
-			description: m.description || '',
-			icon: m.icon || ( 'entrance' === m.kind ? 'number' : 'info' ),
-			number: m.number || '',
-			x: parseFloat( m.x ) || 0,
-			y: parseFloat( m.y ) || 0
-		};
-	} );
+	var limits = cfg.markerLimits || {
+		circleMin: 28,
+		circleMax: 120,
+		circleDefault: 44,
+		iconMin: 12,
+		iconMax: 96,
+		iconDefault: 20,
+		facilityBg: '#1d2327',
+		entranceBg: '#c2410c'
+	};
+	var markers = ( cfg.markers || [] ).map( normalizeMarker );
 	var selected = -1;
 	var selectedMarker = -1;
 	var draft = null; // Array af [x, y] under tegning, ellers null.
 	var rubber = null; // <line> fra sidste punkt til musen.
 	var placing = false;
 	var dirty = false;
+	var iconFrame = null;
 
 	/* ---------- Hjælpefunktioner ---------- */
+
+	/**
+	 * @param {string} kind
+	 * @return {string}
+	 */
+	function defaultBg( kind ) {
+		return 'entrance' === kind ? limits.entranceBg : limits.facilityBg;
+	}
+
+	/**
+	 * @param {number|string} value
+	 * @param {number} min
+	 * @param {number} max
+	 * @param {number} fallback
+	 * @return {number}
+	 */
+	function clampSize( value, min, max, fallback ) {
+		var n = parseInt( value, 10 );
+		if ( isNaN( n ) ) {
+			return fallback;
+		}
+		return Math.min( max, Math.max( min, n ) );
+	}
+
+	/**
+	 * @param {Object} m
+	 * @return {Object}
+	 */
+	function normalizeMarker( m ) {
+		var kind = 'entrance' === m.kind ? 'entrance' : 'facility';
+		var bg = /^#[0-9a-f]{6}$/i.test( m.bg || '' ) ? m.bg : defaultBg( kind );
+		return {
+			kind: kind,
+			label: m.label || '',
+			description: m.description || '',
+			icon: m.icon || ( 'entrance' === kind ? 'number' : 'info' ),
+			icon_id: parseInt( m.icon_id, 10 ) || 0,
+			icon_url: m.icon_url || '',
+			number: m.number || '',
+			bg: bg,
+			circle_size: clampSize( m.circle_size, limits.circleMin, limits.circleMax, limits.circleDefault ),
+			icon_size: clampSize( m.icon_size, limits.iconMin, limits.iconMax, limits.iconDefault ),
+			x: parseFloat( m.x ) || 0,
+			y: parseFloat( m.y ) || 0
+		};
+	}
+
+	/**
+	 * @param {Object} marker
+	 * @return {boolean}
+	 */
+	function hasCustomIcon( marker ) {
+		return !!( marker.icon_id && marker.icon_url );
+	}
+
+	/**
+	 * @param {HTMLElement} el
+	 * @param {Object} marker
+	 */
+	function applyMarkerStyle( el, marker ) {
+		el.style.left = ( marker.x * 100 ) + '%';
+		el.style.top = ( marker.y * 100 ) + '%';
+		el.style.setProperty( '--marker-size', marker.circle_size + 'px' );
+		el.style.setProperty( '--marker-icon', marker.icon_size + 'px' );
+		el.style.setProperty( '--marker-bg', marker.bg || defaultBg( marker.kind ) );
+	}
 
 	function parsePoints( str ) {
 		if ( ! str ) {
@@ -320,18 +387,26 @@
 			btn.removeChild( btn.firstChild );
 		}
 
-		if ( 'number' === marker.icon ) {
+		if ( hasCustomIcon( marker ) ) {
+			var image = document.createElement( 'span' );
+			image.className = 'floorplan-marker__glyph';
+			var img = document.createElement( 'img' );
+			img.src = marker.icon_url;
+			img.alt = '';
+			image.appendChild( img );
+			btn.appendChild( image );
+		} else if ( 'number' === marker.icon ) {
 			var num = document.createElement( 'span' );
 			num.className = 'floorplan-marker__num';
 			num.textContent = marker.number || ( 'entrance' === marker.kind ? '–' : '1' );
 			btn.appendChild( num );
 			return;
+		} else {
+			var glyph = document.createElement( 'span' );
+			glyph.className = 'floorplan-marker__glyph';
+			glyph.innerHTML = iconSvg( marker.icon ) || iconSvg( 'info' );
+			btn.appendChild( glyph );
 		}
-
-		var glyph = document.createElement( 'span' );
-		glyph.className = 'floorplan-marker__glyph';
-		glyph.innerHTML = iconSvg( marker.icon ) || iconSvg( 'info' );
-		btn.appendChild( glyph );
 
 		if ( 'entrance' === marker.kind && marker.number ) {
 			var badge = document.createElement( 'span' );
@@ -408,12 +483,12 @@
 		markers.forEach( function ( marker, i ) {
 			var btn = document.createElement( 'button' );
 			btn.type = 'button';
+			var custom = hasCustomIcon( marker );
 			btn.className = 'floorplan-marker'
 				+ ( 'entrance' === marker.kind ? ' is-entrance' : '' )
-				+ ( 'number' === marker.icon ? ' is-number' : '' )
+				+ ( ! custom && 'number' === marker.icon ? ' is-number' : '' )
 				+ ( i === selectedMarker ? ' is-selected' : '' );
-			btn.style.left = ( marker.x * 100 ) + '%';
-			btn.style.top = ( marker.y * 100 ) + '%';
+			applyMarkerStyle( btn, marker );
 			btn.setAttribute( 'aria-label', markerLabel( marker, i ) );
 			fillMarkerButton( btn, marker );
 			attachMarkerEvents( btn, i );
@@ -466,6 +541,85 @@
 		} );
 	}
 
+	/**
+	 * @param {string} labelText
+	 * @param {number} value
+	 * @param {number} min
+	 * @param {number} max
+	 * @param {function(number): void} onInput
+	 * @return {HTMLElement}
+	 */
+	function sizeField( labelText, value, min, max, onInput ) {
+		var p = document.createElement( 'p' );
+		p.className = 'marker-size-field';
+		var label = document.createElement( 'label' );
+		var head = document.createElement( 'span' );
+		head.className = 'marker-size-head';
+		var strong = document.createElement( 'strong' );
+		strong.textContent = labelText;
+		var out = document.createElement( 'span' );
+		out.className = 'marker-size-value';
+		out.textContent = value + ' px';
+		head.appendChild( strong );
+		head.appendChild( out );
+		var range = document.createElement( 'input' );
+		range.type = 'range';
+		range.min = String( min );
+		range.max = String( max );
+		range.value = String( value );
+		range.addEventListener( 'input', function () {
+			var n = clampSize( range.value, min, max, value );
+			out.textContent = n + ' px';
+			onInput( n );
+		} );
+		label.appendChild( head );
+		label.appendChild( range );
+		p.appendChild( label );
+		return p;
+	}
+
+	function openIconFrame() {
+		if ( ! window.wp || ! window.wp.media ) {
+			return;
+		}
+		if ( ! iconFrame ) {
+			iconFrame = window.wp.media( {
+				title: cfg.strings.chooseIcon,
+				button: { text: cfg.strings.useIcon },
+				library: { type: [ 'image/png', 'image/webp', 'image/svg+xml' ] },
+				multiple: false
+			} );
+			iconFrame.on( 'select', function () {
+				var marker = markers[ selectedMarker ];
+				if ( ! marker ) {
+					return;
+				}
+				var att = iconFrame.state().get( 'selection' ).first().toJSON();
+				post( 'check_floorplan_marker_icon', { attachment_id: att.id } )
+					.then( function ( res ) {
+						if ( ! res.success ) {
+							throw new Error( 'string' === typeof res.data ? res.data : cfg.strings.iconInvalid );
+						}
+						marker.icon_id = res.data.id;
+						marker.icon_url = res.data.url;
+						markDirty();
+						renderMarkers();
+						renderMarkerList();
+						renderEditor();
+					} )
+					.catch( function ( err ) {
+						var message = ( err && err.message ) || cfg.strings.iconInvalid;
+						var slot = editorEl && editorEl.querySelector( '.marker-icon-error' );
+						if ( slot ) {
+							slot.textContent = message;
+						}
+						setStatus( message, true );
+					} );
+			} );
+		}
+		iconFrame.open();
+	}
+
 	function renderMarkerEditor( marker ) {
 		var kind = document.createElement( 'select' );
 		kind.className = 'widefat';
@@ -482,9 +636,13 @@
 			kind.appendChild( opt );
 		} );
 		kind.addEventListener( 'change', function () {
+			var previous = marker.kind;
 			marker.kind = 'entrance' === kind.value ? 'entrance' : 'facility';
-			if ( 'entrance' === marker.kind && 'info' === marker.icon ) {
+			if ( 'entrance' === marker.kind && 'info' === marker.icon && ! hasCustomIcon( marker ) ) {
 				marker.icon = 'number';
+			}
+			if ( marker.bg === defaultBg( previous ) ) {
+				marker.bg = defaultBg( marker.kind );
 			}
 			markDirty();
 			renderMarkers();
@@ -513,14 +671,14 @@
 		( cfg.icons || [] ).forEach( function ( icon ) {
 			var choice = document.createElement( 'label' );
 			choice.title = icon.label;
-			if ( icon.id === marker.icon ) {
+			if ( ! hasCustomIcon( marker ) && icon.id === marker.icon ) {
 				choice.className = 'is-selected';
 			}
 			var input = document.createElement( 'input' );
 			input.type = 'radio';
 			input.name = 'marker-icon';
 			input.value = icon.id;
-			input.checked = icon.id === marker.icon;
+			input.checked = ! hasCustomIcon( marker ) && icon.id === marker.icon;
 			var hidden = document.createElement( 'span' );
 			hidden.className = 'screen-reader-text';
 			hidden.textContent = icon.label;
@@ -529,10 +687,13 @@
 			glyph.innerHTML = icon.svg || '';
 			input.addEventListener( 'change', function () {
 				marker.icon = input.value;
+				marker.icon_id = 0;
+				marker.icon_url = '';
 				markDirty();
 				picker.querySelectorAll( 'label' ).forEach( function ( el ) {
 					el.classList.toggle( 'is-selected', el.contains( input ) && input.checked );
 				} );
+				syncCustom();
 				renderMarkers();
 				renderMarkerList();
 			} );
@@ -581,6 +742,92 @@
 		iconField.appendChild( document.createElement( 'br' ) );
 		iconField.appendChild( picker );
 		editorEl.appendChild( iconField );
+
+		var customRow = document.createElement( 'div' );
+		customRow.className = 'marker-custom-icon';
+		var upload = document.createElement( 'button' );
+		upload.type = 'button';
+		upload.className = 'button';
+		upload.textContent = cfg.strings.uploadIcon;
+		var removeIcon = document.createElement( 'button' );
+		removeIcon.type = 'button';
+		removeIcon.className = 'button';
+		removeIcon.textContent = cfg.strings.removeIcon;
+		var preview = document.createElement( 'img' );
+		preview.className = 'marker-custom-icon__preview';
+		preview.alt = '';
+		var iconError = document.createElement( 'p' );
+		iconError.className = 'description marker-icon-error';
+
+		function syncCustom() {
+			var on = hasCustomIcon( marker );
+			preview.hidden = ! on;
+			removeIcon.hidden = ! on;
+			if ( on ) {
+				preview.src = marker.icon_url;
+			}
+		}
+
+		upload.addEventListener( 'click', function () {
+			openIconFrame();
+		} );
+		removeIcon.addEventListener( 'click', function () {
+			marker.icon_id = 0;
+			marker.icon_url = '';
+			iconError.textContent = '';
+			markDirty();
+			syncCustom();
+			picker.querySelectorAll( 'label' ).forEach( function ( el ) {
+				var radio = el.querySelector( 'input' );
+				var selected = radio && radio.value === marker.icon;
+				if ( radio ) {
+					radio.checked = !! selected;
+				}
+				el.classList.toggle( 'is-selected', !! selected );
+			} );
+			renderMarkers();
+			renderMarkerList();
+		} );
+		syncCustom();
+		customRow.appendChild( upload );
+		customRow.appendChild( removeIcon );
+		customRow.appendChild( preview );
+		iconField.appendChild( customRow );
+		var iconHelp = document.createElement( 'span' );
+		iconHelp.className = 'description';
+		iconHelp.textContent = cfg.strings.iconHelp;
+		iconField.appendChild( iconHelp );
+		iconField.appendChild( iconError );
+
+		var bg = document.createElement( 'input' );
+		bg.type = 'color';
+		bg.value = marker.bg || defaultBg( marker.kind );
+		bg.addEventListener( 'input', function () {
+			marker.bg = bg.value;
+			markDirty();
+			var current = markerLayer && markerLayer.querySelector( '.floorplan-marker.is-selected' );
+			if ( current ) {
+				current.style.setProperty( '--marker-bg', marker.bg );
+			}
+		} );
+
+		editorEl.appendChild( field( cfg.strings.markerBg, bg ) );
+		editorEl.appendChild( sizeField( cfg.strings.circleSize, marker.circle_size, limits.circleMin, limits.circleMax, function ( n ) {
+			marker.circle_size = n;
+			markDirty();
+			var current = markerLayer && markerLayer.querySelector( '.floorplan-marker.is-selected' );
+			if ( current ) {
+				current.style.setProperty( '--marker-size', n + 'px' );
+			}
+		} ) );
+		editorEl.appendChild( sizeField( cfg.strings.iconSize, marker.icon_size, limits.iconMin, limits.iconMax, function ( n ) {
+			marker.icon_size = n;
+			markDirty();
+			var current = markerLayer && markerLayer.querySelector( '.floorplan-marker.is-selected' );
+			if ( current ) {
+				current.style.setProperty( '--marker-icon', n + 'px' );
+			}
+		} ) );
 		if ( 'entrance' === marker.kind ) {
 			var numberField = field( cfg.strings.markerNumber, number );
 			var help = document.createElement( 'span' );
@@ -921,15 +1168,18 @@
 		svg.addEventListener( 'click', function ( evt ) {
 			var p = eventToNorm( evt );
 			if ( placing ) {
-				markers.push( {
+				markers.push( normalizeMarker( {
 					kind: 'facility',
 					label: cfg.strings.facility + ' ' + ( markers.length + 1 ),
 					description: '',
 					icon: 'info',
 					number: '',
+					bg: limits.facilityBg,
+					circle_size: limits.circleDefault,
+					icon_size: limits.iconDefault,
 					x: p[ 0 ],
 					y: p[ 1 ]
-				} );
+				} ) );
 				placing = false;
 				setPlaceUi( false );
 				markDirty();
@@ -1041,7 +1291,11 @@
 					label: m.label,
 					description: m.description,
 					icon: m.icon,
+					icon_id: m.icon_id,
 					number: m.number,
+					bg: m.bg,
+					circle_size: m.circle_size,
+					icon_size: m.icon_size,
 					x: m.x,
 					y: m.y
 				};
@@ -1066,17 +1320,7 @@
 							points: parsePoints( a.points )
 						};
 					} );
-					markers = ( res.data.markers || [] ).map( function ( m ) {
-						return {
-							kind: 'entrance' === m.kind ? 'entrance' : 'facility',
-							label: m.label || '',
-							description: m.description || '',
-							icon: m.icon || 'info',
-							number: m.number || '',
-							x: parseFloat( m.x ) || 0,
-							y: parseFloat( m.y ) || 0
-						};
-					} );
+					markers = ( res.data.markers || [] ).map( normalizeMarker );
 					if ( keepMarker >= 0 && keepMarker < markers.length ) {
 						selectMarker( keepMarker );
 					} else {
