@@ -58,11 +58,13 @@ add_filter("manage_butiksside_posts_columns", "butik_edit_columns");
 add_filter("manage_edit-butiksside_sortable_columns", "my_sortable_butiksside_column");
 
 /**
+ * Register metaboxes on the butiksside edit screen.
+ */
 function add_butik_metaboxes(){
 	add_meta_box("butik_open_info", "Åbningstider", "jxw_opening_hours_v2_metabox_html", "butiksside", "normal", "high" );
 	add_meta_box("butik_kontakt_info", "Kontakt information", "butik_kontakt_meta_options", "butiksside", "side", "high" );
-	add_meta_box("butik_logo_pic", "Logo", "butik_logo_meta_options", "butiksside", "side", "low" );	 	
-}  
+	add_meta_box("butik_logo_pic", "Logo", "butik_logo_meta_options", "butiksside", "side", "low" );
+}
 
 /**
  * 
