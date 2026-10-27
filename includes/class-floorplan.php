@@ -37,6 +37,15 @@ class CenterShop_FloorPlan {
 	const MAX_POINTS  = 200;
 	const MAX_MARKERS = 200;
 
+	const DEFAULT_CIRCLE_SIZE = 44;
+	const DEFAULT_ICON_SIZE   = 20;
+	const MIN_CIRCLE_SIZE     = 16;
+	const MAX_CIRCLE_SIZE     = 96;
+	const MIN_ICON_SIZE       = 8;
+	const MAX_ICON_SIZE       = 64;
+	const DEFAULT_FACILITY_BG = '#1d2327';
+	const DEFAULT_ENTRANCE_BG = '#c2410c';
+
 	/**
 	 * Get instance
 	 */
@@ -134,9 +143,19 @@ class CenterShop_FloorPlan {
 					'height' => $size['height'],
 				),
 				'areas'   => $this->get_areas(),
-				'markers' => $this->get_markers(),
+				'markers' => $this->prepare_markers_for_client( $this->get_markers() ),
 				'icons'   => $this->get_marker_icons_for_js(),
 				'shops'   => $shops,
+				'markerStyle' => array(
+					'circleSize'    => self::DEFAULT_CIRCLE_SIZE,
+					'iconSize'      => self::DEFAULT_ICON_SIZE,
+					'minCircle'     => self::MIN_CIRCLE_SIZE,
+					'maxCircle'     => self::MAX_CIRCLE_SIZE,
+					'minIcon'       => self::MIN_ICON_SIZE,
+					'maxIcon'       => self::MAX_ICON_SIZE,
+					'facilityColor' => self::DEFAULT_FACILITY_BG,
+					'entranceColor' => self::DEFAULT_ENTRANCE_BG,
+				),
 				'strings' => array(
 					'selectShop'          => __( 'Vælg butik', 'centershop_txtdomain' ),
 					'noShop'              => __( 'Ingen butik', 'centershop_txtdomain' ),
@@ -164,6 +183,15 @@ class CenterShop_FloorPlan {
 					'kindLabel'           => __( 'Type', 'centershop_txtdomain' ),
 					'markerLabel'         => __( 'Overskrift', 'centershop_txtdomain' ),
 					'markerIcon'          => __( 'Ikon', 'centershop_txtdomain' ),
+					'customIcon'          => __( 'Eget ikon', 'centershop_txtdomain' ),
+					'uploadIcon'          => __( 'Upload ikon', 'centershop_txtdomain' ),
+					'changeIcon'          => __( 'Skift ikon', 'centershop_txtdomain' ),
+					'removeIcon'          => __( 'Fjern ikon', 'centershop_txtdomain' ),
+					'chooseIcon'          => __( 'Vælg ikon', 'centershop_txtdomain' ),
+					'useIcon'             => __( 'Brug dette ikon', 'centershop_txtdomain' ),
+					'markerColor'         => __( 'Baggrundsfarve', 'centershop_txtdomain' ),
+					'markerCircleSize'    => __( 'Cirkelstørrelse', 'centershop_txtdomain' ),
+					'markerIconSize'      => __( 'Ikonstørrelse', 'centershop_txtdomain' ),
 					'markerNumber'        => __( 'Indgangsnummer', 'centershop_txtdomain' ),
 					'markerNumberHelp'    => __( 'Vises på kortet. Med ikonet Nummer er tallet selve symbolet.', 'centershop_txtdomain' ),
 					'markerDescription'   => __( 'Beskrivelse', 'centershop_txtdomain' ),
@@ -226,9 +254,43 @@ class CenterShop_FloorPlan {
 
 		?>
 		<div class="wrap centershop-floorplan-admin">
-			<h1><?php esc_html_e( 'Grundplan over centret', 'centershop_txtdomain' ); ?></h1>
-
 			<div class="centershop-floorplan-content">
+				<div class="floorplan-main">
+					<h1><?php esc_html_e( 'Grundplan over centret', 'centershop_txtdomain' ); ?></h1>
+
+					<div class="floorplan-canvas-wrapper">
+						<?php if ( $ready ) : ?>
+							<div id="floorplan-canvas" data-mode="edit">
+								<svg id="floorplan-canvas-svg"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 <?php echo esc_attr( $size['width'] . ' ' . $size['height'] ); ?>">
+									<image href="<?php echo esc_url( $svg_url ); ?>"
+										x="0" y="0"
+										width="<?php echo esc_attr( $size['width'] ); ?>"
+										height="<?php echo esc_attr( $size['height'] ); ?>"></image>
+									<g id="fp-areas"></g>
+									<g id="fp-draft"></g>
+									<g id="fp-handles"></g>
+								</svg>
+								<div id="fp-marker-layer" class="floorplan-marker-layer"></div>
+							</div>
+							<p class="description" id="floorplan-hint"></p>
+						<?php else : ?>
+							<div class="floorplan-empty">
+								<span class="dashicons dashicons-images-alt2"></span>
+								<p><?php esc_html_e( 'Upload et grundplan billede for at komme i gang', 'centershop_txtdomain' ); ?></p>
+							</div>
+						<?php endif; ?>
+					</div>
+
+					<div class="floorplan-actions">
+						<button type="button" class="button button-primary button-large" id="save-floorplan" <?php disabled( ! $ready ); ?>>
+							<?php esc_html_e( 'Gem grundplan', 'centershop_txtdomain' ); ?>
+						</button>
+						<span id="floorplan-status" role="status" aria-live="polite"></span>
+					</div>
+				</div>
+
 				<div class="floorplan-sidebar">
 					<div class="postbox">
 						<h2 class="hndle"><?php esc_html_e( 'Grundplan billede', 'centershop_txtdomain' ); ?></h2>
@@ -310,40 +372,6 @@ class CenterShop_FloorPlan {
 						</div>
 					</div>
 				</div>
-
-				<div class="floorplan-main">
-					<div class="floorplan-canvas-wrapper">
-						<?php if ( $ready ) : ?>
-							<div id="floorplan-canvas" data-mode="edit">
-								<svg id="floorplan-canvas-svg"
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 <?php echo esc_attr( $size['width'] . ' ' . $size['height'] ); ?>">
-									<image href="<?php echo esc_url( $svg_url ); ?>"
-										x="0" y="0"
-										width="<?php echo esc_attr( $size['width'] ); ?>"
-										height="<?php echo esc_attr( $size['height'] ); ?>"></image>
-									<g id="fp-areas"></g>
-									<g id="fp-draft"></g>
-									<g id="fp-handles"></g>
-								</svg>
-								<div id="fp-marker-layer" class="floorplan-marker-layer"></div>
-							</div>
-							<p class="description" id="floorplan-hint"></p>
-						<?php else : ?>
-							<div class="floorplan-empty">
-								<span class="dashicons dashicons-images-alt2"></span>
-								<p><?php esc_html_e( 'Upload et grundplan billede for at komme i gang', 'centershop_txtdomain' ); ?></p>
-							</div>
-						<?php endif; ?>
-					</div>
-
-					<div class="floorplan-actions">
-						<button type="button" class="button button-primary button-large" id="save-floorplan" <?php disabled( ! $ready ); ?>>
-							<?php esc_html_e( 'Gem grundplan', 'centershop_txtdomain' ); ?>
-						</button>
-						<span id="floorplan-status" role="status" aria-live="polite"></span>
-					</div>
-				</div>
 			</div>
 		</div>
 		<?php
@@ -382,6 +410,98 @@ class CenterShop_FloorPlan {
 	private function get_markers() {
 		$markers = get_option( self::OPTION_MARKERS, array() );
 		return is_array( $markers ) ? array_values( $markers ) : array();
+	}
+
+	/**
+	 * Tilføj afledte felter (fx ikon-URL) til symboler, der sendes til JS.
+	 *
+	 * @param array<int, array<string, mixed>> $markers Stored markers.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function prepare_markers_for_client( $markers ) {
+		$out = array();
+		foreach ( $markers as $marker ) {
+			if ( ! is_array( $marker ) ) {
+				continue;
+			}
+			$marker['icon_id']     = isset( $marker['icon_id'] ) ? absint( $marker['icon_id'] ) : 0;
+			$marker['icon_url']    = $this->marker_custom_icon_url( $marker );
+			$marker['color']       = isset( $marker['color'] ) ? (string) $marker['color'] : '';
+			$marker['circle_size'] = isset( $marker['circle_size'] ) ? absint( $marker['circle_size'] ) : self::DEFAULT_CIRCLE_SIZE;
+			$marker['icon_size']   = isset( $marker['icon_size'] ) ? absint( $marker['icon_size'] ) : self::DEFAULT_ICON_SIZE;
+			$out[]                 = $marker;
+		}
+		return $out;
+	}
+
+	/**
+	 * URL til et uploadet symbol-ikon, eller tom streng.
+	 *
+	 * @param array<string, mixed> $marker Marker.
+	 * @return string
+	 */
+	private function marker_custom_icon_url( $marker ) {
+		$id = isset( $marker['icon_id'] ) ? absint( $marker['icon_id'] ) : 0;
+		if ( ! $id ) {
+			return '';
+		}
+
+		$mime = get_post_mime_type( $id );
+		if ( ! $mime || 0 !== strpos( $mime, 'image/' ) ) {
+			return '';
+		}
+
+		$url = wp_get_attachment_url( $id );
+		return $url ? $url : '';
+	}
+
+	/**
+	 * Inline-stil for et kort-symbol (position, farve og størrelser).
+	 *
+	 * @param array<string, mixed> $marker Marker.
+	 * @return string
+	 */
+	private function marker_button_style( $marker ) {
+		$x     = isset( $marker['x'] ) ? (float) $marker['x'] : 0;
+		$y     = isset( $marker['y'] ) ? (float) $marker['y'] : 0;
+		$parts = array(
+			'left:' . number_format( $x * 100, 3, '.', '' ) . '%',
+			'top:' . number_format( $y * 100, 3, '.', '' ) . '%',
+		);
+
+		$color = isset( $marker['color'] ) ? $this->sanitize_color( $marker['color'] ) : '';
+		if ( $color ) {
+			$parts[] = '--marker-bg:' . $color;
+		}
+
+		$circle = isset( $marker['circle_size'] ) ? absint( $marker['circle_size'] ) : 0;
+		if ( $circle >= self::MIN_CIRCLE_SIZE && $circle <= self::MAX_CIRCLE_SIZE ) {
+			$parts[] = '--marker-size:' . $circle . 'px';
+		}
+
+		$icon = isset( $marker['icon_size'] ) ? absint( $marker['icon_size'] ) : 0;
+		if ( $icon >= self::MIN_ICON_SIZE && $icon <= self::MAX_ICON_SIZE ) {
+			$parts[] = '--marker-icon-size:' . $icon . 'px';
+		}
+
+		return implode( ';', $parts );
+	}
+
+	/**
+	 * Hold en størrelse inden for intervallet, ellers brug standard.
+	 *
+	 * @param mixed $value   Rå værdi.
+	 * @param int   $min     Inklusiv minimum.
+	 * @param int   $max     Inklusiv maksimum.
+	 * @param int   $default Fallback.
+	 * @return int
+	 */
+	private function sanitize_marker_size( $value, $min, $max, $default ) {
+		$number = absint( $value );
+		if ( $number < $min || $number > $max ) {
+			return $default;
+		}
+		return $number;
 	}
 
 	/**
@@ -669,7 +789,7 @@ class CenterShop_FloorPlan {
 	 * Rens symboler til faciliteter og indgange.
 	 *
 	 * @param mixed $markers Raw markers.
-	 * @return array<int, array<string, string>>
+	 * @return array<int, array<string, mixed>>
 	 */
 	private function sanitize_markers( $markers ) {
 		if ( ! is_array( $markers ) ) {
@@ -677,7 +797,8 @@ class CenterShop_FloorPlan {
 		}
 
 		$allowed = array_keys( $this->marker_icons() );
-		$clean   = array();
+		$allowed[] = 'custom';
+		$clean     = array();
 
 		foreach ( array_slice( $markers, 0, self::MAX_MARKERS ) as $marker ) {
 			if ( ! is_array( $marker ) || ! isset( $marker['x'], $marker['y'] ) ) {
@@ -692,7 +813,19 @@ class CenterShop_FloorPlan {
 
 			$kind = ( isset( $marker['kind'] ) && 'entrance' === $marker['kind'] ) ? 'entrance' : 'facility';
 			$icon = isset( $marker['icon'] ) ? sanitize_key( $marker['icon'] ) : '';
+
+			$icon_id = isset( $marker['icon_id'] ) ? absint( $marker['icon_id'] ) : 0;
+			if ( $icon_id ) {
+				$mime = get_post_mime_type( $icon_id );
+				if ( ! $mime || 0 !== strpos( $mime, 'image/' ) ) {
+					$icon_id = 0;
+				}
+			}
+
 			if ( ! in_array( $icon, $allowed, true ) ) {
+				$icon = 'entrance' === $kind ? 'number' : 'info';
+			}
+			if ( 'custom' === $icon && ! $icon_id ) {
 				$icon = 'entrance' === $kind ? 'number' : 'info';
 			}
 
@@ -710,7 +843,21 @@ class CenterShop_FloorPlan {
 				'label'       => $label,
 				'description' => $description,
 				'icon'        => $icon,
+				'icon_id'     => $icon_id,
 				'number'      => 'entrance' === $kind ? $number : '',
+				'color'       => isset( $marker['color'] ) ? $this->sanitize_color( $marker['color'] ) : '',
+				'circle_size' => $this->sanitize_marker_size(
+					isset( $marker['circle_size'] ) ? $marker['circle_size'] : self::DEFAULT_CIRCLE_SIZE,
+					self::MIN_CIRCLE_SIZE,
+					self::MAX_CIRCLE_SIZE,
+					self::DEFAULT_CIRCLE_SIZE
+				),
+				'icon_size'   => $this->sanitize_marker_size(
+					isset( $marker['icon_size'] ) ? $marker['icon_size'] : self::DEFAULT_ICON_SIZE,
+					self::MIN_ICON_SIZE,
+					self::MAX_ICON_SIZE,
+					self::DEFAULT_ICON_SIZE
+				),
 				'x'           => number_format( $x, 5, '.', '' ),
 				'y'           => number_format( $y, 5, '.', '' ),
 			);
@@ -762,6 +909,18 @@ class CenterShop_FloorPlan {
 				$number = 'entrance' === $kind ? '–' : '1';
 			}
 			return '<span class="floorplan-marker__num">' . esc_html( $number ) . '</span>';
+		}
+
+		if ( 'custom' === $icon ) {
+			$url = $this->marker_custom_icon_url( $marker );
+			if ( $url ) {
+				$html = '<span class="floorplan-marker__glyph"><img src="' . esc_url( $url ) . '" alt=""></span>';
+				if ( 'entrance' === $kind && '' !== $number ) {
+					$html .= '<span class="floorplan-marker__badge">' . esc_html( $number ) . '</span>';
+				}
+				return $html;
+			}
+			$icon = 'info';
 		}
 
 		$html = '<span class="floorplan-marker__glyph">' . $this->marker_svg( $icon ) . '</span>';
@@ -885,7 +1044,7 @@ class CenterShop_FloorPlan {
 		wp_send_json_success(
 			array(
 				'areas'   => $areas,
-				'markers' => $markers,
+				'markers' => $this->prepare_markers_for_client( $markers ),
 			)
 		);
 	}
@@ -905,7 +1064,7 @@ class CenterShop_FloorPlan {
 				'svg'     => get_option( self::OPTION_SVG, '' ),
 				'size'    => $this->get_size(),
 				'areas'   => $this->get_areas(),
-				'markers' => $this->get_markers(),
+				'markers' => $this->prepare_markers_for_client( $this->get_markers() ),
 			)
 		);
 	}
@@ -1216,13 +1375,7 @@ class CenterShop_FloorPlan {
 							if ( 'number' === $icon ) {
 								$classes .= ' is-number';
 							}
-							$x = isset( $marker['x'] ) ? (float) $marker['x'] : 0;
-							$y = isset( $marker['y'] ) ? (float) $marker['y'] : 0;
-							$style = sprintf(
-								'left:%s%%;top:%s%%',
-								number_format( $x * 100, 3, '.', '' ),
-								number_format( $y * 100, 3, '.', '' )
-							);
+							$style = $this->marker_button_style( $marker );
 							?>
 							<button type="button"
 								class="<?php echo esc_attr( $classes ); ?>"
@@ -1232,7 +1385,7 @@ class CenterShop_FloorPlan {
 								aria-label="<?php echo esc_attr( $public_label ); ?>"
 								aria-haspopup="dialog"
 								aria-controls="<?php echo esc_attr( $popup_id ); ?>">
-								<?php echo $this->marker_glyph_html( $marker ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Tal escapes, SVG er fast markup fra marker_icons(). ?>
+								<?php echo $this->marker_glyph_html( $marker ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Tal og img-URL escapes; SVG er fast markup fra marker_icons(). ?>
 							</button>
 							<?php
 						}
