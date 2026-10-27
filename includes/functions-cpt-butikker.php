@@ -63,7 +63,36 @@ add_filter("manage_edit-butiksside_sortable_columns", "my_sortable_butiksside_co
 function add_butik_metaboxes(){
 	add_meta_box("butik_open_info", "Åbningstider", "jxw_opening_hours_v2_metabox_html", "butiksside", "normal", "high" );
 	add_meta_box("butik_kontakt_info", "Kontakt information", "butik_kontakt_meta_options", "butiksside", "side", "high" );
+	add_meta_box("butik_lokale_status", "Lokale status", "butik_status_meta_options", "butiksside", "side", "high" );
 	add_meta_box("butik_logo_pic", "Logo", "butik_logo_meta_options", "butiksside", "side", "low" );
+}
+
+/**
+ * Occupancy metabox: mark a unit as an active shop or for rent/sale.
+ */
+function butik_status_meta_options() {
+	global $post;
+	$availability = function_exists( 'centershop_get_shop_availability' )
+		? centershop_get_shop_availability( $post->ID )
+		: 'occupied';
+	$options = function_exists( 'centershop_get_shop_availability_options' )
+		? centershop_get_shop_availability_options()
+		: array(
+			'occupied' => 'Aktiv butik',
+			'for_rent' => 'Til leje / salg',
+		);
+	?>
+	<p><?php esc_html_e( 'Markér om lokalet er en aktiv butik eller ledigt til leje/salg.', 'centershop_txtdomain' ); ?></p>
+	<?php foreach ( $options as $value => $label ) : ?>
+		<label for="butik_availability_<?php echo esc_attr( $value ); ?>" style="display:block;margin:0.4em 0;">
+			<input type="radio"
+				name="butik_availability"
+				id="butik_availability_<?php echo esc_attr( $value ); ?>"
+				value="<?php echo esc_attr( $value ); ?>"
+				<?php checked( $availability, $value ); ?> />
+			<?php echo esc_html( $label ); ?>
+		</label>
+	<?php endforeach;
 }
 
 /**
@@ -150,7 +179,8 @@ function save_butiks_meta($post_id, $post) {
 
 	// OK, we're authenticated: we need to find and save the data
 	// We'll put it into an array to make it easier to loop though.
-	
+	$events_meta = array();
+
 	if (isset($_POST['butik_payed_name'])) $events_meta['butik_payed_name'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_name'] ) );
 	if (isset($_POST['butik_payed_adress'])) $events_meta['butik_payed_adress'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_adress'] ) );
 	if (isset($_POST['butik_payed_postal'])) $events_meta['butik_payed_postal'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_postal'] ) );
@@ -160,7 +190,12 @@ function save_butiks_meta($post_id, $post) {
 	if (isset($_POST['butik_payed_web'])) $events_meta['butik_payed_web'] = esc_url_raw( wp_unslash( $_POST['butik_payed_web'] ) );
 	if (isset($_POST['butik_payed_fb'])) $events_meta['butik_payed_fb'] = esc_url_raw( wp_unslash( $_POST['butik_payed_fb'] ) );
 	if (isset($_POST['butik_payed_insta'])) $events_meta['butik_payed_insta'] = esc_url_raw( wp_unslash( $_POST['butik_payed_insta'] ) );
-	if (isset($_POST['allround-cpt_logo_id'])) $events_meta['allround-cpt_logo_id'] = absint( $_POST['allround-cpt_logo_id'] );		
+	if (isset($_POST['allround-cpt_logo_id'])) $events_meta['allround-cpt_logo_id'] = absint( $_POST['allround-cpt_logo_id'] );
+	if ( isset( $_POST['butik_availability'] ) ) {
+		$events_meta['butik_availability'] = function_exists( 'centershop_sanitize_shop_availability' )
+			? centershop_sanitize_shop_availability( wp_unslash( $_POST['butik_availability'] ) )
+			: ( ( 'for_rent' === $_POST['butik_availability'] ) ? 'for_rent' : 'occupied' );
+	}
 	
 	// Add values of $events_meta as custom fields
 	if (isset($events_meta)) {
@@ -190,6 +225,7 @@ function butik_edit_columns( $columns ) {
 		"cb" 				=> "<input type='checkbox' />",
 		"butik_logo" 		=> "Logo",
 		"title" 			=> "Butiks Titel",
+		"butik_status" 		=> "Status",
 		"description" 		=> "Beskrivelse",
 		"wordcount" 		=> "Antal ord",
 		"butikskategori" 	=> "Kategori",
@@ -211,6 +247,15 @@ function butik_custom_columns( $column ) {
   	switch ($column) {
 		case "butik_logo":
 			echo get_the_post_thumbnail($post->ID, 'thumbnail');
+			break;
+		case "butik_status":
+			$availability = function_exists( 'centershop_get_shop_availability' )
+				? centershop_get_shop_availability( $post->ID )
+				: 'occupied';
+			$label = function_exists( 'centershop_get_shop_availability_label' )
+				? centershop_get_shop_availability_label( $availability )
+				: ( ( 'for_rent' === $availability ) ? 'Til leje / salg' : 'Aktiv butik' );
+			echo esc_html( $label );
 			break;
 		case "description":
 			the_excerpt();

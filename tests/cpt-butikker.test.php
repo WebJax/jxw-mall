@@ -64,6 +64,7 @@ function test_cpt_args_point_to_callable_metabox_callback() {
 	require dirname( __DIR__ ) . '/includes/functions-cpt-butikker.php';
 
 	assert_true( function_exists( 'add_butik_metaboxes' ), 'Including the CPT file should define add_butik_metaboxes.' );
+	assert_true( function_exists( 'butik_status_meta_options' ), 'Including the CPT file should define the vacancy status metabox renderer.' );
 	assert_true( is_callable( $args['register_meta_box_cb'] ), 'register_meta_box_cb must be a valid callback.' );
 	assert_same( 'add_butik_metaboxes', $args['register_meta_box_cb'], 'CPT should register add_butik_metaboxes as the metabox callback.' );
 }
@@ -87,11 +88,13 @@ function test_add_butik_metaboxes_registers_expected_boxes() {
 	add_butik_metaboxes();
 	$registered = $GLOBALS['centershop_test_metaboxes'];
 
-	assert_same( 3, count( $registered ), 'Shop edit screen should register opening hours, contact, and logo metaboxes.' );
+	assert_same( 4, count( $registered ), 'Shop edit screen should register opening hours, contact, status, and logo metaboxes.' );
 	assert_same( 'butik_open_info', $registered[0]['id'], 'Opening hours metabox should be registered first.' );
 	assert_same( 'jxw_opening_hours_v2_metabox_html', $registered[0]['callback'], 'Opening hours should use the v2 metabox renderer.' );
 	assert_same( 'butik_kontakt_info', $registered[1]['id'], 'Contact metabox should be registered.' );
-	assert_same( 'butik_logo_pic', $registered[2]['id'], 'Logo metabox should be registered.' );
+	assert_same( 'butik_lokale_status', $registered[2]['id'], 'Vacancy status metabox should be registered.' );
+	assert_same( 'butik_status_meta_options', $registered[2]['callback'], 'Vacancy status should use butik_status_meta_options.' );
+	assert_same( 'butik_logo_pic', $registered[3]['id'], 'Logo metabox should be registered.' );
 }
 
 test_add_butik_metaboxes_is_a_real_function();
