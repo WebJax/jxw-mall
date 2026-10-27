@@ -5,7 +5,20 @@
   "title": "Butiksliste",
   "category": "widgets",
   "icon": "store",
-  "description": "Viser en liste over alle udgivne butikker med deres information",
+  "description": "Viser butikker filtreret efter status og kategori",
+  "attributes": {
+    "availability": {
+      "type": "string",
+      "default": "all"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": []
+    }
+  },
   "supports": {
     "html": false,
     "align": ["wide", "full"]

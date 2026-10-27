@@ -262,6 +262,20 @@ li.butik-paa-liste {
     color: #333;
 }
 
+.centershop-availability-badge,
+.butikinfo .centershop-availability-badge {
+    display: inline-block;
+    margin: 6px 0 4px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: #7a4a00;
+    background: #fff3cd;
+    border-radius: 3px;
+}
+
 /* Address and phone */
 .centershop-address, .centershop-phone {
     margin: 4px 0;
