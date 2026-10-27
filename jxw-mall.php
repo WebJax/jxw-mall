@@ -117,9 +117,7 @@ function centershop_setup_post_types()
 	}
 	
 	add_action('admin_enqueue_scripts','enqueue_datepicker_ui_for_associations');
-	
-	require_once(dirname( __FILE__ ) .  "/includes/functions-categorythumbnail.php");
-	
+
 	require_once(dirname( __FILE__ ) .  "/includes/functions-branch-shortcode.php");
 	
 	wp_enqueue_style( 'centershop-frontend-styles', plugins_url('/css/centershop-frontend-styles.css', __FILE__ ) );

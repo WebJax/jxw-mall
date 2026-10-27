@@ -53,8 +53,27 @@ function test_deactivation_clears_crons_and_flushes() {
 	);
 }
 
+function test_bootstrap_required_files_exist() {
+	$plugin_dir = dirname( __DIR__ );
+	$bootstrap  = file_get_contents( $plugin_dir . '/jxw-mall.php' );
+
+	preg_match_all(
+		'/require_once\s*(?:\(?\s*dirname\s*\(\s*__FILE__\s*\)\s*\.\s*|CENTERSHOP_PLUGIN_DIR\s*\.\s*)[\'"]([^\'"]+)[\'"]/',
+		$bootstrap,
+		$matches
+	);
+
+	assert_true( ! empty( $matches[1] ), 'Bootstrap should require at least one include file.' );
+
+	foreach ( $matches[1] as $relative ) {
+		$path = $plugin_dir . '/' . ltrim( $relative, '/' );
+		assert_true( file_exists( $path ), 'Required file is missing: ' . $relative );
+	}
+}
+
 test_activation_runs_setup_migrations_and_flush();
 test_deactivation_clears_crons_and_flushes();
+test_bootstrap_required_files_exist();
 
 assert_true( true, 'Lifecycle tests passed.' );
 echo "plugin-lifecycle tests passed\n";
