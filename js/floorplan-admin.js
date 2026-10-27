@@ -43,17 +43,18 @@
 			points: parsePoints( a.points )
 		};
 	} );
-	var markers = ( cfg.markers || [] ).map( function ( m ) {
-		return {
-			kind: 'entrance' === m.kind ? 'entrance' : 'facility',
-			label: m.label || '',
-			description: m.description || '',
-			icon: m.icon || ( 'entrance' === m.kind ? 'number' : 'info' ),
-			number: m.number || '',
-			x: parseFloat( m.x ) || 0,
-			y: parseFloat( m.y ) || 0
-		};
-	} );
+	var styleCfg = cfg.markerStyle || {};
+	var DEFAULT_CIRCLE = parseInt( styleCfg.circleSize, 10 ) || 44;
+	var DEFAULT_ICON = parseInt( styleCfg.iconSize, 10 ) || 20;
+	var MIN_CIRCLE = parseInt( styleCfg.minCircle, 10 ) || 16;
+	var MAX_CIRCLE = parseInt( styleCfg.maxCircle, 10 ) || 96;
+	var MIN_ICON = parseInt( styleCfg.minIcon, 10 ) || 8;
+	var MAX_ICON = parseInt( styleCfg.maxIcon, 10 ) || 64;
+	var FACILITY_COLOR = styleCfg.facilityColor || '#1d2327';
+	var ENTRANCE_COLOR = styleCfg.entranceColor || '#c2410c';
+	var iconFrame = null;
+
+	var markers = ( cfg.markers || [] ).map( normalizeMarker );
 	var selected = -1;
 	var selectedMarker = -1;
 	var draft = null; // Array af [x, y] under tegning, ellers null.
@@ -62,6 +63,41 @@
 	var dirty = false;
 
 	/* ---------- Hjælpefunktioner ---------- */
+
+	function clampInt( value, min, max, fallback ) {
+		var n = parseInt( value, 10 );
+		if ( isNaN( n ) ) {
+			return fallback;
+		}
+		return Math.min( max, Math.max( min, n ) );
+	}
+
+	/**
+	 * @param {Object} m
+	 * @return {Object}
+	 */
+	function normalizeMarker( m ) {
+		m = m || {};
+		var kind = 'entrance' === m.kind ? 'entrance' : 'facility';
+		return {
+			kind: kind,
+			label: m.label || '',
+			description: m.description || '',
+			icon: m.icon || ( 'entrance' === kind ? 'number' : 'info' ),
+			icon_id: parseInt( m.icon_id, 10 ) || 0,
+			icon_url: m.icon_url || '',
+			number: m.number || '',
+			color: m.color || '',
+			circle_size: clampInt( m.circle_size, MIN_CIRCLE, MAX_CIRCLE, DEFAULT_CIRCLE ),
+			icon_size: clampInt( m.icon_size, MIN_ICON, MAX_ICON, DEFAULT_ICON ),
+			x: parseFloat( m.x ) || 0,
+			y: parseFloat( m.y ) || 0
+		};
+	}
+
+	function defaultMarkerColor( kind ) {
+		return 'entrance' === kind ? ENTRANCE_COLOR : FACILITY_COLOR;
+	}
 
 	function parsePoints( str ) {
 		if ( ! str ) {
@@ -330,7 +366,14 @@
 
 		var glyph = document.createElement( 'span' );
 		glyph.className = 'floorplan-marker__glyph';
-		glyph.innerHTML = iconSvg( marker.icon ) || iconSvg( 'info' );
+		if ( 'custom' === marker.icon && marker.icon_url ) {
+			var img = document.createElement( 'img' );
+			img.src = marker.icon_url;
+			img.alt = '';
+			glyph.appendChild( img );
+		} else {
+			glyph.innerHTML = iconSvg( marker.icon ) || iconSvg( 'info' );
+		}
 		btn.appendChild( glyph );
 
 		if ( 'entrance' === marker.kind && marker.number ) {
@@ -339,6 +382,45 @@
 			badge.textContent = marker.number;
 			btn.appendChild( badge );
 		}
+	}
+
+	/**
+	 * @param {HTMLElement} btn
+	 * @param {Object} marker
+	 */
+	function applyMarkerAppearance( btn, marker ) {
+		var circle = clampInt( marker.circle_size, MIN_CIRCLE, MAX_CIRCLE, DEFAULT_CIRCLE );
+		var icon = clampInt( marker.icon_size, MIN_ICON, MAX_ICON, DEFAULT_ICON );
+		btn.style.setProperty( '--marker-size', circle + 'px' );
+		btn.style.setProperty( '--marker-icon-size', icon + 'px' );
+		if ( marker.color ) {
+			btn.style.setProperty( '--marker-bg', marker.color );
+		} else {
+			btn.style.removeProperty( '--marker-bg' );
+		}
+	}
+
+	/**
+	 * @param {Function} onSelect
+	 */
+	function openIconMedia( onSelect ) {
+		if ( ! window.wp || ! window.wp.media ) {
+			return;
+		}
+		if ( ! iconFrame ) {
+			iconFrame = window.wp.media( {
+				title: cfg.strings.chooseIcon,
+				button: { text: cfg.strings.useIcon },
+				library: { type: 'image' },
+				multiple: false
+			} );
+		}
+		iconFrame.off( 'select' );
+		iconFrame.on( 'select', function () {
+			var att = iconFrame.state().get( 'selection' ).first().toJSON();
+			onSelect( att );
+		} );
+		iconFrame.open();
 	}
 
 	/**
@@ -414,6 +496,7 @@
 				+ ( i === selectedMarker ? ' is-selected' : '' );
 			btn.style.left = ( marker.x * 100 ) + '%';
 			btn.style.top = ( marker.y * 100 ) + '%';
+			applyMarkerAppearance( btn, marker );
 			btn.setAttribute( 'aria-label', markerLabel( marker, i ) );
 			fillMarkerButton( btn, marker );
 			attachMarkerEvents( btn, i );
@@ -510,36 +593,71 @@
 
 		var picker = document.createElement( 'div' );
 		picker.className = 'marker-icon-picker';
-		( cfg.icons || [] ).forEach( function ( icon ) {
+
+		function selectIcon( id ) {
+			marker.icon = id;
+			markDirty();
+			picker.querySelectorAll( 'label' ).forEach( function ( el ) {
+				var radio = el.querySelector( 'input' );
+				el.classList.toggle( 'is-selected', radio && radio.value === id && radio.checked );
+			} );
+			renderMarkers();
+			renderMarkerList();
+		}
+
+		function addIconChoice( id, title, fillGlyph ) {
 			var choice = document.createElement( 'label' );
-			choice.title = icon.label;
-			if ( icon.id === marker.icon ) {
+			choice.title = title;
+			if ( id === marker.icon ) {
 				choice.className = 'is-selected';
 			}
 			var input = document.createElement( 'input' );
 			input.type = 'radio';
 			input.name = 'marker-icon';
-			input.value = icon.id;
-			input.checked = icon.id === marker.icon;
+			input.value = id;
+			input.checked = id === marker.icon;
 			var hidden = document.createElement( 'span' );
 			hidden.className = 'screen-reader-text';
-			hidden.textContent = icon.label;
+			hidden.textContent = title;
 			var glyph = document.createElement( 'span' );
 			glyph.className = 'marker-icon-picker__glyph';
-			glyph.innerHTML = icon.svg || '';
+			fillGlyph( glyph );
 			input.addEventListener( 'change', function () {
-				marker.icon = input.value;
-				markDirty();
-				picker.querySelectorAll( 'label' ).forEach( function ( el ) {
-					el.classList.toggle( 'is-selected', el.contains( input ) && input.checked );
-				} );
-				renderMarkers();
-				renderMarkerList();
+				if ( 'custom' === id && ! marker.icon_url ) {
+					openIconMedia( function ( att ) {
+						marker.icon_id = att.id;
+						marker.icon_url = att.url;
+						selectIcon( 'custom' );
+						renderEditor();
+					} );
+					if ( ! marker.icon_url ) {
+						input.checked = false;
+						return;
+					}
+				}
+				selectIcon( id );
 			} );
 			choice.appendChild( input );
 			choice.appendChild( hidden );
 			choice.appendChild( glyph );
 			picker.appendChild( choice );
+		}
+
+		( cfg.icons || [] ).forEach( function ( icon ) {
+			addIconChoice( icon.id, icon.label, function ( glyph ) {
+				glyph.innerHTML = icon.svg || '';
+			} );
+		} );
+
+		addIconChoice( 'custom', cfg.strings.customIcon, function ( glyph ) {
+			if ( marker.icon_url ) {
+				var img = document.createElement( 'img' );
+				img.src = marker.icon_url;
+				img.alt = '';
+				glyph.appendChild( img );
+			} else {
+				glyph.innerHTML = '<span class="dashicons dashicons-upload"></span>';
+			}
 		} );
 
 		var number = document.createElement( 'input' );
@@ -572,6 +690,62 @@
 			removeMarker( selectedMarker );
 		} );
 
+		var color = document.createElement( 'input' );
+		color.type = 'color';
+		color.value = marker.color || defaultMarkerColor( marker.kind );
+		color.addEventListener( 'input', function () {
+			marker.color = color.value;
+			markDirty();
+			renderMarkers();
+		} );
+
+		var circleSize = document.createElement( 'input' );
+		circleSize.type = 'number';
+		circleSize.className = 'small-text';
+		circleSize.min = String( MIN_CIRCLE );
+		circleSize.max = String( MAX_CIRCLE );
+		circleSize.step = '1';
+		circleSize.value = String( marker.circle_size );
+
+		var iconSize = document.createElement( 'input' );
+		iconSize.type = 'number';
+		iconSize.className = 'small-text';
+		iconSize.min = String( MIN_ICON );
+		iconSize.max = String( MAX_ICON );
+		iconSize.step = '1';
+		iconSize.value = String( marker.icon_size );
+
+		function bindSizeInput( input, key, min, max, fallback ) {
+			function apply( commit ) {
+				var n = parseInt( input.value, 10 );
+				if ( isNaN( n ) ) {
+					if ( ! commit ) {
+						return;
+					}
+					n = fallback;
+				}
+				if ( ! commit && ( n < min || n > max ) ) {
+					return;
+				}
+				n = clampInt( n, min, max, fallback );
+				marker[ key ] = n;
+				if ( commit ) {
+					input.value = String( n );
+				}
+				markDirty();
+				renderMarkers();
+			}
+			input.addEventListener( 'input', function () {
+				apply( false );
+			} );
+			input.addEventListener( 'change', function () {
+				apply( true );
+			} );
+		}
+
+		bindSizeInput( circleSize, 'circle_size', MIN_CIRCLE, MAX_CIRCLE, DEFAULT_CIRCLE );
+		bindSizeInput( iconSize, 'icon_size', MIN_ICON, MAX_ICON, DEFAULT_ICON );
+
 		editorEl.appendChild( field( cfg.strings.kindLabel, kind ) );
 		editorEl.appendChild( field( cfg.strings.markerLabel, label ) );
 		var iconField = document.createElement( 'p' );
@@ -580,7 +754,65 @@
 		iconField.appendChild( iconStrong );
 		iconField.appendChild( document.createElement( 'br' ) );
 		iconField.appendChild( picker );
+
+		var uploadActions = document.createElement( 'span' );
+		uploadActions.className = 'marker-icon-upload';
+		var upload = document.createElement( 'button' );
+		upload.type = 'button';
+		upload.className = 'button';
+		upload.textContent = marker.icon_id ? cfg.strings.changeIcon : cfg.strings.uploadIcon;
+		upload.addEventListener( 'click', function () {
+			openIconMedia( function ( att ) {
+				marker.icon = 'custom';
+				marker.icon_id = att.id;
+				marker.icon_url = att.url;
+				markDirty();
+				renderMarkers();
+				renderMarkerList();
+				renderEditor();
+			} );
+		} );
+		uploadActions.appendChild( upload );
+		if ( marker.icon_id ) {
+			var remove = document.createElement( 'button' );
+			remove.type = 'button';
+			remove.className = 'button-link-delete';
+			remove.textContent = cfg.strings.removeIcon;
+			remove.addEventListener( 'click', function () {
+				marker.icon_id = 0;
+				marker.icon_url = '';
+				if ( 'custom' === marker.icon ) {
+					marker.icon = 'entrance' === marker.kind ? 'number' : 'info';
+				}
+				markDirty();
+				renderMarkers();
+				renderMarkerList();
+				renderEditor();
+			} );
+			uploadActions.appendChild( remove );
+		}
+		iconField.appendChild( uploadActions );
 		editorEl.appendChild( iconField );
+		editorEl.appendChild( field( cfg.strings.markerColor, color ) );
+		var sizes = document.createElement( 'div' );
+		sizes.className = 'marker-size-fields';
+		sizes.appendChild( field( cfg.strings.markerCircleSize, circleSize ) );
+		sizes.appendChild( field( cfg.strings.markerIconSize, iconSize ) );
+		var circleHelp = sizes.querySelector( 'p' );
+		if ( circleHelp ) {
+			var px = document.createElement( 'span' );
+			px.className = 'description';
+			px.textContent = ' px';
+			circleHelp.querySelector( 'label' ).appendChild( px );
+		}
+		var iconHelp = sizes.querySelectorAll( 'p' )[ 1 ];
+		if ( iconHelp ) {
+			var px2 = document.createElement( 'span' );
+			px2.className = 'description';
+			px2.textContent = ' px';
+			iconHelp.querySelector( 'label' ).appendChild( px2 );
+		}
+		editorEl.appendChild( sizes );
 		if ( 'entrance' === marker.kind ) {
 			var numberField = field( cfg.strings.markerNumber, number );
 			var help = document.createElement( 'span' );
@@ -921,7 +1153,7 @@
 		svg.addEventListener( 'click', function ( evt ) {
 			var p = eventToNorm( evt );
 			if ( placing ) {
-				markers.push( {
+				markers.push( normalizeMarker( {
 					kind: 'facility',
 					label: cfg.strings.facility + ' ' + ( markers.length + 1 ),
 					description: '',
@@ -929,7 +1161,7 @@
 					number: '',
 					x: p[ 0 ],
 					y: p[ 1 ]
-				} );
+				} ) );
 				placing = false;
 				setPlaceUi( false );
 				markDirty();
@@ -1041,7 +1273,11 @@
 					label: m.label,
 					description: m.description,
 					icon: m.icon,
+					icon_id: m.icon_id,
 					number: m.number,
+					color: m.color,
+					circle_size: m.circle_size,
+					icon_size: m.icon_size,
 					x: m.x,
 					y: m.y
 				};
@@ -1066,17 +1302,7 @@
 							points: parsePoints( a.points )
 						};
 					} );
-					markers = ( res.data.markers || [] ).map( function ( m ) {
-						return {
-							kind: 'entrance' === m.kind ? 'entrance' : 'facility',
-							label: m.label || '',
-							description: m.description || '',
-							icon: m.icon || 'info',
-							number: m.number || '',
-							x: parseFloat( m.x ) || 0,
-							y: parseFloat( m.y ) || 0
-						};
-					} );
+					markers = ( res.data.markers || [] ).map( normalizeMarker );
 					if ( keepMarker >= 0 && keepMarker < markers.length ) {
 						selectMarker( keepMarker );
 					} else {
