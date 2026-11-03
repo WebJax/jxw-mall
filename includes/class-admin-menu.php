@@ -397,12 +397,15 @@ class CenterShop_Admin_Menu {
                     '<p><strong>' . __('Kontakt e-mail', 'centershop_txtdomain') . '</strong> &ndash; ' .
                     __('Den e-mailadresse, der modtager systemnotifikationer fra pluginet.', 'centershop_txtdomain') . '</p>' .
                     '<p><strong>' . __('Google Maps API nøgle', 'centershop_txtdomain') . '</strong> &ndash; ' .
-                    __('Kræves for at vise centrets kort. Hent en nøgle via Google Cloud Console.', 'centershop_txtdomain') . '</p>',
+                    __('Kræves for at vise centrets kort. Hent en nøgle via Google Cloud Console.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Facebook App ID / Secret', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Valgfrit. Bruges til at slå Facebook Page ID op fra vanity-URLs som facebook.com/butiksnavn.', 'centershop_txtdomain') . '</p>',
             ));
 
             $screen->set_help_sidebar(
                 '<p><strong>' . __('Nyttige links', 'centershop_txtdomain') . '</strong></p>' .
-                '<p><a href="https://console.cloud.google.com/" target="_blank">' . __('Google Cloud Console', 'centershop_txtdomain') . '</a></p>'
+                '<p><a href="https://console.cloud.google.com/" target="_blank">' . __('Google Cloud Console', 'centershop_txtdomain') . '</a></p>' .
+                '<p><a href="https://developers.facebook.com/apps/" target="_blank">' . __('Facebook Developers', 'centershop_txtdomain') . '</a></p>'
             );
         }
 
