@@ -2,6 +2,11 @@
   <a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>">
     <h4 class="butikerhvervnavn butik-<?php echo esc_attr( $post->ID ); ?>"><?php echo esc_html( $post->butik_payed_name ); ?></h4>
   </a>
+  <?php
+  if ( function_exists( 'centershop_get_shop_availability_badge_html' ) ) {
+	  echo centershop_get_shop_availability_badge_html( $post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in helper
+  }
+  ?>
   <?php echo esc_html( $post->butik_payed_adress ); ?><br/>
   <?php echo esc_html( trim( $post->butik_payed_postal . " " . $post->butik_payed_city ) ); ?><br/>
   <?php echo esc_html( "Telefon: " . $post->butik_payed_phone ); ?><br/>

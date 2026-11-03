@@ -3,7 +3,7 @@
 Plugin Name: Centershop
 Plugin URI:  http://www.jaxweb.dk
 Description: Butiksoversigt i Dianalund Centret med kort og åbningstider
-Version:     1.6.2
+Version:     1.7.0
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
 License:     GPL2
@@ -33,10 +33,11 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('CENTERSHOP_VERSION', '1.6.2');
+define('CENTERSHOP_VERSION', '1.7.0');
 define('CENTERSHOP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once CENTERSHOP_PLUGIN_DIR . 'includes/plugin-lifecycle.php';
+require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-shop-availability.php';
 
 /**
  * Load all plugin modules
@@ -61,6 +62,7 @@ function centershop_setup_post_types()
 {
     // register butiksside post type
 
+  require_once(dirname( __FILE__ ) . "/includes/functions-shop-availability.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");
   register_post_type( 'butiksside', $args );
@@ -272,31 +274,31 @@ function centershop_register_blocks() {
 add_action( 'init', 'centershop_register_blocks' );
 
 // Render callbacks for blocks
-function centershop_render_logo_carousel_block( string $attributes, string $content ) {
+function centershop_render_logo_carousel_block( array $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/shop-logo-carousel/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_opening_hours_block( string $attributes, string $content ) {
+function centershop_render_opening_hours_block( array $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/opening-hours/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_shop_list_block( string $attributes, string $content ) {
+function centershop_render_shop_list_block( array $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/shop-list/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_single_shop_block( string $attributes, string $content ) {
+function centershop_render_single_shop_block( array $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/single-shop/render.php';
     return ob_get_clean();
 }
 
-function centershop_render_read_also_block( string $attributes, string $content ) {
+function centershop_render_read_also_block( array $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/read-also/render.php';
     return ob_get_clean();
@@ -314,7 +316,8 @@ function centershop_register_meta_fields() {
         'butik_payed_web',
         'butik_payed_fb',
         'butik_payed_insta',
-        'allround-cpt_logo_id'
+        'allround-cpt_logo_id',
+        'butik_availability'
     );
     
     foreach ($meta_fields as $field) {

@@ -6,6 +6,7 @@ WordPress-plugin til administration og visning af butikker i et shoppingcenter, 
 
 - Custom post type: `butiksside` (butikker)
 - Butiksdata via metafelter (adresse, telefon, mail, web, sociale medier, logo)
+- Lokale-status på butik: aktiv butik eller til leje / salg
 - CenterShop admin-menu med oversigt, butikker, kategorier, åbningstider, eksport og indstillinger
 - Åbningstider med ugedage, helligdage og ekstra tekst
 - Eksport af butiksmails fra admin
@@ -17,7 +18,7 @@ WordPress-plugin til administration og visning af butikker i et shoppingcenter, 
 
 Plugin’et indeholder bl.a. følgende blokke:
 
-- `centershop/shop-list` – butiksliste
+- `centershop/shop-list` – butiksliste med filter på status og kategorier
 - `centershop/single-shop` – enkelt butik
 - `centershop/shop-logo-carousel` – logo-ticker
 - `centershop/opening-hours` – centerets åbningstider
@@ -47,6 +48,7 @@ Plugin’et indeholder bl.a. følgende blokke:
 - `includes/class-settings.php` – plugin-indstillinger
 - `includes/class-floorplan.php` – grundplansfunktionalitet
 - `includes/functions-cpt-butikker.php` – CPT og butik-metaboxes
+- `includes/functions-shop-availability.php` – lokale-status og butiksliste-filtre
 - `includes/functions-shopping-hours.php` – centerets åbningstider
 - `includes/functions-opening-hours-v2.php` – åbningstider på butiksniveau
 
