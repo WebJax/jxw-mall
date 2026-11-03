@@ -55,6 +55,18 @@ class CenterShop_Settings {
             'default' => '',
             'sanitize_callback' => 'sanitize_email'
         ));
+
+        register_setting('centershop_settings', 'centershop_fb_app_id', array(
+            'type' => 'string',
+            'default' => '',
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+
+        register_setting('centershop_settings', 'centershop_fb_app_secret', array(
+            'type' => 'string',
+            'default' => '',
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
         
         // Add settings section
         add_settings_section(
@@ -87,6 +99,29 @@ class CenterShop_Settings {
             array($this, 'render_google_maps_field'),
             'centershop_settings',
             'centershop_general_section'
+        );
+
+        add_settings_section(
+            'centershop_facebook_section',
+            __('Facebook', 'centershop_txtdomain'),
+            array($this, 'render_facebook_section'),
+            'centershop_settings'
+        );
+
+        add_settings_field(
+            'centershop_fb_app_id',
+            __('Facebook App ID', 'centershop_txtdomain'),
+            array($this, 'render_facebook_app_id_field'),
+            'centershop_settings',
+            'centershop_facebook_section'
+        );
+
+        add_settings_field(
+            'centershop_fb_app_secret',
+            __('Facebook App Secret', 'centershop_txtdomain'),
+            array($this, 'render_facebook_app_secret_field'),
+            'centershop_settings',
+            'centershop_facebook_section'
         );
     }
     
@@ -162,6 +197,65 @@ class CenterShop_Settings {
                 '<a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>'
             );
             ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render Facebook section description
+     */
+    public function render_facebook_section() {
+        echo '<div class="centershop-fb-settings">';
+        echo '<p>' . esc_html__('Bruges til at slå Facebook Page ID op ud fra butikkernes Facebook-adresser. Påkrævet for vanity-URLs som facebook.com/butiksnavn.', 'centershop_txtdomain') . '</p>';
+        echo '</div>';
+    }
+
+    /**
+     * Render Facebook App ID field
+     */
+    public function render_facebook_app_id_field() {
+        $value = get_option('centershop_fb_app_id', '');
+        ?>
+        <input type="text"
+               id="centershop_fb_app_id"
+               name="centershop_fb_app_id"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               autocomplete="off"
+               aria-describedby="centershop_fb_app_id_desc" />
+        <span class="dashicons dashicons-editor-help centershop-field-tip"
+              title="<?php esc_attr_e('App ID fra Facebook Developer-appen. Bruges sammen med App Secret til at slå Page ID op.', 'centershop_txtdomain'); ?>"
+              aria-label="<?php esc_attr_e('Hjælp til Facebook App ID', 'centershop_txtdomain'); ?>"></span>
+        <p class="description" id="centershop_fb_app_id_desc">
+            <?php
+            printf(
+                /* translators: %s: link to Facebook developers */
+                esc_html__('Valgfri. Opret en app på %s. URLs der allerede indeholder et numerisk ID virker uden denne nøgle.', 'centershop_txtdomain'),
+                '<a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">Facebook Developers</a>'
+            );
+            ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render Facebook App Secret field
+     */
+    public function render_facebook_app_secret_field() {
+        $value = get_option('centershop_fb_app_secret', '');
+        ?>
+        <input type="password"
+               id="centershop_fb_app_secret"
+               name="centershop_fb_app_secret"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               autocomplete="off"
+               aria-describedby="centershop_fb_app_secret_desc" />
+        <span class="dashicons dashicons-editor-help centershop-field-tip"
+              title="<?php esc_attr_e('App Secret fra Facebook Developer-appen. Gemmes i WordPress og bruges kun server-side til Graph API.', 'centershop_txtdomain'); ?>"
+              aria-label="<?php esc_attr_e('Hjælp til Facebook App Secret', 'centershop_txtdomain'); ?>"></span>
+        <p class="description" id="centershop_fb_app_secret_desc">
+            <?php esc_html_e('Valgfri. Nødvendig sammen med App ID for at slå vanity-URLs op via Graph API.', 'centershop_txtdomain'); ?>
         </p>
         <?php
     }

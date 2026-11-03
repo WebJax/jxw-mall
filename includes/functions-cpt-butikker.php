@@ -113,6 +113,7 @@ function butik_kontakt_meta_options(){
 	$butik_payed_mail = get_post_meta($post->ID, 'butik_payed_mail', true);
 	$butik_payed_web = get_post_meta($post->ID, 'butik_payed_web', true);
 	$butik_payed_fb = get_post_meta($post->ID, 'butik_payed_fb', true);
+	$butik_payed_fb_id = get_post_meta($post->ID, 'butik_payed_fb_id', true);
 	$butik_payed_insta = get_post_meta($post->ID, 'butik_payed_insta', true);
 
 	?>
@@ -125,6 +126,15 @@ function butik_kontakt_meta_options(){
 		<tr><td><label for="butik_payed_mail">Email:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_mail ); ?>" name="butik_payed_mail" id="butik_payed_mail"/></td></tr>
 		<tr><td><label for="butik_payed_web">Hjemmeside:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_web ); ?>" name="butik_payed_web" id="butik_payed_web"/></td></tr>
 		<tr><td><label for="butik_payed_fb">Facebook:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_fb ); ?>" name="butik_payed_fb" id="butik_payed_fb"/></td></tr>
+		<tr>
+			<td>
+				<label for="butik_payed_fb_id"><?php esc_html_e( 'Facebook Page ID:', 'centershop_txtdomain' ); ?></label><br/>
+				<input type="text" value="<?php echo esc_attr( $butik_payed_fb_id ); ?>" name="butik_payed_fb_id" id="butik_payed_fb_id" inputmode="numeric" autocomplete="off" />
+				<button type="button" class="button" id="centershop-fetch-fb-page-id"><?php esc_html_e( 'Hent Page ID', 'centershop_txtdomain' ); ?></button>
+				<span id="centershop-fb-page-id-status" aria-live="polite"></span>
+				<p class="description"><?php esc_html_e( 'Udfyldes automatisk ud fra Facebook-adressen ved gem. Vanity-URLs (facebook.com/butiksnavn) kræver Facebook App ID og Secret under CenterShop → Indstillinger.', 'centershop_txtdomain' ); ?></p>
+			</td>
+		</tr>
 		<tr><td><label for="butik_payed_insta">Instagram:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_insta ); ?>" name="butik_payed_insta" id="butik_payed_insta"/></td></tr>
 	</table>
 <?php
@@ -208,6 +218,13 @@ function save_butiks_meta($post_id, $post) {
 				add_post_meta($post->ID, $key, $value);
 			}
 			if(!$value) delete_post_meta($post->ID, $key); // Delete if blank
+		}
+
+		if ( array_key_exists( 'butik_payed_fb', $events_meta ) && function_exists( 'centershop_sync_shop_facebook_page_id' ) ) {
+			$posted_fb_id = isset( $_POST['butik_payed_fb_id'] )
+				? sanitize_text_field( wp_unslash( $_POST['butik_payed_fb_id'] ) )
+				: '';
+			centershop_sync_shop_facebook_page_id( $post->ID, $events_meta['butik_payed_fb'], $posted_fb_id );
 		}
 	}
 

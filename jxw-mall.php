@@ -3,7 +3,7 @@
 Plugin Name: Centershop
 Plugin URI:  http://www.jaxweb.dk
 Description: Butiksoversigt i Dianalund Centret med kort og åbningstider
-Version:     1.7.0
+Version:     1.7.1
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
 License:     GPL2
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('CENTERSHOP_VERSION', '1.7.0');
+define('CENTERSHOP_VERSION', '1.7.1');
 define('CENTERSHOP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once CENTERSHOP_PLUGIN_DIR . 'includes/plugin-lifecycle.php';
@@ -50,6 +50,7 @@ function centershop_load_modules() {
 
     // Post-Shop connection module
     require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-post-shop-connection.php';
+    require_once CENTERSHOP_PLUGIN_DIR . 'includes/functions-facebook-page-id.php';
     
     // Initialize modules
     CenterShop_Admin_Menu::get_instance();
@@ -114,6 +115,27 @@ function centershop_setup_post_types()
 				[],
 				filemtime( plugin_dir_path( __FILE__ ) . 'js/opening-hours-admin.js' ),
 				true
+			);
+			wp_enqueue_script(
+				'centershop-facebook-page-id-admin',
+				plugins_url( '/js/facebook-page-id-admin.js', __FILE__ ),
+				array( 'jquery' ),
+				filemtime( plugin_dir_path( __FILE__ ) . 'js/facebook-page-id-admin.js' ),
+				true
+			);
+			wp_localize_script(
+				'centershop-facebook-page-id-admin',
+				'centershopFbPageId',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'centershop_fb_page_id' ),
+					'i18n'    => array(
+						'missingUrl' => __( 'Indtast først en Facebook-adresse.', 'centershop_txtdomain' ),
+						'working'    => __( 'Henter…', 'centershop_txtdomain' ),
+						'success'    => __( 'Page ID hentet.', 'centershop_txtdomain' ),
+						'error'      => __( 'Kunne ikke hente Page ID.', 'centershop_txtdomain' ),
+					),
+				)
 			);
 		}
 	}
@@ -315,6 +337,7 @@ function centershop_register_meta_fields() {
         'butik_payed_mail',
         'butik_payed_web',
         'butik_payed_fb',
+        'butik_payed_fb_id',
         'butik_payed_insta',
         'allround-cpt_logo_id',
         'butik_availability'
