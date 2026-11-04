@@ -31,6 +31,7 @@ function centershop_get_shop_availability_filter_options() {
 	return array(
 		'all'      => 'Alle',
 		'occupied' => 'Aktiv butik',
+		'coming_soon' => 'Kommer snart',
 		'for_rent' => 'Til leje / salg',
 	);
 }
@@ -43,18 +44,18 @@ function centershop_get_shop_availability_filter_options() {
  */
 function centershop_sanitize_shop_availability( $value ) {
 	$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
-	return ( 'for_rent' === $value ) ? 'for_rent' : 'occupied';
+	return ( ( 'for_rent' === $value ) ? 'for_rent' : ( ( 'coming_soon' === $value ) ? 'coming_soon' : 'occupied' ) );
 }
 
 /**
  * Sanitize the shop-list status filter.
  *
  * @param mixed $value Raw value.
- * @return string all|occupied|for_rent
+ * @return string all|occupied|for_rent|coming_soon
  */
 function centershop_sanitize_shop_availability_filter( $value ) {
 	$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
-	if ( in_array( $value, array( 'occupied', 'for_rent' ), true ) ) {
+	if ( in_array( $value, array( 'occupied', 'for_rent', 'coming_soon' ), true ) ) {
 		return $value;
 	}
 	return 'all';
@@ -86,7 +87,7 @@ function centershop_sanitize_shop_list_categories( $categories ) {
  * Occupancy for a shop post. Missing meta is treated as occupied.
  *
  * @param int $post_id Shop post ID.
- * @return string occupied|for_rent
+ * @return string occupied|for_rent|coming_soon
  */
 function centershop_get_shop_availability( $post_id ) {
 	$post_id = (int) $post_id;
@@ -100,7 +101,7 @@ function centershop_get_shop_availability( $post_id ) {
 /**
  * Human-readable occupancy label.
  *
- * @param string $availability occupied|for_rent.
+ * @param string $availability occupied|for_rent|coming_soon.
  * @return string
  */
 function centershop_get_shop_availability_label( $availability ) {
@@ -116,7 +117,7 @@ function centershop_get_shop_availability_label( $availability ) {
  * @return string
  */
 function centershop_get_shop_availability_badge_html( $post_id ) {
-	if ( 'for_rent' !== centershop_get_shop_availability( $post_id ) ) {
+	if ( 'for_rent' !== centershop_get_shop_availability( $post_id ) && 'coming_soon' !== centershop_get_shop_availability( $post_id ) ) {
 		return '';
 	}
 
@@ -150,7 +151,15 @@ function centershop_get_shop_list_query_args( $attributes ) {
 				'compare' => '=',
 			),
 		);
-	} elseif ( 'occupied' === $availability ) {
+	} elseif ( 'coming_soon' === $availability ) {
+		$args['meta_query'] = array(
+			array(
+				'key'     => 'butik_availability',
+				'value'   => 'coming_soon',
+				'compare' => '=',
+			),
+		);
+	} else {
 		$args['meta_query'] = array(
 			'relation' => 'OR',
 			array(
