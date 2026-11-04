@@ -36,7 +36,7 @@ $args = array(
 	'show_ui'            	=> true,
 	'show_in_menu'       	=> false,
 	'query_var'          	=> true,
-	'rewrite'            	=> array( 'slug' => 'butiksside' ),
+	'rewrite'            	=> array( 'slug' => centershop_get_shop_slug() ),
 	'capability_type'    	=> 'post',
 	'has_archive'        	=> true,
 	'hierarchical'       	=> false,

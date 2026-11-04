@@ -31,6 +31,7 @@ class CenterShop_Settings {
      */
     private function __construct() {
         add_action('admin_init', array($this, 'register_settings'));
+        add_action('admin_init', array($this, 'handle_flush_rewrites'));
     }
     
     /**
@@ -54,6 +55,12 @@ class CenterShop_Settings {
             'type' => 'string',
             'default' => '',
             'sanitize_callback' => 'sanitize_email'
+        ));
+
+        register_setting('centershop_settings', 'centershop_shop_slug', array(
+            'type' => 'string',
+            'default' => 'butiksside',
+            'sanitize_callback' => 'centershop_sanitize_shop_slug'
         ));
         
         // Add settings section
@@ -85,6 +92,14 @@ class CenterShop_Settings {
             'centershop_google_maps_api_key',
             __('Google Maps API nøgle', 'centershop_txtdomain'),
             array($this, 'render_google_maps_field'),
+            'centershop_settings',
+            'centershop_general_section'
+        );
+
+        add_settings_field(
+            'centershop_shop_slug',
+            __('Permalink-slug', 'centershop_txtdomain'),
+            array($this, 'render_shop_slug_field'),
             'centershop_settings',
             'centershop_general_section'
         );
@@ -163,6 +178,91 @@ class CenterShop_Settings {
             );
             ?>
         </p>
+        <?php
+    }
+
+    /**
+     * Render the shop permalink slug field.
+     */
+    public function render_shop_slug_field() {
+        $value = centershop_get_shop_slug();
+        $example = trailingslashit( home_url( $value ) ) . 'butiksnavn/';
+        ?>
+        <input type="text"
+               id="centershop_shop_slug"
+               name="centershop_shop_slug"
+               value="<?php echo esc_attr( $value ); ?>"
+               class="regular-text"
+               maxlength="100"
+               autocapitalize="off"
+               spellcheck="false"
+               aria-describedby="centershop_shop_slug_desc" />
+        <span class="dashicons dashicons-editor-help centershop-field-tip"
+              title="<?php esc_attr_e( 'Stien foran butikkens navn i webadressen. Eksempler: butik, butiksside, lokale, store, location.', 'centershop_txtdomain' ); ?>"
+              aria-label="<?php esc_attr_e( 'Hjælp til Permalink-slug', 'centershop_txtdomain' ); ?>"></span>
+        <p class="description" id="centershop_shop_slug_desc">
+            <?php
+            printf(
+                /* translators: %s: example shop URL */
+                esc_html__( 'Sti i butikkens webadresse, fx %s. Brug små bogstaver, tal og bindestreger. Eksempler: butik, butiksside, lokale, store, location.', 'centershop_txtdomain' ),
+                '<code>' . esc_html( $example ) . '</code>'
+            );
+            ?>
+        </p>
+        <p class="description">
+            <?php esc_html_e( 'Gem indstillingerne, når du ændrer sluggen. Permalinks opdateres automatisk bagefter. Brug knappen nedenfor, hvis adresserne stadig ikke virker.', 'centershop_txtdomain' ); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Flush rewrite rules from the settings page.
+     */
+    public function handle_flush_rewrites() {
+        if ( ! isset( $_POST['centershop_flush_rewrites'] ) ) {
+            return;
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Du har ikke adgang til at genopfriske permalinks.', 'centershop_txtdomain' ) );
+        }
+
+        check_admin_referer( 'centershop_flush_rewrites', 'centershop_flush_rewrites_nonce' );
+
+        centershop_flush_butiksside_rewrites();
+
+        wp_safe_redirect(
+            add_query_arg(
+                array(
+                    'page'              => 'centershop-settings',
+                    'rewrites-flushed'  => '1',
+                ),
+                admin_url( 'admin.php' )
+            )
+        );
+        exit;
+    }
+
+    /**
+     * Separate form so the flush action is not saved as a setting.
+     */
+    public function render_flush_rewrites_form() {
+        ?>
+        <form id="centershop-flush-rewrites" method="post" action="">
+            <?php wp_nonce_field( 'centershop_flush_rewrites', 'centershop_flush_rewrites_nonce' ); ?>
+            <h2><?php esc_html_e( 'Permalinks', 'centershop_txtdomain' ); ?></h2>
+            <p>
+                <?php esc_html_e( 'Genindlæs rewrite-reglerne i WordPress, så den gemte slug bruges i butikkernes adresser.', 'centershop_txtdomain' ); ?>
+            </p>
+            <?php
+            submit_button(
+                __( 'Genopfrisk permalinks', 'centershop_txtdomain' ),
+                'secondary',
+                'centershop_flush_rewrites',
+                false
+            );
+            ?>
+        </form>
         <?php
     }
 }

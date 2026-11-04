@@ -57,17 +57,105 @@ function centershop_load_modules() {
 }
 add_action('plugins_loaded', 'centershop_load_modules');
 
+/**
+ * Default path segment for a single shop.
+ */
+function centershop_default_shop_slug(): string {
+  return 'butiksside';
+}
+
+/**
+ * Slugs that would collide with WordPress core routes.
+ */
+function centershop_shop_slug_is_reserved( string $slug ): bool {
+  $reserved = array(
+    'wp-admin',
+    'wp-content',
+    'wp-includes',
+    'wp-json',
+    'feed',
+    'embed',
+    'page',
+    'attachment',
+    'category',
+    'tag',
+    'author',
+    'search',
+    'comments',
+  );
+
+  return in_array( $slug, $reserved, true );
+}
+
+/**
+ * Permalink slug used in shop URLs, for example /butik/netto/.
+ */
+function centershop_get_shop_slug(): string {
+  $slug = get_option( 'centershop_shop_slug', centershop_default_shop_slug() );
+
+  if ( ! is_string( $slug ) ) {
+    return centershop_default_shop_slug();
+  }
+
+  $slug = sanitize_title( $slug );
+
+  if ( $slug === '' || centershop_shop_slug_is_reserved( $slug ) ) {
+    return centershop_default_shop_slug();
+  }
+
+  return $slug;
+}
+
+/**
+ * Sanitize the shop permalink slug from settings.
+ *
+ * @param mixed $value Raw submitted value.
+ */
+function centershop_sanitize_shop_slug( $value ): string {
+  $raw  = is_string( $value ) ? $value : '';
+  $slug = sanitize_title( $raw );
+
+  if ( $slug === '' ) {
+    add_settings_error(
+      'centershop_shop_slug',
+      'centershop_shop_slug_empty',
+      __( 'Permalink-slug er tom eller ugyldig. Standardværdien "butiksside" er gemt.', 'centershop_txtdomain' ),
+      'error'
+    );
+
+    return centershop_default_shop_slug();
+  }
+
+  if ( centershop_shop_slug_is_reserved( $slug ) ) {
+    add_settings_error(
+      'centershop_shop_slug',
+      'centershop_shop_slug_reserved',
+      sprintf(
+        /* translators: %s: rejected slug */
+        __( 'Sluggen "%s" er reserveret og kan ikke bruges. Den tidligere værdi er beholdt.', 'centershop_txtdomain' ),
+        $slug
+      ),
+      'error'
+    );
+
+    return centershop_get_shop_slug();
+  }
+
+  return $slug;
+}
+
 function centershop_setup_post_types()
 {
     // register butiksside post type
 
   require_once(dirname( __FILE__ ) . "/includes/functions-cpt-butikker.php");
   require_once(dirname( __FILE__ ) . "/includes/functions-opening-hours-v2.php");
+  $args['rewrite'] = array( 'slug' => centershop_get_shop_slug() );
   register_post_type( 'butiksside', $args );
 
-  // Shop URLs are stored in the rewrite option. Refresh them once after the
-  // registration change, otherwise /butiksside/butiknavn/ stays a 404.
-  if ( get_option( 'centershop_butiksside_rewrite' ) !== 'butiksside' ) {
+  // Shop URLs are stored in the rewrite option. Refresh them when the saved
+  // slug changes, otherwise /butik/butiknavn/ stays a 404.
+  if ( get_option( 'centershop_butiksside_rewrite' ) !== centershop_get_shop_slug() ) {
     add_action( 'init', 'centershop_flush_butiksside_rewrites', 99 );
   }
   add_action('save_post', 'save_butiks_meta', 999, 2); // save the custom fields
@@ -130,7 +218,7 @@ add_action( 'init', 'centershop_setup_post_types' );
  */
 function centershop_flush_butiksside_rewrites() {
   flush_rewrite_rules( false );
-  update_option( 'centershop_butiksside_rewrite', 'butiksside', false );
+  update_option( 'centershop_butiksside_rewrite', centershop_get_shop_slug(), false );
 }
 
 // Enqueue shared butik styles on frontend
