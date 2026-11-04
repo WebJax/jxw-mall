@@ -11,7 +11,7 @@
 global $post;
 
 // Check the shops status
-$shop_status = get_post_meta( $post->ID, 'shop_status', true );
+$shop_status = get_post_meta( $post->ID, 'butik_availability', true );
 if ( $shop_status === 'coming_soon' ) {
     echo '<div class="aabningstider-box"><h5>Åbningstider</h5>Kommer snart</div>';
     return;
