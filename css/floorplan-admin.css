@@ -103,6 +103,14 @@
 	stroke-width: 2.5px;
 }
 
+.area-link-field[hidden] {
+	display: none;
+}
+
+.area-link-field .description {
+	margin-top: 0;
+}
+
 .floorplan-handle {
 	fill: #fff;
 	stroke: #d63638;
