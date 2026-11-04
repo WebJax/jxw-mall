@@ -11,13 +11,9 @@
 global $post;
 
 // Check the shops status
-$shop_status = get_post_meta( $post->ID, 'butik_availability', true );
-if ( $shop_status === 'coming_soon' ) {
-    echo '<div class="aabningstider-box"><h5>Åbningstider</h5>Kommer snart</div>';
-    return;
-}
-if ( $shop_status === 'for_rent' ) {
-    echo '<div class="aabningstider-box"><h5>Åbningstider</h5>Til leje / salg</div>';
+$availability = centershop_get_shop_availability( $post->ID );
+if ( 'coming_soon' === $availability || 'for_rent' === $availability ) {
+    echo centershop_get_shop_availability_badge_html( $post->ID );
     return;
 }
 

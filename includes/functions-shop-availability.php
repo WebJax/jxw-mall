@@ -117,11 +117,12 @@ function centershop_get_shop_availability_label( $availability ) {
  * @return string
  */
 function centershop_get_shop_availability_badge_html( $post_id ) {
-	if ( 'for_rent' !== centershop_get_shop_availability( $post_id ) && 'coming_soon' !== centershop_get_shop_availability( $post_id ) ) {
+	$availability = centershop_get_shop_availability( $post_id );
+	if ( 'for_rent' !== $availability && 'coming_soon' !== $availability ) {
 		return '';
 	}
 
-	return '<span class="centershop-availability-badge">' . esc_html( centershop_get_shop_availability_label( 'for_rent' ) ) . '</span>';
+	return '<span class="centershop-availability-badge">' . esc_html( centershop_get_shop_availability_label( $availability ) ) . '</span>';
 }
 
 /**
