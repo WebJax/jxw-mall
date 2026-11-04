@@ -33,7 +33,7 @@
 		var dialog = wrap.querySelector( '.floorplan-popup' );
 		var input = wrap.querySelector( '.floorplan-search-input' );
 		var results = wrap.querySelector( '.floorplan-search-results' );
-		var areas = Array.prototype.slice.call( svg.querySelectorAll( '.floorplan-area-front.has-shop' ) );
+		var areas = Array.prototype.slice.call( svg.querySelectorAll( '.floorplan-area-front.has-shop, .floorplan-area-front.has-link' ) );
 		var markerButtons = Array.prototype.slice.call( wrap.querySelectorAll( '.floorplan-marker' ) );
 		var shops = {};
 		var markerCards = [];
@@ -182,8 +182,31 @@
 			} );
 		}
 
+		/**
+		 * @param {Element} el
+		 * @return {string}
+		 */
+		function areaCaption( el ) {
+			return el.getAttribute( 'data-shop-name' ) || el.getAttribute( 'data-area-label' ) || '';
+		}
+
+		/**
+		 * @param {string} url
+		 * @return {boolean}
+		 */
+		function followLink( url ) {
+			if ( ! url || ! /^https?:\/\//i.test( url ) ) {
+				return false;
+			}
+			window.location.assign( url );
+			return true;
+		}
+
 		areas.forEach( function ( el ) {
 			function activate() {
+				if ( followLink( el.getAttribute( 'data-link-url' ) || '' ) ) {
+					return;
+				}
 				openShop( el.getAttribute( 'data-shop-id' ) );
 			}
 
@@ -200,7 +223,7 @@
 			} );
 
 			el.addEventListener( 'mouseenter', function () {
-				showTooltip( el.getAttribute( 'data-shop-name' ) || '', 8, 8, false );
+				showTooltip( areaCaption( el ), 8, 8, false );
 			} );
 
 			el.addEventListener( 'mousemove', function ( evt ) {
@@ -209,7 +232,7 @@
 				}
 				var box = display.getBoundingClientRect();
 				showTooltip(
-					el.getAttribute( 'data-shop-name' ) || '',
+					areaCaption( el ),
 					evt.clientX - box.left + 12,
 					evt.clientY - box.top + 12,
 					false
@@ -219,7 +242,7 @@
 			el.addEventListener( 'mouseleave', hideTooltip );
 
 			el.addEventListener( 'focus', function () {
-				showTooltip( el.getAttribute( 'data-shop-name' ) || '', 8, 8, false );
+				showTooltip( areaCaption( el ), 8, 8, false );
 			} );
 
 			el.addEventListener( 'blur', hideTooltip );
@@ -300,6 +323,9 @@
 					btn.appendChild( note );
 				}
 				btn.addEventListener( 'click', function () {
+					if ( followLink( shop.link_url || '' ) ) {
+						return;
+					}
 					if ( shop.on_map && openShop( shop.id ) ) {
 						input.value = shop.title;
 						closeResults();

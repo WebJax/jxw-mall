@@ -130,8 +130,9 @@ class CenterShop_FloorPlan {
 		$shops = array();
 		foreach ( $this->get_all_shops() as $shop ) {
 			$shops[] = array(
-				'id'    => (int) $shop->ID,
-				'title' => $shop->post_title,
+				'id'           => (int) $shop->ID,
+				'title'        => $shop->post_title,
+				'availability' => centershop_get_shop_availability( $shop->ID ),
 			);
 		}
 
@@ -174,6 +175,9 @@ class CenterShop_FloorPlan {
 					'areaLabel'           => __( 'Områdenavn', 'centershop_txtdomain' ),
 					'areaShop'            => __( 'Tilknyt butik', 'centershop_txtdomain' ),
 					'areaColor'           => __( 'Farve', 'centershop_txtdomain' ),
+					'areaLink'            => __( 'Henvis til', 'centershop_txtdomain' ),
+					'areaLinkHelp'        => __( 'Valgfrit. Til tomme lokaler og lokaler til leje eller salg. Besøgende sendes til adressen, når de klikker på området.', 'centershop_txtdomain' ),
+					'forRent'             => __( 'Til leje / salg', 'centershop_txtdomain' ),
 					'newArea'             => __( 'Lokale', 'centershop_txtdomain' ),
 					'selectHint'          => __( 'Klik på et område i grundplanen for at redigere det. Træk i hjørnerne for at justere. Dobbeltklik på en kant for at tilføje et hjørne, og på et hjørne for at fjerne det. Klik på et symbol for at redigere det.', 'centershop_txtdomain' ),
 					'drawHint'            => __( 'Klik for at sætte hjørner. Klik på det første punkt (eller tryk Enter) for at afslutte. Backspace fjerner sidste punkt, Esc annullerer.', 'centershop_txtdomain' ),
@@ -573,6 +577,30 @@ class CenterShop_FloorPlan {
 	}
 
 	/**
+	 * Kun http- og https-adresser. Tom streng, hvis værdien ikke kan bruges som henvisning.
+	 *
+	 * @param mixed $url Raw URL.
+	 * @return string
+	 */
+	private function sanitize_link_url( $url ) {
+		if ( ! is_string( $url ) ) {
+			return '';
+		}
+
+		$url = trim( $url );
+		if ( '' === $url ) {
+			return '';
+		}
+
+		$clean = esc_url_raw( $url, array( 'http', 'https' ) );
+		if ( ! is_string( $clean ) || '' === $clean ) {
+			return '';
+		}
+
+		return $this->limit_text( $clean, 500 );
+	}
+
+	/**
 	 * Rens hele områdelisten.
 	 *
 	 * @param mixed $areas Raw areas.
@@ -600,10 +628,11 @@ class CenterShop_FloorPlan {
 			}
 
 			$clean[] = array(
-				'label'   => isset( $area['label'] ) ? sanitize_text_field( $area['label'] ) : '',
-				'shop_id' => $shop_id,
-				'color'   => isset( $area['color'] ) ? $this->sanitize_color( $area['color'] ) : '',
-				'points'  => $points,
+				'label'    => isset( $area['label'] ) ? sanitize_text_field( $area['label'] ) : '',
+				'shop_id'  => $shop_id,
+				'color'    => isset( $area['color'] ) ? $this->sanitize_color( $area['color'] ) : '',
+				'link_url' => $this->sanitize_link_url( isset( $area['link_url'] ) ? $area['link_url'] : '' ),
+				'points'   => $points,
 			);
 		}
 
@@ -1301,10 +1330,17 @@ class CenterShop_FloorPlan {
 			wp_send_json_success( array() );
 		}
 
-		$on_map = array();
+		$on_map     = array();
+		$area_links = array();
 		foreach ( $this->get_areas() as $area ) {
-			if ( ! empty( $area['shop_id'] ) ) {
-				$on_map[ (int) $area['shop_id'] ] = true;
+			if ( empty( $area['shop_id'] ) ) {
+				continue;
+			}
+			$id            = (int) $area['shop_id'];
+			$on_map[ $id ] = true;
+			$link          = isset( $area['link_url'] ) ? $this->sanitize_link_url( $area['link_url'] ) : '';
+			if ( '' !== $link && 'for_rent' === centershop_get_shop_availability( $id ) ) {
+				$area_links[ $id ] = $link;
 			}
 		}
 
@@ -1320,10 +1356,11 @@ class CenterShop_FloorPlan {
 		$results = array();
 		foreach ( $shops as $shop ) {
 			$results[] = array(
-				'id'     => $shop->ID,
-				'title'  => $shop->post_title,
-				'url'    => get_permalink( $shop->ID ),
-				'on_map' => isset( $on_map[ $shop->ID ] ),
+				'id'       => $shop->ID,
+				'title'    => $shop->post_title,
+				'url'      => get_permalink( $shop->ID ),
+				'on_map'   => isset( $on_map[ $shop->ID ] ),
+				'link_url' => isset( $area_links[ $shop->ID ] ) ? $area_links[ $shop->ID ] : '',
 			);
 		}
 
@@ -1533,11 +1570,29 @@ class CenterShop_FloorPlan {
 						$has_shop  = isset( $shop_cards[ $shop_id ] );
 						$shop_name = $has_shop ? $shop_cards[ $shop_id ]['name'] : '';
 						$color     = ! empty( $area['color'] ) ? $this->sanitize_color( $area['color'] ) : '';
-						$classes   = 'floorplan-area-front ' . ( $has_shop ? 'has-shop' : 'no-shop' );
+						$label     = isset( $area['label'] ) ? trim( (string) $area['label'] ) : '';
+						$link_url  = isset( $area['link_url'] ) ? $this->sanitize_link_url( $area['link_url'] ) : '';
+						$vacant    = ! $has_shop || 'for_rent' === centershop_get_shop_availability( $shop_id );
+						$use_link  = $vacant && '' !== $link_url;
+						$classes   = 'floorplan-area-front';
+						if ( $has_shop ) {
+							$classes .= ' has-shop';
+						}
+						if ( $use_link ) {
+							$classes .= ' has-link';
+						} elseif ( ! $has_shop ) {
+							$classes .= ' no-shop';
+						}
 						if ( $has_shop && $selected_shop === $shop_id ) {
 							$classes .= ' selected';
 						}
-						$points = $this->points_to_viewbox( isset( $area['points'] ) ? $area['points'] : '', $size['width'], $size['height'] );
+						$public_name = '' !== $shop_name ? $shop_name : $label;
+						if ( '' === $public_name && $use_link ) {
+							$public_name = __( 'Ledigt lokale', 'centershop_txtdomain' );
+						}
+						$opens_dialog = $has_shop && ! $use_link;
+						$interactive  = $has_shop || $use_link;
+						$points       = $this->points_to_viewbox( isset( $area['points'] ) ? $area['points'] : '', $size['width'], $size['height'] );
 						?>
 						<polygon
 							class="<?php echo esc_attr( $classes ); ?>"
@@ -1545,14 +1600,24 @@ class CenterShop_FloorPlan {
 							<?php if ( $color ) : ?>
 								style="--area-color: <?php echo esc_attr( $color ); ?>;"
 							<?php endif; ?>
-							<?php if ( $has_shop ) : ?>
-								data-shop-id="<?php echo esc_attr( $shop_id ); ?>"
-								data-shop-name="<?php echo esc_attr( $shop_name ); ?>"
+							<?php if ( $interactive ) : ?>
+								<?php if ( $has_shop ) : ?>
+									data-shop-id="<?php echo esc_attr( (string) $shop_id ); ?>"
+									data-shop-name="<?php echo esc_attr( $shop_name ); ?>"
+								<?php endif; ?>
+								<?php if ( '' !== $label ) : ?>
+									data-area-label="<?php echo esc_attr( $label ); ?>"
+								<?php endif; ?>
+								<?php if ( $use_link ) : ?>
+									data-link-url="<?php echo esc_url( $link_url ); ?>"
+								<?php endif; ?>
 								tabindex="0"
-								role="button"
-								aria-haspopup="dialog"
-								aria-controls="<?php echo esc_attr( $popup_id ); ?>"
-								aria-label="<?php echo esc_attr( $shop_name ); ?>"
+								role="<?php echo esc_attr( $use_link ? 'link' : 'button' ); ?>"
+								<?php if ( $opens_dialog ) : ?>
+									aria-haspopup="dialog"
+									aria-controls="<?php echo esc_attr( $popup_id ); ?>"
+								<?php endif; ?>
+								aria-label="<?php echo esc_attr( $public_name ); ?>"
 							<?php else : ?>
 								aria-hidden="true"
 							<?php endif; ?>

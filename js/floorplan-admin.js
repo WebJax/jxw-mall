@@ -35,14 +35,21 @@
 	var uploadBtn = document.getElementById( 'upload-svg-btn' );
 	var importInput = document.getElementById( 'import-areas-file' );
 
-	var areas = ( cfg.areas || [] ).map( function ( a ) {
+	/**
+	 * @param {Object} area
+	 * @return {Object}
+	 */
+	function mapStoredArea( area ) {
 		return {
-			label: a.label || '',
-			shop_id: parseInt( a.shop_id, 10 ) || 0,
-			color: a.color || '',
-			points: parsePoints( a.points )
+			label: area.label || '',
+			shop_id: parseInt( area.shop_id, 10 ) || 0,
+			color: area.color || '',
+			link_url: 'string' === typeof area.link_url ? area.link_url : '',
+			points: parsePoints( area.points )
 		};
-	} );
+	}
+
+	var areas = ( cfg.areas || [] ).map( mapStoredArea );
 	var limits = cfg.markerLimits || {
 		circleMin: 28,
 		circleMax: 120,
@@ -207,6 +214,25 @@
 			}
 		} );
 		return found;
+	}
+
+	/**
+	 * Tomt lokale, eller et lokale der er markeret til leje/salg.
+	 *
+	 * @param {Object} area
+	 * @return {boolean}
+	 */
+	function areaAcceptsLink( area ) {
+		if ( ! area.shop_id ) {
+			return true;
+		}
+		var accepts = false;
+		( cfg.shops || [] ).forEach( function ( s ) {
+			if ( s.id === area.shop_id && 'for_rent' === s.availability ) {
+				accepts = true;
+			}
+		} );
+		return accepts;
 	}
 
 	/**
@@ -937,7 +963,10 @@
 			var strong = document.createElement( 'strong' );
 			strong.textContent = area.label || ( cfg.strings.newArea + ' ' + ( i + 1 ) );
 			title.appendChild( strong );
-			var name = area.shop_id ? shopTitle( area.shop_id ) : null;
+			var name = area.shop_id ? shopTitle( area.shop_id ) : '';
+			if ( ! name && area.link_url ) {
+				name = area.link_url.replace( /^https?:\/\//, '' ).replace( /\/$/, '' );
+			}
 			if ( name ) {
 				var span = document.createElement( 'span' );
 				span.className = 'shop-name';
@@ -1009,7 +1038,9 @@
 		( cfg.shops || [] ).forEach( function ( s ) {
 			var opt = document.createElement( 'option' );
 			opt.value = String( s.id );
-			opt.textContent = s.title;
+			opt.textContent = 'for_rent' === s.availability
+				? s.title + ' (' + cfg.strings.forRent + ')'
+				: s.title;
 			if ( s.id === area.shop_id ) {
 				opt.selected = true;
 			}
@@ -1020,6 +1051,9 @@
 			markDirty();
 			renderList();
 			renderAreas();
+			if ( linkBlock ) {
+				linkBlock.hidden = ! areaAcceptsLink( area );
+			}
 		} );
 
 		var color = document.createElement( 'input' );
@@ -1042,8 +1076,32 @@
 			removeArea( selected );
 		} );
 
+		var link = document.createElement( 'input' );
+		link.type = 'url';
+		link.className = 'widefat';
+		link.placeholder = 'https://';
+		link.value = area.link_url || '';
+		link.spellcheck = false;
+		link.setAttribute( 'inputmode', 'url' );
+		link.addEventListener( 'input', function () {
+			area.link_url = link.value.trim();
+			markDirty();
+			renderList();
+		} );
+
+		var linkHelp = document.createElement( 'p' );
+		linkHelp.className = 'description';
+		linkHelp.textContent = cfg.strings.areaLinkHelp;
+
+		var linkBlock = document.createElement( 'div' );
+		linkBlock.className = 'area-link-field';
+		linkBlock.appendChild( field( cfg.strings.areaLink, link ) );
+		linkBlock.appendChild( linkHelp );
+		linkBlock.hidden = ! areaAcceptsLink( area );
+
 		editorEl.appendChild( field( cfg.strings.areaLabel, label ) );
 		editorEl.appendChild( field( cfg.strings.areaShop, shop ) );
+		editorEl.appendChild( linkBlock );
 		editorEl.appendChild( field( cfg.strings.areaColor, color ) );
 		var actions = document.createElement( 'p' );
 		actions.appendChild( del );
@@ -1120,6 +1178,7 @@
 			label: cfg.strings.newArea + ' ' + ( areas.length + 1 ),
 			shop_id: 0,
 			color: '',
+			link_url: '',
 			points: draft
 		} );
 		draft = null;
@@ -1282,6 +1341,7 @@
 					label: a.label,
 					shop_id: a.shop_id,
 					color: a.color,
+					link_url: a.link_url || '',
 					points: pointsToString( a.points )
 				};
 			} );
@@ -1312,14 +1372,7 @@
 					// Brug serverens rensede version, så skærm og database er ens.
 					var keep = selected;
 					var keepMarker = selectedMarker;
-					areas = ( res.data.areas || [] ).map( function ( a ) {
-						return {
-							label: a.label,
-							shop_id: a.shop_id,
-							color: a.color,
-							points: parsePoints( a.points )
-						};
-					} );
+					areas = ( res.data.areas || [] ).map( mapStoredArea );
 					markers = ( res.data.markers || [] ).map( normalizeMarker );
 					if ( keepMarker >= 0 && keepMarker < markers.length ) {
 						selectMarker( keepMarker );
@@ -1400,6 +1453,7 @@
 								label: String( a.label || '' ),
 								shop_id: parseInt( a.shop_id, 10 ) || 0,
 								color: a.color && /^#[0-9a-f]{6}$/i.test( a.color ) ? a.color : '',
+								link_url: 'string' === typeof a.link_url ? a.link_url : '',
 								points: pts
 							} );
 						}

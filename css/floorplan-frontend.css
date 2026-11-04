@@ -87,7 +87,8 @@
 	pointer-events: none;
 }
 
-.floorplan-area-front.has-shop {
+.floorplan-area-front.has-shop,
+.floorplan-area-front.has-link {
 	fill: var(--area-color);
 	fill-opacity: 0.2;
 	cursor: pointer;
@@ -95,12 +96,15 @@
 }
 
 .floorplan-area-front.has-shop:hover,
-.floorplan-area-front.has-shop:focus {
+.floorplan-area-front.has-shop:focus,
+.floorplan-area-front.has-link:hover,
+.floorplan-area-front.has-link:focus {
 	fill-opacity: 0.45;
 	outline: none;
 }
 
-.floorplan-area-front.has-shop:focus-visible {
+.floorplan-area-front.has-shop:focus-visible,
+.floorplan-area-front.has-link:focus-visible {
 	stroke: #1d2327;
 	stroke-width: 2px;
 }
@@ -345,6 +349,7 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.floorplan-area-front.has-shop,
+	.floorplan-area-front.has-link,
 	.floorplan-marker {
 		transition: none;
 	}
