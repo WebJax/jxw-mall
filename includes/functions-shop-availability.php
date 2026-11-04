@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function centershop_get_shop_availability_options() {
 	return array(
 		'occupied' => 'Aktiv butik',
+		'coming_soon' => 'Kommer snart',
 		'for_rent' => 'Til leje / salg',
 	);
 }
