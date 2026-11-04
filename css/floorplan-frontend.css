@@ -152,8 +152,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--marker-size, 2.75rem);
-	height: var(--marker-size, 2.75rem);
+	width: var(--marker-size, 44px);
+	height: var(--marker-size, 44px);
 	margin: 0;
 	padding: 0;
 	border: 2px solid #fff;
@@ -165,6 +165,7 @@
 	line-height: 1;
 	cursor: pointer;
 	pointer-events: auto;
+	overflow: visible;
 	transform: translate(-50%, -50%);
 	transition: transform 0.15s ease;
 }
@@ -175,13 +176,14 @@
 
 .floorplan-marker.is-number {
 	width: auto;
-	min-width: var(--marker-size, 2.75rem);
+	min-width: var(--marker-size, 44px);
+	height: var(--marker-size, 44px);
 	padding: 0 0.45rem;
 	border-radius: 999px;
 }
 
 .floorplan-marker__num {
-	font-size: var(--marker-icon-size, 1rem);
+	font-size: var(--marker-icon, 20px);
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 	pointer-events: none;
@@ -189,10 +191,8 @@
 
 .floorplan-marker__glyph {
 	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--marker-icon-size, 1.25rem);
-	height: var(--marker-icon-size, 1.25rem);
+	width: var(--marker-icon, 20px);
+	height: var(--marker-icon, 20px);
 	pointer-events: none;
 }
 

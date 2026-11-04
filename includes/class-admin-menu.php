@@ -398,6 +398,8 @@ class CenterShop_Admin_Menu {
                     __('Den e-mailadresse, der modtager systemnotifikationer fra pluginet.', 'centershop_txtdomain') . '</p>' .
                     '<p><strong>' . __('Google Maps API nøgle', 'centershop_txtdomain') . '</strong> &ndash; ' .
                     __('Kræves for at vise centrets kort. Hent en nøgle via Google Cloud Console.', 'centershop_txtdomain') . '</p>' .
+                    '<p><strong>' . __('Permalink-slug', 'centershop_txtdomain') . '</strong> &ndash; ' .
+                    __('Stien foran butikkens navn i webadressen, fx butik, butiksside eller store. Gem ændringen, og brug "Genopfrisk permalinks", hvis de nye adresser ikke virker med det samme.', 'centershop_txtdomain') . '</p>' .
                     '<p><strong>' . __('Facebook App ID / Secret', 'centershop_txtdomain') . '</strong> &ndash; ' .
                     __('Valgfrit. Bruges til at slå Facebook Page ID op fra vanity-URLs som facebook.com/butiksnavn.', 'centershop_txtdomain') . '</p>',
             ));
@@ -444,6 +446,12 @@ class CenterShop_Admin_Menu {
         ?>
         <div class="wrap">
             <h1><?php _e('CenterShop Indstillinger', 'centershop_txtdomain'); ?></h1>
+            <?php
+            if ( isset( $_GET['rewrites-flushed'] ) && '1' === $_GET['rewrites-flushed'] ) {
+                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Permalinks er genopfrisket.', 'centershop_txtdomain' ) . '</p></div>';
+            }
+            settings_errors();
+            ?>
             <form method="post" action="options.php">
                 <?php
                 settings_fields('centershop_settings');
@@ -451,6 +459,7 @@ class CenterShop_Admin_Menu {
                 submit_button(__('Gem indstillinger', 'centershop_txtdomain'));
                 ?>
             </form>
+            <?php CenterShop_Settings::get_instance()->render_flush_rewrites_form(); ?>
         </div>
         <?php
     }

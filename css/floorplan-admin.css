@@ -1,9 +1,5 @@
 /* CenterShop Grundplan – admin */
 
-.centershop-floorplan-admin > .centershop-floorplan-content {
-	margin-top: 0;
-}
-
 .centershop-floorplan-content {
 	display: flex;
 	gap: 20px;
@@ -11,13 +7,19 @@
 	margin-top: 15px;
 }
 
-.floorplan-main {
-	flex: 1 1 auto;
-	min-width: 0;
+.centershop_page_centershop-floorplan h1 {
+    position: sticky;
+    top: 40px;
 }
 
-.floorplan-main > h1 {
-	margin-top: 0;
+.centershop_page_centershop-floorplan #wpfooter {
+    display: none;
+}
+
+.centershop_page_centershop-floorplan .hndle {
+	padding-left: 12px;
+    padding-top: 8px;
+    margin-block: 0;
 }
 
 .floorplan-sidebar {
@@ -25,11 +27,11 @@
 	max-width: 320px;
 }
 
-.floorplan-sidebar .postbox .hndle {
-	margin: 0 0 0 12px;
-	padding: 12px 12px 8px 0;
-	font-size: 14px;
-	line-height: 1.4;
+.floorplan-main {
+	flex: 1 1 auto;
+	min-width: 0;
+	position: sticky;
+	top: 95px;
 }
 
 .floorplan-sidebar .postbox .inside {
@@ -173,6 +175,8 @@
 
 #areas-list,
 #markers-list {
+	max-height: 320px;
+	overflow-y: auto;
 	margin-bottom: 8px;
 }
 
@@ -190,8 +194,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--marker-size, 2.75rem);
-	height: var(--marker-size, 2.75rem);
+	width: var(--marker-size, 44px);
+	height: var(--marker-size, 44px);
 	margin: 0;
 	padding: 0;
 	border: 2px solid #fff;
@@ -204,6 +208,7 @@
 	cursor: grab;
 	pointer-events: auto;
 	touch-action: none;
+	overflow: visible;
 	transform: translate(-50%, -50%);
 	appearance: none;
 }
@@ -214,7 +219,8 @@
 
 .floorplan-marker.is-number {
 	width: auto;
-	min-width: var(--marker-size, 2.75rem);
+	min-width: var(--marker-size, 44px);
+	height: var(--marker-size, 44px);
 	padding: 0 0.45rem;
 	border-radius: 999px;
 }
@@ -230,31 +236,29 @@
 }
 
 .floorplan-marker__num {
-	font-size: var(--marker-icon-size, 1rem);
+	font-size: var(--marker-icon, 20px);
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 	pointer-events: none;
 }
 
-.floorplan-marker__glyph,
-.marker-icon-picker__glyph {
+.floorplan-marker__glyph {
 	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--marker-icon-size, 1.25rem);
-	height: var(--marker-icon-size, 1.25rem);
+	width: var(--marker-icon, 20px);
+	height: var(--marker-icon, 20px);
 	pointer-events: none;
 }
 
 .marker-icon-picker__glyph {
+	display: flex;
 	width: 1.25rem;
 	height: 1.25rem;
+	pointer-events: none;
 }
 
 .floorplan-marker__glyph svg,
 .floorplan-marker__glyph img,
-.marker-icon-picker__glyph svg,
-.marker-icon-picker__glyph img {
+.marker-icon-picker__glyph svg {
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -318,14 +322,7 @@
 	outline-offset: 6px;
 }
 
-.marker-icon-picker .dashicons {
-	width: 18px;
-	height: 18px;
-	font-size: 18px;
-	line-height: 1;
-}
-
-.marker-icon-upload {
+.marker-custom-icon {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -333,21 +330,46 @@
 	margin-top: 8px;
 }
 
-.marker-size-fields {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 16px;
+.marker-custom-icon__preview {
+	width: 40px;
+	height: 40px;
+	object-fit: contain;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background:
+		linear-gradient(45deg, #dcdcde 25%, transparent 25%),
+		linear-gradient(-45deg, #dcdcde 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #dcdcde 75%),
+		linear-gradient(-45deg, transparent 75%, #dcdcde 75%);
+	background-size: 12px 12px;
+	background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+	background-color: #fff;
 }
 
-.marker-size-fields p {
-	flex: 1 1 8rem;
-	margin-top: 0;
+.marker-icon-error:empty {
+	display: none;
+}
+
+.marker-icon-error {
+	color: #b32d2e;
+}
+
+.marker-size-field input[type="range"] {
+	width: 100%;
+	margin: 6px 0 0;
+}
+
+.marker-size-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
 }
 
 #add-area-btn .dashicons,
 #add-marker-btn .dashicons {
 	vertical-align: text-top;
 	margin-right: 2px;
+	line-height: 0.85;
 }
 
 .floorplan-actions {
@@ -370,25 +392,6 @@
 	color: #00a32a;
 }
 
-@media (min-width: 961px) {
-	.floorplan-main {
-		position: sticky;
-		top: 32px;
-		align-self: flex-start;
-		z-index: 1;
-	}
-
-	.floorplan-sidebar {
-		max-height: calc(100vh - 46px);
-		overflow-y: auto;
-		overscroll-behavior: contain;
-	}
-
-	.floorplan-main #floorplan-canvas-svg {
-		max-height: calc(100vh - 220px);
-	}
-}
-
 @media (max-width: 960px) {
 	.centershop-floorplan-content {
 		flex-direction: column;
@@ -398,11 +401,5 @@
 		flex-basis: auto;
 		max-width: none;
 		width: 100%;
-	}
-}
-
-@media (max-width: 782px) {
-	.floorplan-main {
-		top: 46px;
 	}
 }
