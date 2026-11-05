@@ -33,6 +33,9 @@ if ( empty( $shops ) ) {
 			$city     = get_post_meta( $shop->ID, 'butik_payed_city', true );
 			$phone    = get_post_meta( $shop->ID, 'butik_payed_phone', true );
 			$email    = get_post_meta( $shop->ID, 'butik_payed_mail', true );
+			if ( $email && ! centershop_shop_email_is_public( (int) $shop->ID ) ) {
+				$email = '';
+			}
 			$web      = get_post_meta( $shop->ID, 'butik_payed_web', true );
 			$fb       = get_post_meta( $shop->ID, 'butik_payed_fb', true );
 			$insta    = get_post_meta( $shop->ID, 'butik_payed_insta', true );

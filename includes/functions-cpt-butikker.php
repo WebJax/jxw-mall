@@ -58,6 +58,41 @@ add_filter("manage_butiksside_posts_columns", "butik_edit_columns");
 add_filter("manage_edit-butiksside_sortable_columns", "my_sortable_butiksside_column");
 
 /**
+ * Whether the shop email is shown on the public site.
+ *
+ * Missing value means shown, so existing shops stay unchanged.
+ */
+function centershop_shop_email_is_public( int $post_id ): bool {
+	return '0' !== (string) get_post_meta( $post_id, 'butik_payed_mail_show', true );
+}
+
+/**
+ * Keep a hidden shop email out of the public REST response.
+ *
+ * @param WP_REST_Response $response Response object.
+ * @param WP_Post          $post     Shop post.
+ */
+function centershop_hide_private_shop_email_from_rest( $response, $post ) {
+	if ( ! $response instanceof WP_REST_Response || ! $post instanceof WP_Post ) {
+		return $response;
+	}
+
+	if ( current_user_can( 'edit_post', $post->ID ) || centershop_shop_email_is_public( (int) $post->ID ) ) {
+		return $response;
+	}
+
+	$data = $response->get_data();
+
+	if ( isset( $data['meta'] ) && is_array( $data['meta'] ) ) {
+		$data['meta']['butik_payed_mail'] = '';
+		$response->set_data( $data );
+	}
+
+	return $response;
+}
+add_filter( 'rest_prepare_butiksside', 'centershop_hide_private_shop_email_from_rest', 10, 2 );
+
+/**
  * Register metaboxes on the butiksside edit screen.
  */
 function add_butik_metaboxes(){
@@ -111,6 +146,7 @@ function butik_kontakt_meta_options(){
 	$butik_payed_city = get_post_meta($post->ID, 'butik_payed_city', true);
 	$butik_payed_phone = get_post_meta($post->ID, 'butik_payed_phone', true);
 	$butik_payed_mail = get_post_meta($post->ID, 'butik_payed_mail', true);
+	$show_mail       = centershop_shop_email_is_public( (int) $post->ID );
 	$butik_payed_web = get_post_meta($post->ID, 'butik_payed_web', true);
 	$butik_payed_fb = get_post_meta($post->ID, 'butik_payed_fb', true);
 	$butik_payed_fb_id = get_post_meta($post->ID, 'butik_payed_fb_id', true);
@@ -123,7 +159,18 @@ function butik_kontakt_meta_options(){
 		<tr><td><label for="butik_payed_postal">Postnr:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_postal ); ?>" name="butik_payed_postal" id="butik_payed_postal"/></td></tr>
 		<tr><td><label for="butik_payed_city">By:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_city ); ?>" name="butik_payed_city" id="butik_payed_city"/></td></tr>
 		<tr><td><label for="butik_payed_phone">Telefon:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_phone ); ?>" name="butik_payed_phone" id="butik_payed_phone"/></td></tr>
-		<tr><td><label for="butik_payed_mail">Email:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_mail ); ?>" name="butik_payed_mail" id="butik_payed_mail"/></td></tr>
+		<tr>
+			<td>
+				<label for="butik_payed_mail">Email:</label><br/>
+				<input type="text" value="<?php echo esc_attr( $butik_payed_mail ); ?>" name="butik_payed_mail" id="butik_payed_mail"/>
+				<p>
+					<label for="butik_payed_mail_show">
+						<input type="checkbox" name="butik_payed_mail_show" id="butik_payed_mail_show" value="1" <?php checked( $show_mail ); ?> />
+						<?php esc_html_e( 'Vis mailadresse på hjemmesiden', 'centershop_txtdomain' ); ?>
+					</label>
+				</p>
+			</td>
+		</tr>
 		<tr><td><label for="butik_payed_web">Hjemmeside:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_web ); ?>" name="butik_payed_web" id="butik_payed_web"/></td></tr>
 		<tr><td><label for="butik_payed_fb">Facebook:</label><br/><input type="text" value="<?php echo esc_attr( $butik_payed_fb ); ?>" name="butik_payed_fb" id="butik_payed_fb"/></td></tr>
 		<tr>
@@ -197,6 +244,9 @@ function save_butiks_meta($post_id, $post) {
 	if (isset($_POST['butik_payed_city'])) $events_meta['butik_payed_city'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_city'] ) );
 	if (isset($_POST['butik_payed_phone'])) $events_meta['butik_payed_phone'] = sanitize_text_field( wp_unslash( $_POST['butik_payed_phone'] ) );
 	if (isset($_POST['butik_payed_mail'])) $events_meta['butik_payed_mail'] = sanitize_email( wp_unslash( $_POST['butik_payed_mail'] ) );
+	if ( 'revision' !== $post->post_type ) {
+		update_post_meta( $post->ID, 'butik_payed_mail_show', isset( $_POST['butik_payed_mail_show'] ) ? '1' : '0' );
+	}
 	if (isset($_POST['butik_payed_web'])) $events_meta['butik_payed_web'] = esc_url_raw( wp_unslash( $_POST['butik_payed_web'] ) );
 	if (isset($_POST['butik_payed_fb'])) $events_meta['butik_payed_fb'] = esc_url_raw( wp_unslash( $_POST['butik_payed_fb'] ) );
 	if (isset($_POST['butik_payed_insta'])) $events_meta['butik_payed_insta'] = esc_url_raw( wp_unslash( $_POST['butik_payed_insta'] ) );

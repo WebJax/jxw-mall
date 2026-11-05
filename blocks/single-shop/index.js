@@ -146,7 +146,7 @@
             }
             
             // Email
-            if (selectedShop.meta && selectedShop.meta.butik_payed_mail) {
+            if (selectedShop.meta && selectedShop.meta.butik_payed_mail && selectedShop.meta.butik_payed_mail_show !== '0') {
                 infoElements.push(
                     el('p', { className: 'centershop-email', key: 'email' },
                         el('span', { className: 'dashicons dashicons-email' }),

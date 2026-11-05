@@ -221,8 +221,26 @@
 }
 
 /* Status messages */
-#centershop-fb-status-message {
+#centershop-fb-status-message,
+#centershop-copy-emails-status {
     margin-left: 10px;
+}
+
+#centershop-email-list {
+    margin-top: 8px;
+}
+
+.centershop-missing-emails {
+    margin-left: 1.2em;
+    list-style: disc;
+}
+
+.centershop-missing-emails a {
+    margin-left: 8px;
+}
+
+.centershop-missing-emails .description {
+    margin-left: 8px;
 }
 
 /* Shop dashboard */

@@ -423,6 +423,7 @@ function centershop_register_meta_fields() {
         'butik_payed_city',
         'butik_payed_phone',
         'butik_payed_mail',
+        'butik_payed_mail_show',
         'butik_payed_web',
         'butik_payed_fb',
         'butik_payed_fb_id',
@@ -443,49 +444,309 @@ add_action('init', 'centershop_register_meta_fields');
  
 centershop_register_lifecycle_hooks( __FILE__ );
 
-function centershop_export_emails_page() {
-    ?>
-    <div class="wrap">
-        <h1><?php esc_html_e( 'Eksporter butik e-mails', 'centershop_txtdomain' ); ?></h1>
-        <p><?php esc_html_e( 'Klik på knappen nedenfor for at eksportere alle e-mail-adresser fra butikkerne til en tekstfil.', 'centershop_txtdomain' ); ?></p>
-        <form method="post">
-            <?php wp_nonce_field('centershop_export_emails', 'centershop_email_export_nonce'); ?>
-            <input type="submit" name="centershop_export_emails" class="button button-primary" value="<?php echo esc_attr__( 'Eksporter e-mails', 'centershop_txtdomain' ); ?>">
-        </form>
-    </div>
-    <?php
-    
-    // Process export if form is submitted
-    if (isset($_POST['centershop_export_emails']) && check_admin_referer('centershop_export_emails', 'centershop_email_export_nonce')) {
-        centershop_process_email_export();
-    }
+/**
+ * Published shops, sorted by title.
+ *
+ * @return WP_Post[]
+ */
+function centershop_get_export_shops(): array {
+	$shops = get_posts(
+		array(
+			'post_type'   => 'butiksside',
+			'numberposts' => -1,
+			'post_status' => 'publish',
+			'orderby'     => 'title',
+			'order'       => 'ASC',
+		)
+	);
+
+	return is_array( $shops ) ? $shops : array();
 }
 
-function centershop_process_email_export() {
-    // Get all shop posts
-    $shops = get_posts(array(
-        'post_type' => 'butiksside',
-        'numberposts' => -1,
-        'post_status' => 'publish'
-    ));
-    
-    $emails = array();
-    
-    // Extract emails from each shop
-    foreach ($shops as $shop) {
-        $email = get_post_meta($shop->ID, 'butik_payed_mail', true);
-        $shop_name = get_the_title($shop->ID);
-        if ( ! empty( $email ) && is_email( $email ) ) {
-            $emails[] = $shop_name . ': ' . $email;
-        }
-    }
-    
-    if (empty($emails)) {
-        echo '<div class="notice notice-warning"><p>' . esc_html__( 'Ingen gyldige e-mail-adresser fundet.', 'centershop_txtdomain' ) . '</p></div>';
-        return;
-    }
-    
-	foreach ($emails as $email) {
-		echo esc_html( $email ) . '<br>';
+/**
+ * Read a shop meta value as a string.
+ */
+function centershop_export_meta_string( int $post_id, string $key ): string {
+	$value = get_post_meta( $post_id, $key, true );
+
+	return is_string( $value ) ? $value : '';
+}
+
+/**
+ * Column headings for the shop CSV, in output order.
+ *
+ * @return array<string, string>
+ */
+function centershop_get_shop_export_columns(): array {
+	return array(
+		'titel'            => __( 'Titel', 'centershop_txtdomain' ),
+		'butiksnavn'       => __( 'Butiksnavn', 'centershop_txtdomain' ),
+		'adresse'          => __( 'Adresse', 'centershop_txtdomain' ),
+		'postnr'           => __( 'Postnr', 'centershop_txtdomain' ),
+		'by'               => __( 'By', 'centershop_txtdomain' ),
+		'telefon'          => __( 'Telefon', 'centershop_txtdomain' ),
+		'email'            => __( 'E-mail', 'centershop_txtdomain' ),
+		'hjemmeside'       => __( 'Hjemmeside', 'centershop_txtdomain' ),
+		'facebook'         => __( 'Facebook', 'centershop_txtdomain' ),
+		'facebook_page_id' => __( 'Facebook Page ID', 'centershop_txtdomain' ),
+		'instagram'        => __( 'Instagram', 'centershop_txtdomain' ),
+		'kategorier'       => __( 'Kategorier', 'centershop_txtdomain' ),
+		'status'           => __( 'Status', 'centershop_txtdomain' ),
+		'link'             => __( 'Link', 'centershop_txtdomain' ),
+	);
+}
+
+/**
+ * One spreadsheet row per published shop.
+ *
+ * @return array<int, array<string, string>>
+ */
+function centershop_get_shop_export_rows(): array {
+	$availability = function_exists( 'centershop_get_shop_availability_options' )
+		? centershop_get_shop_availability_options()
+		: array();
+	$rows         = array();
+
+	foreach ( centershop_get_export_shops() as $shop ) {
+		$terms = get_the_terms( $shop->ID, 'category' );
+		$names = array();
+
+		if ( is_array( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$names[] = $term->name;
+			}
+		}
+
+		$status_key = centershop_export_meta_string( $shop->ID, 'butik_availability' );
+		$status     = $availability[ $status_key ] ?? ( $availability['occupied'] ?? '' );
+		$permalink  = get_permalink( $shop );
+		$email      = sanitize_email( centershop_export_meta_string( $shop->ID, 'butik_payed_mail' ) );
+
+		$rows[] = array(
+			'titel'            => get_the_title( $shop ),
+			'butiksnavn'       => centershop_export_meta_string( $shop->ID, 'butik_payed_name' ),
+			'adresse'          => centershop_export_meta_string( $shop->ID, 'butik_payed_adress' ),
+			'postnr'           => centershop_export_meta_string( $shop->ID, 'butik_payed_postal' ),
+			'by'               => centershop_export_meta_string( $shop->ID, 'butik_payed_city' ),
+			'telefon'          => centershop_export_meta_string( $shop->ID, 'butik_payed_phone' ),
+			'email'            => $email,
+			'hjemmeside'       => centershop_export_meta_string( $shop->ID, 'butik_payed_web' ),
+			'facebook'         => centershop_export_meta_string( $shop->ID, 'butik_payed_fb' ),
+			'facebook_page_id' => centershop_export_meta_string( $shop->ID, 'butik_payed_fb_id' ),
+			'instagram'        => centershop_export_meta_string( $shop->ID, 'butik_payed_insta' ),
+			'kategorier'       => implode( ', ', $names ),
+			'status'           => $status,
+			'link'             => is_string( $permalink ) ? $permalink : '',
+		);
 	}
+
+	return $rows;
+}
+
+/**
+ * Published shops that have a usable email address.
+ *
+ * @return array<int, array{id: int, title: string, email: string}>
+ */
+function centershop_get_shop_email_choices(): array {
+	$choices = array();
+
+	foreach ( centershop_get_export_shops() as $shop ) {
+		$email = sanitize_email( centershop_export_meta_string( $shop->ID, 'butik_payed_mail' ) );
+
+		if ( $email === '' || ! is_email( $email ) ) {
+			continue;
+		}
+
+		$choices[] = array(
+			'id'    => (int) $shop->ID,
+			'title' => get_the_title( $shop ),
+			'email' => $email,
+		);
+	}
+
+	return $choices;
+}
+
+/**
+ * Unique shop emails, each followed by a semicolon, ready for a mail client.
+ */
+function centershop_get_shop_email_list(): string {
+	$emails = array();
+
+	foreach ( centershop_get_shop_email_choices() as $choice ) {
+		$emails[ strtolower( $choice['email'] ) ] = $choice['email'];
+	}
+
+	if ( $emails === array() ) {
+		return '';
+	}
+
+	return implode( '; ', $emails ) . ';';
+}
+
+/**
+ * Published shops that have no usable email address.
+ *
+ * @return array<int, array{shop: WP_Post, email: string}>
+ */
+function centershop_get_shops_missing_email(): array {
+	$missing = array();
+
+	foreach ( centershop_get_export_shops() as $shop ) {
+		$raw   = centershop_export_meta_string( $shop->ID, 'butik_payed_mail' );
+		$email = sanitize_email( $raw );
+
+		if ( $email !== '' && is_email( $email ) ) {
+			continue;
+		}
+
+		$missing[] = array(
+			'shop'  => $shop,
+			'email' => $raw,
+		);
+	}
+
+	return $missing;
+}
+
+/**
+ * Stop spreadsheet apps from treating a cell as a formula.
+ */
+function centershop_csv_cell( string $value ): string {
+	if ( $value !== '' && in_array( $value[0], array( '=', '+', '-', '@' ), true ) ) {
+		return "'" . $value;
+	}
+
+	return $value;
+}
+
+/**
+ * Download every published shop as a semicolon-separated CSV.
+ */
+function centershop_download_shops_csv(): void {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Du har ikke adgang til at eksportere butikker.', 'centershop_txtdomain' ) );
+	}
+
+	check_admin_referer( 'centershop_export_shops_csv', 'centershop_export_nonce' );
+
+	$filename = 'butikker-' . wp_date( 'Y-m-d' ) . '.csv';
+
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=utf-8' );
+	header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+
+	$output = fopen( 'php://output', 'w' );
+
+	if ( $output === false ) {
+		wp_die( esc_html__( 'Kunne ikke oprette CSV-filen.', 'centershop_txtdomain' ) );
+	}
+
+	fwrite( $output, "\xEF\xBB\xBF" );
+
+	$columns = centershop_get_shop_export_columns();
+	fputcsv( $output, array_values( $columns ), ';', '"', '\\' );
+
+	foreach ( centershop_get_shop_export_rows() as $row ) {
+		$line = array();
+
+		foreach ( array_keys( $columns ) as $key ) {
+			$line[] = centershop_csv_cell( $row[ $key ] ?? '' );
+		}
+
+		fputcsv( $output, $line, ';', '"', '\\' );
+	}
+
+	fclose( $output );
+	exit;
+}
+add_action( 'admin_post_centershop_export_shops_csv', 'centershop_download_shops_csv' );
+
+/**
+ * Admin page: CSV download and a copy-ready mail list.
+ */
+function centershop_export_emails_page(): void {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	$email_list    = centershop_get_shop_email_list();
+	$email_count   = $email_list === '' ? 0 : count( explode( '; ', rtrim( $email_list, ';' ) ) );
+	$shop_count    = count( centershop_get_export_shops() );
+	$missing_email = centershop_get_shops_missing_email();
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'Eksporter butikker', 'centershop_txtdomain' ); ?></h1>
+		<p><?php esc_html_e( 'Hent alle butiksoplysninger som CSV, eller kopiér mailadresserne herunder direkte ind i et mailprogram.', 'centershop_txtdomain' ); ?></p>
+
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<?php wp_nonce_field( 'centershop_export_shops_csv', 'centershop_export_nonce' ); ?>
+			<input type="hidden" name="action" value="centershop_export_shops_csv">
+			<button type="submit" class="button button-primary"><?php esc_html_e( 'Eksporter til CSV', 'centershop_txtdomain' ); ?></button>
+		</form>
+
+		<h2><?php esc_html_e( 'Mailadresser', 'centershop_txtdomain' ); ?></h2>
+		<?php if ( $email_list === '' ) : ?>
+			<div class="notice notice-warning">
+				<p><?php esc_html_e( 'Ingen gyldige e-mail-adresser fundet.', 'centershop_txtdomain' ); ?></p>
+			</div>
+		<?php else : ?>
+			<p><?php esc_html_e( 'Hver adresse står med semikolon efter, så listen kan sættes ind i modtagerfeltet.', 'centershop_txtdomain' ); ?></p>
+			<textarea id="centershop-email-list" class="large-text code" rows="8" readonly><?php echo esc_textarea( $email_list ); ?></textarea>
+			<p>
+				<button type="button" class="button" id="centershop-copy-emails"><?php esc_html_e( 'Kopiér mailadresser', 'centershop_txtdomain' ); ?></button>
+				<span id="centershop-copy-emails-status" aria-live="polite"></span>
+			</p>
+			<p class="description">
+				<?php
+				$email_label = sprintf(
+					/* translators: %d: number of email addresses */
+					_n( '%d mailadresse', '%d mailadresser', $email_count, 'centershop_txtdomain' ),
+					$email_count
+				);
+				$shop_label = sprintf(
+					/* translators: %d: number of published shops */
+					_n( '%d publiceret butik', '%d publicerede butikker', $shop_count, 'centershop_txtdomain' ),
+					$shop_count
+				);
+				echo esc_html( $email_label . ' fra ' . $shop_label . '.' );
+				?>
+			</p>
+		<?php endif; ?>
+
+		<h2><?php esc_html_e( 'Butikker uden mailadresse', 'centershop_txtdomain' ); ?></h2>
+		<?php if ( $missing_email === array() ) : ?>
+			<p><?php esc_html_e( 'Alle publicerede butikker har en mailadresse.', 'centershop_txtdomain' ); ?></p>
+		<?php else : ?>
+			<ul class="centershop-missing-emails">
+				<?php foreach ( $missing_email as $item ) : ?>
+					<?php
+					$shop     = $item['shop'];
+					$edit_url = get_edit_post_link( $shop->ID, 'raw' );
+					?>
+					<li>
+						<?php echo esc_html( get_the_title( $shop ) ); ?>
+						<?php if ( is_string( $edit_url ) && $edit_url !== '' ) : ?>
+							<a href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Rediger', 'centershop_txtdomain' ); ?></a>
+						<?php endif; ?>
+						<?php if ( $item['email'] !== '' ) : ?>
+							<span class="description">
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: %s: stored email value that is not a valid address */
+										__( 'Ugyldig adresse: %s', 'centershop_txtdomain' ),
+										$item['email']
+									)
+								);
+								?>
+							</span>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
+	</div>
+	<?php
 }

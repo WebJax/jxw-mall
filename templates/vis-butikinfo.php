@@ -20,7 +20,7 @@ global $post;
   <div class="butik-socialmedia">
   <?php 
   $logo = false; 
-  if ($post->butik_payed_mail != '') { 
+  if ( $post->butik_payed_mail != '' && centershop_shop_email_is_public( (int) $post->ID ) ) { 
     $logo = true; ?>
     <a class="cpt-mailadress" href="mailto:<?php echo esc_attr( sanitize_email( $post->butik_payed_mail ) ); ?>"><i class="mail-logo"></i></a> <?php }
   if ($post->butik_payed_web != '') { 
