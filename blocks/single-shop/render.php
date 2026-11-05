@@ -25,6 +25,9 @@ $postal = get_post_meta($shop_id, 'butik_payed_postal', true);
 $city = get_post_meta($shop_id, 'butik_payed_city', true);
 $phone = get_post_meta($shop_id, 'butik_payed_phone', true);
 $email = get_post_meta($shop_id, 'butik_payed_mail', true);
+if ( $email && ! centershop_shop_email_is_public( (int) $shop_id ) ) {
+    $email = '';
+}
 $web = get_post_meta($shop_id, 'butik_payed_web', true);
 $fb = get_post_meta($shop_id, 'butik_payed_fb', true);
 $insta = get_post_meta($shop_id, 'butik_payed_insta', true);

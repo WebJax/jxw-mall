@@ -34,6 +34,35 @@
             });
         });
         
+        $(document).on('click', '#centershop-copy-emails', function() {
+            var field = document.getElementById('centershop-email-list');
+            var status = document.getElementById('centershop-copy-emails-status');
+            var text = field ? field.value : '';
+
+            if (!field || text === '') {
+                return;
+            }
+
+            var showCopied = function() {
+                if (status) {
+                    status.textContent = centershopAdmin.strings.copied;
+                }
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(showCopied).catch(function() {
+                    field.focus();
+                    field.select();
+                });
+                return;
+            }
+
+            field.focus();
+            field.select();
+            document.execCommand('copy');
+            showCopied();
+        });
+
         // Send credentials
         $(document).on('click', '.centershop-send-credentials', function() {
             var userId = $(this).data('user-id');

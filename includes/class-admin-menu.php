@@ -105,8 +105,8 @@ class CenterShop_Admin_Menu {
         // Eksporter E-mails
         add_submenu_page(
             self::MENU_SLUG,
-            __('Eksporter e-mails', 'centershop_txtdomain'),
-            __('Eksporter e-mails', 'centershop_txtdomain'),
+            __('Eksporter butikker', 'centershop_txtdomain'),
+            __('Eksporter butikker', 'centershop_txtdomain'),
             'manage_options',
             'centershop-export-emails',
             array($this, 'render_export_emails_redirect')
@@ -161,6 +161,7 @@ class CenterShop_Admin_Menu {
                 'saving' => __('Gemmer...', 'centershop_txtdomain'),
                 'saved' => __('Gemt!', 'centershop_txtdomain'),
                 'error' => __('Der opstod en fejl', 'centershop_txtdomain'),
+                'copied' => __('Kopieret.', 'centershop_txtdomain'),
             )
         ));
     }

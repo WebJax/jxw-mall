@@ -1,19 +1,26 @@
+<?php
+/**
+ * Template for displaying the information of a shop.
+ *
+ * @package CenterShop
+ * @subpackage Templates
+ * @since 1.8.1
+ */
+
+global $post;
+
+?>
 <div class="butikinfo">
   <a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>">
     <h4 class="butikerhvervnavn butik-<?php echo esc_attr( $post->ID ); ?>"><?php echo esc_html( $post->butik_payed_name ); ?></h4>
   </a>
-  <?php
-  if ( function_exists( 'centershop_get_shop_availability_badge_html' ) ) {
-	  echo centershop_get_shop_availability_badge_html( $post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in helper
-  }
-  ?>
   <?php echo esc_html( $post->butik_payed_adress ); ?><br/>
   <?php echo esc_html( trim( $post->butik_payed_postal . " " . $post->butik_payed_city ) ); ?><br/>
   <?php echo esc_html( "Telefon: " . $post->butik_payed_phone ); ?><br/>
   <div class="butik-socialmedia">
   <?php 
   $logo = false; 
-  if ($post->butik_payed_mail != '') { 
+  if ( $post->butik_payed_mail != '' && centershop_shop_email_is_public( (int) $post->ID ) ) { 
     $logo = true; ?>
     <a class="cpt-mailadress" href="mailto:<?php echo esc_attr( sanitize_email( $post->butik_payed_mail ) ); ?>"><i class="mail-logo"></i></a> <?php }
   if ($post->butik_payed_web != '') { 
