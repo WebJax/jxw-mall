@@ -8,6 +8,7 @@
     var Placeholder = components.Placeholder;
     var useSelect = data.useSelect;
     var RawHTML = element.RawHTML;
+    var Fragment = element.Fragment;
 
     blocks.registerBlockType('centershop/single-shop', {
         edit: function(props) {
@@ -36,6 +37,19 @@
                     _embed: true
                 });
             }, [shopId]);
+
+            var logoId = 0;
+            if (selectedShop && selectedShop.meta && selectedShop.meta['allround-cpt_logo_id']) {
+                logoId = parseInt(selectedShop.meta['allround-cpt_logo_id'], 10) || 0;
+            }
+
+            var logoUrl = useSelect(function(select) {
+                if (!logoId) {
+                    return '';
+                }
+                var media = select('core').getEntityRecord('postType', 'attachment', logoId);
+                return media && media.source_url ? media.source_url : '';
+            }, [logoId]);
 
             if (!shops) {
                 return el('div', blockProps,
@@ -69,7 +83,7 @@
 
             // If no shop selected, show placeholder
             if (!shopId) {
-                return el('div', {},
+                return el(Fragment, {},
                     inspectorControls,
                     el('div', blockProps,
                         el(Placeholder, {
@@ -83,7 +97,7 @@
 
             // If shop is loading
             if (!selectedShop) {
-                return el('div', {},
+                return el(Fragment, {},
                     inspectorControls,
                     el('div', blockProps,
                         el(Spinner)
@@ -96,8 +110,6 @@
                 ? selectedShop._embedded['wp:featuredmedia'][0].source_url 
                 : null;
             
-            var logoId = selectedShop.meta && selectedShop.meta['allround-cpt_logo_id'];
-            
             var elements = [];
             
             // Featured image
@@ -109,13 +121,12 @@
                 );
             }
             
-            // Logo
-            if (logoId) {
+            if (logoUrl) {
                 elements.push(
                     el('div', { className: 'centershop-logo', key: 'logo' },
-                        el('img', { 
-                            src: wp.media.attachment(logoId) ? wp.media.attachment(logoId).get('url') : '', 
-                            alt: 'Logo' 
+                        el('img', {
+                            src: logoUrl,
+                            alt: 'Logo'
                         })
                     )
                 );
@@ -213,7 +224,7 @@
                 el('div', { className: 'centershop-info', key: 'info' }, infoElements)
             );
 
-            return el('div', {},
+            return el(Fragment, {},
                 inspectorControls,
                 el('div', blockProps,
                     el('div', { className: 'centershop-item' }, elements)

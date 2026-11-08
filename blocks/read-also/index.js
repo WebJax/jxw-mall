@@ -1,7 +1,8 @@
 (function (blocks, element, blockEditor, components, data) {
 	var el = element.createElement;
 	var useBlockProps = blockEditor.useBlockProps;
-	var InspectorControls = blockEditor.InpectorControls;
+	var InspectorControls = blockEditor.InspectorControls;
+	var Fragment = element.Fragment;
 	var PanelBody = components.PanelBody;
 	var RangeControl = components.RangeControl;
 	var TextControl = components.TextControl;
@@ -331,7 +332,7 @@
 				);
 			}
 
-			return el('div', {}, inspectorControls, el('div', blockProps, inner));
+			return el(Fragment, {}, inspectorControls, el('div', blockProps, inner));
 		},
 
 		save: function () {

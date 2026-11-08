@@ -1,6 +1,7 @@
 (function(blocks, element, blockEditor, components, data) {
     var el = element.createElement;
     var registerBlockType = blocks.registerBlockType;
+    var useBlockProps = blockEditor.useBlockProps;
     var InspectorControls = blockEditor.InspectorControls;
     var PanelBody = components.PanelBody;
     var RangeControl = components.RangeControl;
@@ -10,6 +11,9 @@
         edit: function(props) {
             var attributes = props.attributes;
             var setAttributes = props.setAttributes;
+            var blockProps = useBlockProps({
+                className: 'centershop-logo-ticker-editor'
+            });
 
             // Fetch all shops
             var shops = useSelect(function(select) {
@@ -21,7 +25,7 @@
                 });
             }, []);
 
-            return el('div', { className: 'centershop-logo-ticker-editor' },
+            return el('div', blockProps,
                 el(InspectorControls, {},
                     el(PanelBody, { title: 'Ticker Indstillinger' },
                         el(RangeControl, {
