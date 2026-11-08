@@ -8,6 +8,7 @@
     var Spinner = components.Spinner;
     var useSelect = data.useSelect;
     var RawHTML = element.RawHTML;
+    var Fragment = element.Fragment;
 
     function normalizeAvailability(value) {
         return value === 'for_rent' ? 'for_rent' : 'occupied';
@@ -34,12 +35,19 @@
         return true;
     }
 
-    function renderShopPreview(shop) {
+    function logoIdFromShop(shop) {
+        var raw = shop.meta && shop.meta['allround-cpt_logo_id'];
+        var id = parseInt(raw, 10);
+        return id > 0 ? id : 0;
+    }
+
+    function renderShopPreview(shop, logoUrls) {
         var featuredImage = shop._embedded && shop._embedded['wp:featuredmedia']
             ? shop._embedded['wp:featuredmedia'][0].source_url
             : null;
 
-        var logoId = shop.meta && shop.meta['allround-cpt_logo_id'];
+        var logoId = logoIdFromShop(shop);
+        var logoUrl = logoId && logoUrls[logoId] ? logoUrls[logoId] : '';
         var availability = normalizeAvailability(shop.meta && shop.meta.butik_availability);
         var elements = [];
 
@@ -51,11 +59,11 @@
             );
         }
 
-        if (logoId) {
+        if (logoUrl) {
             elements.push(
                 el('div', { className: 'centershop-logo', key: 'logo' },
                     el('img', {
-                        src: wp.media.attachment(logoId) ? wp.media.attachment(logoId).get('url') : '',
+                        src: logoUrl,
                         alt: 'Logo'
                     })
                 )
@@ -189,6 +197,24 @@
                 });
             }, []);
 
+            var logoUrls = useSelect(function(select) {
+                var urls = {};
+                if (!shops) {
+                    return urls;
+                }
+                shops.forEach(function(shop) {
+                    var logoId = logoIdFromShop(shop);
+                    if (!logoId || urls[logoId]) {
+                        return;
+                    }
+                    var media = select('core').getEntityRecord('postType', 'attachment', logoId);
+                    if (media && media.source_url) {
+                        urls[logoId] = media.source_url;
+                    }
+                });
+                return urls;
+            }, [shops]);
+
             var inspectorControls = el(InspectorControls, {},
                 el(PanelBody, { title: 'Filtre', initialOpen: true },
                     el(SelectControl, {
@@ -237,7 +263,7 @@
             );
 
             if (!shops) {
-                return el('div', {},
+                return el(Fragment, {},
                     inspectorControls,
                     el('div', blockProps,
                         el(Spinner)
@@ -250,7 +276,7 @@
             });
 
             if (visibleShops.length === 0) {
-                return el('div', {},
+                return el(Fragment, {},
                     inspectorControls,
                     el('div', blockProps,
                         el('p', {}, shops.length === 0
@@ -260,11 +286,13 @@
                 );
             }
 
-            return el('div', {},
+            return el(Fragment, {},
                 inspectorControls,
                 el('div', blockProps,
                     el('div', { className: 'centershop-grid' },
-                        visibleShops.map(renderShopPreview)
+                        visibleShops.map(function(shop) {
+                            return renderShopPreview(shop, logoUrls);
+                        })
                     )
                 )
             );

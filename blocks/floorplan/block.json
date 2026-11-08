@@ -1,6 +1,6 @@
 {
     "$schema": "https://schemas.wp.org/trunk/block.json",
-    "apiVersion": 2,
+    "apiVersion": 3,
     "name": "centershop/floorplan",
     "title": "Center Grundplan",
     "category": "widgets",
@@ -11,7 +11,7 @@
         "align": ["wide", "full"]
     },
     "attributes": {
-        "shopId": {
+        "focus": {
             "type": "string",
             "default": ""
         },
@@ -20,11 +20,16 @@
             "default": true
         },
         "height": {
-            "type": "string",
-            "default": "600px"
+            "type": "number",
+            "default": 560
+        },
+        "focusZoom": {
+            "type": "number",
+            "default": 150
         }
     },
     "textdomain": "centershop_txtdomain",
-    "editorScript": "file:./index.js",
-    "style": "file:./style.css"
+    "editorScript": "centershop-floorplan-editor",
+    "script": "centershop-floorplan",
+    "style": "centershop-floorplan"
 }

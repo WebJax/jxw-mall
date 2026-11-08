@@ -1,5 +1,5 @@
 const { registerBlockType } = wp.blocks;
-const { InspectorControls } = wp.blockEditor;
+const { InspectorControls, useBlockProps } = wp.blockEditor;
 const { PanelBody, CheckboxControl } = wp.components;
 const { createElement: el } = wp.element;
 
@@ -7,10 +7,13 @@ registerBlockType('centershop/opening-hours', {
     edit: function(props) {
         const { attributes, setAttributes } = props;
         const { showWeek, showCollected, showToday, showExtraText } = attributes;
+        const blockProps = useBlockProps({
+            className: 'centershop-opening-hours-editor'
+        });
 
         return el(
             'div',
-            { className: 'centershop-opening-hours-editor' },
+            blockProps,
             [
                 el(
                     InspectorControls,

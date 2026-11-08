@@ -72,7 +72,10 @@ class CenterShop_FloorPlan {
 		add_action( 'wp_ajax_delete_floorplan_area', array( $this, 'ajax_delete_area' ) );
 
 		// Frontend assets.
+		add_action( 'init', array( $this, 'register_frontend_assets' ), 5 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_assets' ) );
+		add_action( 'enqueue_block_assets', array( $this, 'enqueue_block_canvas_assets' ) );
 
 		// Shortcode.
 		add_shortcode( 'centershop_floorplan', array( $this, 'floorplan_shortcode' ) );
@@ -212,9 +215,106 @@ class CenterShop_FloorPlan {
 	}
 
 	/**
-	 * Enqueue frontend assets
+	 * Editor choices for shops and services already placed on the map.
+	 *
+	 * @return array<int, array{value:string,label:string}>
+	 */
+	public function get_block_focus_choices() {
+		$choices = array(
+			array(
+				'value' => '',
+				'label' => __( 'Hele kortet', 'centershop_txtdomain' ),
+			),
+		);
+		$shops   = array();
+		$seen    = array();
+
+		foreach ( $this->get_areas() as $area ) {
+			$shop_id = ! empty( $area['shop_id'] ) ? absint( $area['shop_id'] ) : 0;
+			if ( ! $shop_id || isset( $seen[ $shop_id ] ) || 'publish' !== get_post_status( $shop_id ) ) {
+				continue;
+			}
+			$seen[ $shop_id ] = true;
+			$name             = get_post_meta( $shop_id, 'butik_payed_name', true );
+			if ( ! is_string( $name ) || '' === $name ) {
+				$name = get_the_title( $shop_id );
+			}
+			$shops[] = array(
+				'value' => 'shop:' . $shop_id,
+				'label' => sprintf(
+					/* translators: %s: shop name */
+					__( 'Butik: %s', 'centershop_txtdomain' ),
+					$name
+				),
+			);
+		}
+
+		usort(
+			$shops,
+			static function ( $a, $b ) {
+				return strcasecmp( $a['label'], $b['label'] );
+			}
+		);
+
+		foreach ( $shops as $shop ) {
+			$choices[] = $shop;
+		}
+
+		foreach ( $this->get_markers() as $marker ) {
+			$x = isset( $marker['x'] ) ? (string) $marker['x'] : '';
+			$y = isset( $marker['y'] ) ? (string) $marker['y'] : '';
+			if ( '' === $x || '' === $y ) {
+				continue;
+			}
+			$kind = ( isset( $marker['kind'] ) && 'entrance' === $marker['kind'] )
+				? __( 'Indgang', 'centershop_txtdomain' )
+				: __( 'Service', 'centershop_txtdomain' );
+			$choices[] = array(
+				'value' => 'marker:' . $x . ',' . $y,
+				'label' => $kind . ': ' . $this->marker_public_label( $marker ),
+			);
+		}
+
+		return $choices;
+	}
+
+	/**
+	 * Pass the map targets to the block editor.
+	 */
+	public function enqueue_editor_assets() {
+		$this->register_frontend_assets();
+		wp_localize_script(
+			'centershop-floorplan-editor',
+			'centershopFloorplanBlock',
+			array(
+				'targets' => $this->get_block_focus_choices(),
+			)
+		);
+	}
+
+	/**
+	 * Keep the frontend registration hook. The block and the shortcode enqueue the assets.
 	 */
 	public function enqueue_frontend_assets() {
+		$this->register_frontend_assets();
+	}
+
+	/**
+	 * Load the map inside the iframed block editor so the preview can pan and zoom.
+	 */
+	public function enqueue_block_canvas_assets() {
+		if ( ! is_admin() ) {
+			return;
+		}
+		$this->register_frontend_assets();
+		wp_enqueue_style( 'centershop-floorplan' );
+		wp_enqueue_script( 'centershop-floorplan' );
+	}
+
+	/**
+	 * Register frontend style and script so the block and the shortcode can enqueue them.
+	 */
+	public function register_frontend_assets() {
 		if ( ! wp_style_is( 'centershop-butik-styles', 'registered' ) ) {
 			wp_register_style(
 				'centershop-butik-styles',
@@ -1321,7 +1421,24 @@ class CenterShop_FloorPlan {
 	}
 
 	/**
-	 * AJAX: Search shops (frontend)
+	 * Case-insensitive substring check.
+	 *
+	 * @param string $haystack Text to search.
+	 * @param string $needle   Search term.
+	 * @return bool
+	 */
+	private function text_contains( $haystack, $needle ) {
+		if ( '' === $needle ) {
+			return false;
+		}
+		if ( function_exists( 'mb_stripos' ) ) {
+			return false !== mb_stripos( $haystack, $needle );
+		}
+		return false !== stripos( $haystack, $needle );
+	}
+
+	/**
+	 * AJAX: Search shops and services on the map.
 	 */
 	public function ajax_search_shops() {
 		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
@@ -1347,7 +1464,7 @@ class CenterShop_FloorPlan {
 		$shops = get_posts(
 			array(
 				'post_type'      => 'butiksside',
-				'posts_per_page' => 10,
+				'posts_per_page' => 8,
 				's'              => $search,
 				'post_status'    => 'publish',
 			)
@@ -1356,6 +1473,7 @@ class CenterShop_FloorPlan {
 		$results = array();
 		foreach ( $shops as $shop ) {
 			$results[] = array(
+				'type'     => 'shop',
 				'id'       => $shop->ID,
 				'title'    => $shop->post_title,
 				'url'      => get_permalink( $shop->ID ),
@@ -1364,7 +1482,26 @@ class CenterShop_FloorPlan {
 			);
 		}
 
-		wp_send_json_success( $results );
+		foreach ( $this->get_markers() as $marker ) {
+			$label = $this->marker_public_label( $marker );
+			$description = isset( $marker['description'] ) ? (string) $marker['description'] : '';
+			if ( ! $this->text_contains( $label, $search ) && ! $this->text_contains( $description, $search ) ) {
+				continue;
+			}
+			$x = isset( $marker['x'] ) ? (string) $marker['x'] : '';
+			$y = isset( $marker['y'] ) ? (string) $marker['y'] : '';
+			if ( '' === $x || '' === $y ) {
+				continue;
+			}
+			$results[] = array(
+				'type'   => 'marker',
+				'key'    => $x . ',' . $y,
+				'title'  => $label,
+				'on_map' => true,
+			);
+		}
+
+		wp_send_json_success( array_slice( $results, 0, 10 ) );
 	}
 
 	/**
@@ -1469,7 +1606,30 @@ class CenterShop_FloorPlan {
 	}
 
 	/**
+	 * Keep a marker coordinate that points at a service or entrance.
+	 *
+	 * @param mixed $value Raw "x,y" value between 0 and 1.
+	 * @return string
+	 */
+	private function sanitize_focus_marker( $value ) {
+		$value = trim( (string) $value );
+		if ( ! preg_match( '/^\d+(?:\.\d+)?,\d+(?:\.\d+)?$/', $value ) ) {
+			return '';
+		}
+		$parts = explode( ',', $value );
+		$x     = (float) $parts[0];
+		$y     = (float) $parts[1];
+		if ( $x < 0 || $x > 1 || $y < 0 || $y > 1 ) {
+			return '';
+		}
+		return $parts[0] . ',' . $parts[1];
+	}
+
+	/**
 	 * Floorplan shortcode
+	 *
+	 * Used by the `[centershop_floorplan]` shortcode and by the Grundplan block.
+	 * The dashboard also renders it with `do_shortcode()`.
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string
@@ -1478,8 +1638,10 @@ class CenterShop_FloorPlan {
 		$atts = shortcode_atts(
 			array(
 				'shop_id'     => '',
+				'marker'      => '',
 				'show_search' => 'yes',
 				'height'      => '600px',
+				'focus_zoom'  => '150',
 			),
 			$atts,
 			'centershop_floorplan'
@@ -1498,7 +1660,14 @@ class CenterShop_FloorPlan {
 		}
 
 		$selected_shop = absint( $atts['shop_id'] );
+		$focus_marker  = $this->sanitize_focus_marker( $atts['marker'] );
 		$height        = preg_match( '/^\d+(\.\d+)?(px|vh|rem|em|%)$/', $atts['height'] ) ? $atts['height'] : '600px';
+		$focus_zoom    = (int) $atts['focus_zoom'];
+		if ( $focus_zoom < 100 ) {
+			$focus_zoom = 100;
+		} elseif ( $focus_zoom > 250 ) {
+			$focus_zoom = 250;
+		}
 		$popup_id      = wp_unique_id( 'floorplan-popup-' );
 		$popup_title   = wp_unique_id( 'floorplan-popup-title-' );
 
@@ -1537,7 +1706,7 @@ class CenterShop_FloorPlan {
 
 		ob_start();
 		?>
-		<div class="centershop-floorplan-wrapper" data-selected-shop="<?php echo esc_attr( $selected_shop ? $selected_shop : '' ); ?>">
+		<div class="centershop-floorplan-wrapper" data-focus-zoom="<?php echo esc_attr( (string) $focus_zoom ); ?>"<?php echo $selected_shop ? ' data-selected-shop="' . esc_attr( (string) $selected_shop ) . '"' : ''; ?><?php echo '' !== $focus_marker ? ' data-focus-marker="' . esc_attr( $focus_marker ) . '"' : ''; ?>>
 			<?php if ( 'yes' === $atts['show_search'] ) : ?>
 				<div class="floorplan-search">
 					<?php $search_id = wp_unique_id( 'floorplan-search-' ); ?>
@@ -1553,11 +1722,11 @@ class CenterShop_FloorPlan {
 				</div>
 			<?php endif; ?>
 
-			<div class="floorplan-display">
+			<div class="floorplan-display" style="<?php echo esc_attr( '--floorplan-height:' . $height . ';' ); ?>" tabindex="0" aria-label="<?php esc_attr_e( 'Grundplan. Træk for at flytte kortet. Brug knapperne til at zoome.', 'centershop_txtdomain' ); ?>">
+				<div class="floorplan-stage">
 				<svg class="floorplan-svg"
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 <?php echo esc_attr( $size['width'] . ' ' . $size['height'] ); ?>"
-					style="max-height: <?php echo esc_attr( $height ); ?>;"
 					role="group"
 					aria-label="<?php esc_attr_e( 'Grundplan', 'centershop_txtdomain' ); ?>">
 					<image href="<?php echo esc_url( $svg_url ); ?>"
@@ -1635,17 +1804,22 @@ class CenterShop_FloorPlan {
 							$kind         = isset( $marker['kind'] ) ? (string) $marker['kind'] : 'facility';
 							$custom       = ! empty( $marker['icon_url'] );
 							$classes      = 'floorplan-marker';
+							$marker_key   = ( isset( $marker['x'] ) ? (string) $marker['x'] : '' ) . ',' . ( isset( $marker['y'] ) ? (string) $marker['y'] : '' );
 							if ( 'entrance' === $kind ) {
 								$classes .= ' is-entrance';
 							}
 							if ( 'number' === $icon && ! $custom ) {
 								$classes .= ' is-number';
 							}
+							if ( '' !== $focus_marker && $focus_marker === $marker_key ) {
+								$classes .= ' is-focused';
+							}
 							?>
 							<button type="button"
 								class="<?php echo esc_attr( $classes ); ?>"
 								style="<?php echo esc_attr( $this->marker_style( $marker ) ); ?>"
 								data-marker-index="<?php echo esc_attr( (string) $index ); ?>"
+								data-marker-key="<?php echo esc_attr( $marker_key ); ?>"
 								data-label="<?php echo esc_attr( $public_label ); ?>"
 								aria-label="<?php echo esc_attr( $public_label ); ?>"
 								aria-haspopup="dialog"
@@ -1657,7 +1831,14 @@ class CenterShop_FloorPlan {
 						?>
 					</div>
 				<?php endif; ?>
+				</div>
 				<div class="floorplan-tooltip" hidden></div>
+				<div class="floorplan-zoom" role="group" aria-label="<?php esc_attr_e( 'Zoom', 'centershop_txtdomain' ); ?>">
+					<span class="floorplan-zoom__value" aria-live="polite">100%</span>
+					<button type="button" data-zoom="in" aria-label="<?php esc_attr_e( 'Zoom ind', 'centershop_txtdomain' ); ?>">+</button>
+					<button type="button" data-zoom="out" aria-label="<?php esc_attr_e( 'Zoom ud', 'centershop_txtdomain' ); ?>">−</button>
+					<button type="button" data-zoom="reset" aria-label="<?php esc_attr_e( 'Nulstil visning', 'centershop_txtdomain' ); ?>">↺</button>
+				</div>
 			</div>
 
 			<dialog class="floorplan-popup" id="<?php echo esc_attr( $popup_id ); ?>" aria-labelledby="<?php echo esc_attr( $popup_title ); ?>">

@@ -67,13 +67,100 @@
 /* Kort */
 .floorplan-display {
 	position: relative;
+	height: min(var(--floorplan-height, 560px), 78vh);
+	min-height: 220px;
+	overflow: auto;
+	background: #f4f5f5;
 	line-height: 0;
+	touch-action: pan-x pan-y;
+}
+
+.floorplan-display:focus-visible {
+	outline: 2px solid #1d2327;
+	outline-offset: 2px;
+}
+
+.floorplan-display.is-ready {
+	overflow: hidden;
+	touch-action: none;
+	cursor: grab;
+}
+
+.floorplan-display.is-panning {
+	cursor: grabbing;
+}
+
+.floorplan-stage {
+	position: relative;
+	height: 100%;
+	width: max-content;
+	min-width: 100%;
+}
+
+.floorplan-display.is-ready .floorplan-stage {
+	position: absolute;
+	top: 0;
+	left: 0;
+	min-width: 0;
+	transform-origin: 0 0;
 }
 
 .floorplan-svg {
 	display: block;
-	width: 100%;
-	height: auto;
+	height: 100%;
+	width: auto;
+	max-width: none;
+}
+
+.floorplan-zoom {
+	display: none;
+	position: absolute;
+	z-index: 5;
+	right: 0.75rem;
+	bottom: 0.75rem;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.floorplan-zoom__value {
+	min-width: 3.25rem;
+	padding: 0.2rem 0.35rem;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	color: #1d2327;
+	font-size: 0.75rem;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+	text-align: center;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+}
+
+.floorplan-display.is-ready .floorplan-zoom {
+	display: flex;
+}
+
+.floorplan-zoom button {
+	width: 2.5rem;
+	height: 2.5rem;
+	padding: 0;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	color: #1d2327;
+	font: inherit;
+	font-size: 1.25rem;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+}
+
+.floorplan-zoom button:hover,
+.floorplan-zoom button:focus-visible {
+	background: #f0f6fc;
+	outline: 2px solid #1d2327;
+	outline-offset: 1px;
 }
 
 .floorplan-area-front {
@@ -224,6 +311,13 @@
 	text-align: center;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	pointer-events: none;
+}
+
+.floorplan-marker.is-focused {
+	z-index: 3;
+	outline: 2px solid #1d2327;
+	outline-offset: 2px;
+	box-shadow: 0 0 0 4px #fff, 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .floorplan-marker:hover,

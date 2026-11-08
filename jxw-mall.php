@@ -3,7 +3,7 @@
 Plugin Name: Centershop
 Plugin URI:  http://www.jaxweb.dk
 Description: Butiksoversigt i Dianalund Centret med kort og åbningstider
-Version:     1.8.2
+Version:     1.9.0
 Author:      jaxweb.dk
 Author URI:  http://www.jaxweb.dk
 License:     GPL2
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('CENTERSHOP_VERSION', '1.8.2');
+define('CENTERSHOP_VERSION', '1.9.0');
 define('CENTERSHOP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CENTERSHOP_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once CENTERSHOP_PLUGIN_DIR . 'includes/plugin-lifecycle.php';
@@ -380,6 +380,20 @@ function centershop_register_blocks() {
         'editor_script' => 'centershop-read-also-editor',
         'style' => 'centershop-read-also-style'
     ));
+
+    wp_register_script(
+        'centershop-floorplan-editor',
+        plugins_url('blocks/floorplan/index.js', __FILE__),
+        array('wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-server-side-render'),
+        filemtime(plugin_dir_path(__FILE__) . 'blocks/floorplan/index.js')
+    );
+
+    register_block_type( __DIR__ . '/blocks/floorplan', array(
+        'render_callback' => 'centershop_render_floorplan_block',
+        'editor_script' => 'centershop-floorplan-editor',
+        'script' => 'centershop-floorplan',
+        'style' => 'centershop-floorplan'
+    ));
 }
 add_action( 'init', 'centershop_register_blocks' );
 
@@ -411,6 +425,12 @@ function centershop_render_single_shop_block( array $attributes, string $content
 function centershop_render_read_also_block( array $attributes, string $content ) {
     ob_start();
     include plugin_dir_path( __FILE__ ) . 'blocks/read-also/render.php';
+    return ob_get_clean();
+}
+
+function centershop_render_floorplan_block( array $attributes, string $content ) {
+    ob_start();
+    include plugin_dir_path( __FILE__ ) . 'blocks/floorplan/render.php';
     return ob_get_clean();
 }
 
